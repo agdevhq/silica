@@ -1,0 +1,40 @@
+export { defineConfig, loadConfig, resolveConfig } from "./config.js";
+export { isMarkdownFile, scanContent, type ContentAssetFile, type ContentMarkdownFile, type ContentScan } from "./files.js";
+export {
+  asFilePath,
+  asFullSlug,
+  asRelativeURL,
+  asSimpleSlug,
+  hrefToSlug,
+  joinSegments,
+  normalizePath,
+  normalizeSlug,
+  pathToRoot,
+  resolveRelative,
+  resolveWikiLink,
+  simplifySlug,
+  slugifyFilePath,
+  slugifySegment,
+  slugToHref,
+  type FilePath,
+  type FullSlug,
+  type RelativeURL,
+  type SimpleSlug,
+} from "./path.js";
+export { analyzeMarkdown, getDescription, getTags, getTitle, renderMarkdown } from "./pipeline/index.js";
+export { precompute, type PrecomputeOptions } from "./precompute.js";
+export type {
+  AnalyzeResult,
+  BrokenLink,
+  Graph,
+  Manifest,
+  ManifestEntry,
+  PrecomputeResult,
+  RenderContext,
+  RenderResult,
+  ResolvedSilicaConfig,
+  SilicaAuthConfig,
+  SilicaConfig,
+  ThemeConfig,
+  TocItem,
+} from "./types.js";

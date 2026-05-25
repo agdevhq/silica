@@ -1,0 +1,27 @@
+{
+  "name": "create-silica",
+  "version": "0.1.0",
+  "description": "Scaffold a new Silica vault.",
+  "type": "module",
+  "license": "MIT",
+  "bin": {
+    "create-silica": "./dist/index.js"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "test": "vitest run --passWithNoTests",
+    "typecheck": "tsc --noEmit",
+    "lint": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@silicajs/cli": "0.1.0"
+  }
+}

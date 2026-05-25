@@ -8,11 +8,11 @@ Write markdown in a `content/` folder, configure auth and theme in `silica.confi
 
 Early bootstrap. The framework itself is not implemented yet.
 
-| Area | Location |
-| --- | --- |
-| Framework plan & milestones | [`.cursor/plans/silica-framework-plan_ad281e20.plan.md`](.cursor/plans/silica-framework-plan_ad281e20.plan.md) |
-| Quartz research (reference SSG) | [`docs/research/quartz.md`](docs/research/quartz.md) |
-| npm namespace stubs (M-1) | [`tools/npm-stubs/`](tools/npm-stubs/) |
+| Area                            | Location                                                                                                       |
+| ------------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| Framework plan & milestones     | [`.cursor/plans/silica-framework-plan_ad281e20.plan.md`](.cursor/plans/silica-framework-plan_ad281e20.plan.md) |
+| Quartz research (reference SSG) | [`docs/research/quartz.md`](docs/research/quartz.md)                                                           |
+| npm namespace stubs (M-1)       | [`tools/npm-stubs/`](tools/npm-stubs/)                                                                         |
 
 ## Packages (planned)
 

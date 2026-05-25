@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="640" height="240" viewBox="0 0 640 240" role="img" aria-labelledby="title">
+  <title id="title">Silica sample asset</title>
+  <rect width="640" height="240" rx="24" fill="#dbeafe" />
+  <circle cx="120" cy="120" r="64" fill="#2563eb" />
+  <text x="220" y="132" font-family="Arial, sans-serif" font-size="42" font-weight="700" fill="#0f172a">Silica asset</text>
+</svg>

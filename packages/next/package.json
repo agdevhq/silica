@@ -1,0 +1,86 @@
+{
+  "name": "@silicajs/next",
+  "version": "0.1.0",
+  "description": "Next.js runtime, routes, primitives, templates, and proxy for Silica.",
+  "type": "module",
+  "license": "MIT",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./routes/page": {
+      "types": "./dist/routes/page.d.ts",
+      "import": "./dist/routes/page.js"
+    },
+    "./routes/tags-page": {
+      "types": "./dist/routes/tags-page.d.ts",
+      "import": "./dist/routes/tags-page.js"
+    },
+    "./routes/layout": {
+      "types": "./dist/routes/layout.d.ts",
+      "import": "./dist/routes/layout.js"
+    },
+    "./routes/not-found": {
+      "types": "./dist/routes/not-found.d.ts",
+      "import": "./dist/routes/not-found.js"
+    },
+    "./routes/sign-in": {
+      "types": "./dist/routes/sign-in.d.ts",
+      "import": "./dist/routes/sign-in.js"
+    },
+    "./routes/not-allowed": {
+      "types": "./dist/routes/not-allowed.d.ts",
+      "import": "./dist/routes/not-allowed.js"
+    },
+    "./routes/api-auth": {
+      "types": "./dist/routes/api-auth.d.ts",
+      "import": "./dist/routes/api-auth.js"
+    },
+    "./routes/api-search": {
+      "types": "./dist/routes/api-search.d.ts",
+      "import": "./dist/routes/api-search.js"
+    },
+    "./routes/api-revalidate": {
+      "types": "./dist/routes/api-revalidate.d.ts",
+      "import": "./dist/routes/api-revalidate.js"
+    },
+    "./proxy": {
+      "types": "./dist/proxy.d.ts",
+      "import": "./dist/proxy.js"
+    },
+    "./primitives": {
+      "types": "./dist/primitives/index.d.ts",
+      "import": "./dist/primitives/index.js"
+    },
+    "./theme": {
+      "types": "./dist/theme.d.ts",
+      "import": "./dist/theme.js"
+    }
+  },
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "lint": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@silicajs/auth": "0.1.0",
+    "@silicajs/core": "0.1.0",
+    "@silicajs/search": "0.1.0",
+    "better-auth": "^1.6.11",
+    "cmdk": "^1.1.1"
+  },
+  "peerDependencies": {
+    "next": "^16.2.0",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0"
+  },
+  "devDependencies": {
+    "next": "^16.2.6",
+    "react": "^19.2.6",
+    "react-dom": "^19.2.6"
+  }
+}

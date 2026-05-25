@@ -1,0 +1,19 @@
+{
+  "name": "create-silica",
+  "version": "0.0.0",
+  "description": "Reserved scaffolder — run `npx create-silica my-vault` to start a new Silica project.",
+  "license": "MIT",
+  "keywords": [
+    "silica",
+    "silicajs",
+    "create",
+    "scaffold",
+    "starter",
+    "obsidian",
+    "markdown",
+    "next.js"
+  ],
+  "publishConfig": {
+    "access": "public"
+  }
+}

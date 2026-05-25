@@ -1,0 +1,24 @@
+{
+  "name": "@silicajs/search",
+  "version": "0.1.0",
+  "description": "Server-side FlexSearch index builder and query helpers for Silica.",
+  "type": "module",
+  "license": "MIT",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "lint": "tsc --noEmit"
+  },
+  "dependencies": {
+    "flexsearch": "^0.8.212"
+  }
+}

@@ -1,7 +1,8 @@
+import { cacheLife } from "next/cache";
 import { loadResolvedConfig } from "../server-data.js";
 
 export default async function SignInPage() {
-  const config = await loadResolvedConfig();
+  const config = await getSignInConfig();
   const authEnabled = Boolean(config.auth);
   return (
     <main className="silica-status-page">
@@ -16,4 +17,10 @@ export default async function SignInPage() {
       )}
     </main>
   );
+}
+
+async function getSignInConfig() {
+  "use cache";
+  cacheLife("max");
+  return loadResolvedConfig();
 }

@@ -1,8 +1,4 @@
-"use client";
-
-import { useEffect, useMemo, useState } from "react";
-import type { Graph, Manifest, TocItem } from "@silicajs/core";
-import { slugToHref } from "@silicajs/core";
+import type { Graph, Manifest, TocItem } from "@silicajs/core/runtime";
 
 export type ExplorerProps = {
   manifest: Manifest;
@@ -98,25 +94,10 @@ export function Backlinks({ graph, slug, manifest }: BacklinksProps) {
 }
 
 export function SearchTrigger() {
-  const [open, setOpen] = useState(false);
-  useEffect(() => {
-    const onKeyDown = (event: KeyboardEvent) => {
-      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") {
-        event.preventDefault();
-        setOpen((value) => !value);
-      }
-    };
-    window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
-  }, []);
-
   return (
-    <>
-      <button className="silica-search-trigger" type="button" onClick={() => setOpen(true)}>
-        Search <kbd>⌘K</kbd>
-      </button>
-      {open ? <SearchPalette onClose={() => setOpen(false)} /> : null}
-    </>
+    <a className="silica-search-trigger" href="/api/search?q=">
+      Search <kbd>⌘K</kbd>
+    </a>
   );
 }
 
@@ -124,68 +105,23 @@ export type SearchPaletteProps = {
   onClose?: () => void;
 };
 
-export function SearchPalette({ onClose }: SearchPaletteProps) {
-  const [query, setQuery] = useState("");
-  const [results, setResults] = useState<Array<{ slug: string; title: string; excerpt: string }>>([]);
-
-  useEffect(() => {
-    const controller = new AbortController();
-    if (!query.trim()) {
-      setResults([]);
-      return () => controller.abort();
-    }
-    fetch(`/api/search?q=${encodeURIComponent(query)}`, { signal: controller.signal })
-      .then((response) => (response.ok ? response.json() : { results: [] }))
-      .then((payload) => setResults(payload.results ?? []))
-      .catch(() => undefined);
-    return () => controller.abort();
-  }, [query]);
-
+export function SearchPalette({ onClose: _onClose }: SearchPaletteProps) {
   return (
     <div className="silica-search-overlay" role="dialog" aria-modal="true">
       <div className="silica-search-palette">
-        <div className="silica-search-row">
-          <input autoFocus placeholder="Search your vault…" value={query} onChange={(event) => setQuery(event.target.value)} />
-          <button type="button" onClick={onClose} aria-label="Close search">
-            ×
-          </button>
-        </div>
-        <ul>
-          {results.map((result) => (
-            <li key={result.slug}>
-              <a href={slugToHref(result.slug)} onClick={onClose}>
-                <strong>{result.title}</strong>
-                <span>{result.excerpt}</span>
-              </a>
-            </li>
-          ))}
-        </ul>
+        <form className="silica-search-row" action="/api/search">
+          <input name="q" placeholder="Search your vault…" />
+          <button type="submit">Search</button>
+        </form>
       </div>
     </div>
   );
 }
 
 export function DarkModeToggle() {
-  const [theme, setTheme] = useState<"light" | "dark">("light");
-  useEffect(() => {
-    const stored = window.localStorage.getItem("silica-theme");
-    const initial = stored === "dark" || stored === "light" ? stored : "light";
-    setTheme(initial);
-    document.documentElement.dataset.theme = initial;
-  }, []);
-
   return (
-    <button
-      className="silica-dark-toggle"
-      type="button"
-      onClick={() => {
-        const next = theme === "dark" ? "light" : "dark";
-        setTheme(next);
-        window.localStorage.setItem("silica-theme", next);
-        document.documentElement.dataset.theme = next;
-      }}
-    >
-      {theme === "dark" ? "Light" : "Dark"}
+    <button className="silica-dark-toggle" type="button" aria-label="Dark mode toggle">
+      Theme
     </button>
   );
 }
@@ -220,10 +156,7 @@ export type TagsListProps = {
 };
 
 export function TagsList({ manifest, tag }: TagsListProps) {
-  const entries = useMemo(
-    () => manifest.entries.filter((entry) => entry.tags.includes(tag)).sort((a, b) => a.title.localeCompare(b.title)),
-    [manifest, tag],
-  );
+  const entries = manifest.entries.filter((entry) => entry.tags.includes(tag)).sort((a, b) => a.title.localeCompare(b.title));
   return (
     <section className="silica-tag-list">
       <h1>#{tag}</h1>
@@ -240,4 +173,9 @@ export function TagsList({ manifest, tag }: TagsListProps) {
 
 function pretty(segment: string): string {
   return segment.replace(/-/g, " ").replace(/\b\w/g, (letter) => letter.toUpperCase());
+}
+
+function slugToHref(slug: string): string {
+  if (slug === "index") return "/";
+  return `/${slug.replace(/\/index$/, "")}`;
 }

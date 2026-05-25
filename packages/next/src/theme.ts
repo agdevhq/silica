@@ -1,7 +1,6 @@
-import path from "node:path";
-import { pathToFileURL } from "node:url";
 import type React from "react";
-import type { Graph, Manifest, ManifestEntry, ResolvedSilicaConfig, TocItem } from "@silicajs/core";
+import type { Graph, Manifest, ManifestEntry, ResolvedSilicaConfig, TocItem } from "@silicajs/core/runtime";
+import defaultTheme from "./default-theme.js";
 
 export type ThemeLayoutProps = {
   manifest: Manifest;
@@ -36,15 +35,10 @@ export async function resolveTheme(config: ResolvedSilicaConfig): Promise<Silica
   const themeName = typeof themeValue === "object" ? themeValue.name : themeValue;
 
   if (!themeName || themeName === "default") {
-    return normalizeTheme(await import("@silicajs/theme-default"));
+    return normalizeTheme(defaultTheme);
   }
 
-  if (themeName.startsWith(".") || themeName.startsWith("/")) {
-    const absolute = path.isAbsolute(themeName) ? themeName : path.join(config.projectRoot, themeName);
-    return normalizeTheme(await import(pathToFileURL(absolute).href));
-  }
-
-  return normalizeTheme(await import(themeName));
+  throw new Error(`Custom theme resolution is not available in this build: ${themeName}`);
 }
 
 function normalizeTheme(module: Record<string, unknown>): SilicaTheme {

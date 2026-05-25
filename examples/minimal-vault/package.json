@@ -1,0 +1,26 @@
+{
+  "name": "minimal-vault",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "silica dev",
+    "build": "silica build",
+    "start": "silica start",
+    "precompute": "node ../../packages/cli/dist/index.js build"
+  },
+  "dependencies": {
+    "@silicajs/auth": "0.1.0",
+    "@silicajs/cli": "0.1.0",
+    "@silicajs/core": "0.1.0",
+    "@silicajs/next": "0.1.0",
+    "@silicajs/search": "0.1.0",
+    "@silicajs/theme-default": "0.1.0",
+    "next": "^16.2.6",
+    "react": "^19.2.6",
+    "react-dom": "^19.2.6"
+  },
+  "devDependencies": {
+    "typescript": "^6.0.3"
+  }
+}

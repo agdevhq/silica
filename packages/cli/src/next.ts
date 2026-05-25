@@ -1,14 +1,17 @@
 import { execa } from "execa";
+import { loadConfig } from "@silicajs/core";
 
 export type NextCommand = "dev" | "build" | "start";
 
 export async function runNext(command: NextCommand, nextRoot: string): Promise<void> {
   installStackTraceRewrite(nextRoot);
+  const config = await loadConfig(process.cwd());
   await execa("next", [command, nextRoot], {
     stdio: "inherit",
     env: {
       ...process.env,
       SILICA_PROJECT_ROOT: process.cwd(),
+      SILICA_AUTH_ENABLED: config.auth ? "true" : "false",
     },
   });
 }

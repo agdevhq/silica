@@ -2,9 +2,6 @@ import { toNextJsHandler } from "better-auth/next-js";
 import { silicaAuth } from "@silicajs/auth";
 import { loadResolvedConfig } from "../server-data.js";
 
-export const runtime = "nodejs";
-export const dynamic = "force-dynamic";
-
 async function getAuth() {
   const config = await loadResolvedConfig();
   return silicaAuth({

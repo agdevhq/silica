@@ -1,12 +1,12 @@
 import fs from "node:fs/promises";
 import { cacheLife, cacheTag } from "next/cache";
 import { notFound } from "next/navigation";
-import { renderMarkdown } from "@silicajs/core";
+import { renderMarkdown } from "@silicajs/core/runtime";
 import { loadBuildId, loadGraph, loadManifest, loadResolvedConfig, normalizeRouteSlug } from "../server-data.js";
 import { resolveTheme } from "../theme.js";
 
 export async function generateStaticParams() {
-  const manifest = await loadManifest();
+  const manifest = await getPageManifest();
   return manifest.entries.map((entry) => ({
     slug: entry.slug === "index" ? [] : entry.slug.split("/"),
   }));
@@ -15,13 +15,19 @@ export async function generateStaticParams() {
 export async function generateMetadata({ params }: PageProps) {
   const resolvedParams = await params;
   const slug = normalizeRouteSlug(resolvedParams?.slug);
-  const manifest = await loadManifest();
+  const manifest = await getPageManifest();
   const entry = manifest.bySlug[slug];
   if (!entry) return {};
   return {
     title: entry.title,
     description: entry.description,
   };
+}
+
+async function getPageManifest() {
+  "use cache";
+  cacheLife("max");
+  return loadManifest();
 }
 
 export type PageProps = {

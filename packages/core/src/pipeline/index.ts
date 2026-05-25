@@ -58,9 +58,7 @@ export async function renderMarkdown(raw: string, context: RenderContext): Promi
 export async function analyzeMarkdown(raw: string, context: RenderContext): Promise<AnalyzeResult> {
   const parsed = matter(raw);
   const transformed = transformObsidianMarkdown(parsed.content, context);
-  const processor = baseProcessor().use(remarkCollectPlainText);
-  const file = await processor.process(transformed.markdown);
-  const plainText = String(file.data.plainText ?? extractPlainText(parsed.content));
+  const plainText = extractPlainText(transformed.markdown);
   const frontmatter = parsed.data;
 
   return {

@@ -1,10 +1,33 @@
 import { defineConfig } from "tsup";
 
 export default defineConfig({
-  entry: ["src/index.ts"],
+  entry: ["src/index.ts", "src/runtime.ts"],
   format: ["esm"],
   dts: true,
   sourcemap: true,
   clean: true,
-  external: ["react", "react/jsx-runtime"],
+  external: [
+    "@silicajs/search",
+    "fast-glob",
+    "fs-extra",
+    "github-slugger",
+    "gray-matter",
+    "hast-util-to-string",
+    "jiti",
+    "katex",
+    "react",
+    "react/jsx-runtime",
+    "rehype-autolink-headings",
+    "rehype-katex",
+    "rehype-react",
+    "rehype-slug",
+    "remark-frontmatter",
+    "remark-gfm",
+    "remark-math",
+    "remark-parse",
+    "remark-rehype",
+    "shiki",
+    "unified",
+    "unist-util-visit"
+  ],
 });

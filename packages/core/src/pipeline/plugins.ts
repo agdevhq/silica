@@ -24,7 +24,7 @@ export function rehypeCollectTocAndLinks() {
 
     visit(tree, "element", (node: HastNode) => {
       if (isHeading(node)) {
-        const text = toString(node);
+        const text = toString(node as never);
         const id = String(node.properties?.id ?? slugger.slug(text));
         node.properties = { ...node.properties, id };
         toc.push({ id, text, depth: Number(node.tagName?.slice(1) ?? 2) });

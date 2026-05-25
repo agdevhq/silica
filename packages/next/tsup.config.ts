@@ -20,5 +20,20 @@ export default defineConfig({
   dts: true,
   sourcemap: true,
   clean: true,
-  external: ["next", "react", "react-dom", "react/jsx-runtime", "@silicajs/theme-default"],
+  external: [
+    "@silicajs/auth",
+    "@silicajs/core",
+    "@silicajs/core/runtime",
+    "@silicajs/search",
+    "@silicajs/theme-default",
+    "better-auth/next-js",
+    "fs-extra",
+    "next",
+    "next/cache",
+    "next/navigation",
+    "next/server",
+    "react",
+    "react-dom",
+    "react/jsx-runtime"
+  ],
 });

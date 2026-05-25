@@ -1,6 +1,6 @@
 import path from "node:path";
 import fs from "fs-extra";
-import { loadConfig, type Graph, type Manifest } from "@silicajs/core";
+import type { Graph, Manifest, ResolvedSilicaConfig } from "@silicajs/core/runtime";
 
 export function getProjectRoot(): string {
   return process.env.SILICA_PROJECT_ROOT ?? path.resolve(process.cwd(), "../..");
@@ -23,7 +23,7 @@ export async function loadBuildId(): Promise<string> {
 }
 
 export async function loadResolvedConfig() {
-  return loadConfig(getProjectRoot());
+  return fs.readJson(path.join(getSilicaRoot(), "config.json")) as Promise<ResolvedSilicaConfig>;
 }
 
 export function normalizeRouteSlug(slug?: string[]): string {

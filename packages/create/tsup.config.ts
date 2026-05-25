@@ -6,6 +6,7 @@ export default defineConfig({
   dts: true,
   sourcemap: true,
   clean: true,
+  external: ["@silicajs/cli"],
   banner: {
     js: "#!/usr/bin/env node",
   },

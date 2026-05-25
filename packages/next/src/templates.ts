@@ -31,25 +31,25 @@ export function getSilicaTemplates(): TemplateFile[] {
     },
     {
       path: "app/api/auth/[...all]/route.ts",
-      content: `export { GET, POST, runtime, dynamic } from "@silicajs/next/routes/api-auth";\n`,
+      content: `export { GET, POST } from "@silicajs/next/routes/api-auth";\n`,
     },
     {
       path: "app/api/search/route.ts",
-      content: `export { GET, runtime, dynamic } from "@silicajs/next/routes/api-search";\n`,
+      content: `export { GET } from "@silicajs/next/routes/api-search";\n`,
     },
     {
       path: "app/__silica/revalidate/route.ts",
-      content: `export { POST, dynamic } from "@silicajs/next/routes/api-revalidate";\n`,
+      content: `export { POST } from "@silicajs/next/routes/api-revalidate";\n`,
     },
     {
       path: "proxy.ts",
-      content: `export { silicaProxy as proxy, config } from "@silicajs/next/proxy";\n`,
+      content: `import type { NextRequest } from "next/server";\nimport { silicaProxy } from "@silicajs/next/proxy";\n\nexport function proxy(request: NextRequest) {\n  return silicaProxy(request);\n}\n\nexport const config = {\n  matcher: ["/((?!_next/static|_next/image|favicon.ico).*)"],\n};\n`,
     },
   ];
 }
 
 export function nextConfigTemplate(): string {
-  return `import type { NextConfig } from "next";\n\nconst nextConfig: NextConfig = {\n  cacheComponents: true,\n  output: "standalone",\n  transpilePackages: [\n    "@silicajs/core",\n    "@silicajs/next",\n    "@silicajs/auth",\n    "@silicajs/search",\n    "@silicajs/theme-default"\n  ],\n  serverExternalPackages: ["flexsearch"],\n  experimental: {\n    externalDir: true,\n    serverSourceMaps: true,\n    outputFileTracingIncludes: {\n      "/*": ["../../content/**/*", "../manifest.json", "../graph.json", "../search-index.json", "../build-id.txt"]\n    }\n  },\n};\n\nexport default nextConfig;\n`;
+  return `import type { NextConfig } from "next";\n\nconst nextConfig: NextConfig = {\n  cacheComponents: true,\n  output: "standalone",\n  transpilePackages: [\n    "@silicajs/core",\n    "@silicajs/next",\n    "@silicajs/auth",\n    "@silicajs/search",\n    "@silicajs/theme-default"\n  ],\n  serverExternalPackages: ["flexsearch"],\n  outputFileTracingIncludes: {\n    "/*": ["../../content/**/*", "../manifest.json", "../graph.json", "../search-index.json", "../build-id.txt"]\n  },\n  experimental: {\n    externalDir: true,\n    serverSourceMaps: true\n  },\n};\n\nexport default nextConfig;\n`;
 }
 
 export function tsconfigTemplate(hasUserTsconfig: boolean): string {

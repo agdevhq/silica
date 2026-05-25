@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import { loadConfig } from "@silicajs/core";
 
 const PUBLIC_PREFIXES = ["/_next", "/silica", "/api/auth", "/api/search", "/__silica/revalidate"];
 const PUBLIC_PATHS = ["/sign-in", "/not-allowed", "/favicon.ico", "/robots.txt", "/sitemap.xml"];
@@ -8,8 +7,7 @@ export async function silicaProxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
   if (isPublicPath(pathname)) return NextResponse.next();
 
-  const config = await loadConfig(process.env.SILICA_PROJECT_ROOT ?? process.cwd());
-  if (!config.auth) return NextResponse.next();
+  if (process.env.SILICA_AUTH_ENABLED !== "true") return NextResponse.next();
 
   const sessionCookie = getSessionCookieValue(request);
   if (!sessionCookie) {

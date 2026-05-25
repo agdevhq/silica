@@ -69,6 +69,7 @@ export async function precompute(options: PrecomputeOptions = {}): Promise<Preco
 
   await writeJson(path.join(projectRoot, ".silica/manifest.json"), manifest);
   await writeJson(path.join(projectRoot, ".silica/graph.json"), graph);
+  await writeJson(path.join(projectRoot, ".silica/config.json"), config);
   await writeJson(path.join(projectRoot, ".silica/search-index.json"), searchIndex);
   await fs.writeFile(path.join(projectRoot, ".silica/build-id.txt"), `${buildId}\n`);
   await writeSitemapAndRobots(projectRoot, config, manifest);

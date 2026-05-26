@@ -56,6 +56,14 @@
     "./theme": {
       "types": "./dist/theme.d.ts",
       "import": "./dist/theme.js"
+    },
+    "./theme-layout": {
+      "types": "./dist/theme-layout.d.ts",
+      "import": "./dist/theme-layout.js"
+    },
+    "./theme-page": {
+      "types": "./dist/theme-page.d.ts",
+      "import": "./dist/theme-page.js"
     }
   },
   "files": ["dist"],

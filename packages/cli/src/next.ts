@@ -12,6 +12,8 @@ export async function runNext(command: NextCommand, nextRoot: string): Promise<v
       ...process.env,
       SILICA_PROJECT_ROOT: process.cwd(),
       SILICA_AUTH_ENABLED: config.auth ? "true" : "false",
+      SILICA_ALLOWED_DOMAINS: config.auth?.allowedDomains?.join(",") ?? "",
+      SILICA_ALLOWED_EMAILS: config.auth?.allowedEmails?.join(",") ?? "",
     },
   });
 }

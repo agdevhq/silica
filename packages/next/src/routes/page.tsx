@@ -2,8 +2,14 @@ import fs from "node:fs/promises";
 import { cacheLife, cacheTag } from "next/cache";
 import { notFound } from "next/navigation";
 import { renderMarkdown } from "@silicajs/core/runtime";
-import { loadBuildId, loadGraph, loadManifest, loadResolvedConfig, normalizeRouteSlug } from "../server-data.js";
-import { resolveTheme, type SilicaTheme } from "../theme.js";
+import {
+  loadBuildId,
+  loadGraph,
+  loadManifest,
+  loadResolvedConfig,
+  normalizeRouteSlug,
+} from "../server-data.js";
+import type { SilicaTheme } from "../theme.js";
 
 export async function generateStaticParams() {
   const manifest = await getPageManifest();
@@ -34,19 +40,23 @@ export type PageProps = {
   params: Promise<{ slug?: string[] }> | { slug?: string[] };
 };
 
-export default async function Page({ params }: PageProps) {
-  const resolvedParams = await params;
-  const slug = normalizeRouteSlug(resolvedParams?.slug);
-  return <VaultContent slug={slug} />;
-}
-
-export async function VaultContent({ slug, theme: providedTheme }: { slug: string; theme?: SilicaTheme }) {
+export async function VaultContent({
+  slug,
+  theme,
+}: {
+  slug: string;
+  theme: SilicaTheme;
+}) {
   "use cache";
   cacheLife("max");
   const buildId = await loadBuildId();
   cacheTag("build", `build:${buildId}`, `page:${slug}`);
 
-  const [manifest, graph, config] = await Promise.all([loadManifest(), loadGraph(), loadResolvedConfig()]);
+  const [manifest, graph, config] = await Promise.all([
+    loadManifest(),
+    loadGraph(),
+    loadResolvedConfig(),
+  ]);
   const entry = manifest.bySlug[slug];
   if (!entry) notFound();
 
@@ -57,7 +67,6 @@ export async function VaultContent({ slug, theme: providedTheme }: { slug: strin
     assetBaseUrl: "/silica",
     wikilinkStrategy: config.wikilinks.strategy,
   });
-  const theme = providedTheme ?? (await resolveTheme(config));
 
   return (
     <theme.PageRenderer

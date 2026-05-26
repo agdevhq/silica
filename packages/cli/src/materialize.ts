@@ -1,7 +1,13 @@
 import path from "node:path";
 import fs from "fs-extra";
 import { loadConfig } from "@silicajs/core";
-import { getSilicaTemplates, nextConfigTemplate, packageJsonTemplate, themeModuleTemplate, tsconfigTemplate } from "@silicajs/next";
+import {
+  getSilicaTemplates,
+  nextConfigTemplate,
+  packageJsonTemplate,
+  themeModuleTemplate,
+  tsconfigTemplate,
+} from "@silicajs/next";
 
 export type MaterializeOptions = {
   projectRoot?: string;

@@ -8,9 +8,31 @@ import {
 
 import { Sidebar } from "./sidebar.js";
 
+const THEME_INIT_SCRIPT = String.raw`
+(function () {
+  try {
+    var storageKey = "silica-theme";
+    var root = document.documentElement;
+    var stored = window.localStorage.getItem(storageKey);
+    var theme =
+      stored === "dark" || stored === "light"
+        ? stored
+        : window.matchMedia("(prefers-color-scheme: dark)").matches
+          ? "dark"
+          : "light";
+
+    root.classList.remove("dark", "light");
+    root.classList.add(theme);
+  } catch (_) {}
+})();
+`;
+
 export function Layout({ manifest, config, children }: ThemeLayoutProps) {
   return (
     <html lang="en" suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
+      </head>
       <body className="min-h-svh bg-background font-sans text-foreground antialiased">
         <SidebarProvider>
           <Sidebar manifest={manifest} config={config} />

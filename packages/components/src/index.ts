@@ -1,12 +1,12 @@
 export { Backlinks, type BacklinksProps } from "./backlinks.js";
 export { Breadcrumbs, type BreadcrumbsProps } from "./breadcrumbs.js";
-export { DarkModeToggle, type DarkModeToggleProps } from "./dark-mode-toggle.js";
+export {
+  DarkModeToggle,
+  type DarkModeToggleProps,
+} from "./dark-mode-toggle.js";
 export { NotAllowed, type NotAllowedProps } from "./not-allowed.js";
 export { NotFound, type NotFoundProps } from "./not-found.js";
-export {
-  PageProperties,
-  type PagePropertiesProps,
-} from "./page-properties.js";
+export { PageProperties, type PagePropertiesProps } from "./page-properties.js";
 export {
   SearchPalette,
   SearchTrigger,

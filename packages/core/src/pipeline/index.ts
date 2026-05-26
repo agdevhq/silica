@@ -91,6 +91,7 @@ export async function renderMarkdown(
         light: "github-light",
         dark: "github-dark",
       },
+      defaultColor: "light-dark()",
     })
     .use(rehypeSlug)
     .use(rehypeAutolinkHeadings, {

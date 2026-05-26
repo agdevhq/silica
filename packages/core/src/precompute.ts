@@ -1,5 +1,7 @@
 import crypto from "node:crypto";
+import { execFile } from "node:child_process";
 import path from "node:path";
+import { promisify } from "node:util";
 import fs from "fs-extra";
 import { buildSearchIndex, type SearchRecord } from "@silicajs/search";
 import { loadConfig } from "./config.js";
@@ -7,6 +9,8 @@ import { scanContent, type ContentMarkdownFile } from "./files.js";
 import { asFullSlug, slugToHref } from "./path.js";
 import { analyzeMarkdown } from "./pipeline/index.js";
 import type { BrokenLink, Graph, Manifest, ManifestEntry, PrecomputeResult, ResolvedSilicaConfig } from "./types.js";
+
+const execFileAsync = promisify(execFile);
 
 export type PrecomputeOptions = {
   projectRoot?: string;
@@ -28,6 +32,7 @@ export async function precompute(options: PrecomputeOptions = {}): Promise<Preco
   await fs.ensureDir(path.join(projectRoot, ".silica/next/public/silica"));
 
   for (const file of markdownFiles) {
+    const gitDates = await getGitDates(projectRoot, path.join(config.contentDir, file.relativePath));
     const analysis = await analyzeMarkdown(file.raw, {
       slug: asFullSlug(file.slug),
       allSlugs,
@@ -43,8 +48,8 @@ export async function precompute(options: PrecomputeOptions = {}): Promise<Preco
       tags: analysis.tags,
       file: file.absolutePath,
       relativeFile: file.relativePath,
-      created: stringifyDate(getDate(file.frontmatter.created) ?? getDate(file.frontmatter.date) ?? file.stats.birthtime),
-      modified: stringifyDate(getDate(file.frontmatter.modified) ?? file.stats.mtime),
+      created: stringifyDate(getDate(file.frontmatter.created) ?? getDate(file.frontmatter.date) ?? gitDates.created ?? file.stats.birthtime),
+      modified: stringifyDate(getDate(file.frontmatter.modified) ?? gitDates.modified ?? file.stats.mtime),
       frontmatter: file.frontmatter,
     };
     entries.push(entry);
@@ -86,6 +91,34 @@ export async function precompute(options: PrecomputeOptions = {}): Promise<Preco
     buildId,
     brokenLinks,
   };
+}
+
+export async function getGitDates(projectRoot: string, relativePath: string): Promise<{ created?: Date; modified?: Date }> {
+  const normalizedPath = relativePath.replace(/\\/g, "/");
+  const logDates = await gitLogDates(projectRoot, normalizedPath);
+  if (logDates.length === 0) return {};
+
+  return {
+    modified: logDates[0],
+    created: logDates.at(-1),
+  };
+}
+
+async function gitLogDates(projectRoot: string, relativePath: string): Promise<Date[]> {
+  try {
+    const { stdout } = await execFileAsync("git", ["log", "--follow", "--format=%aI", "--", relativePath], {
+      cwd: projectRoot,
+      timeout: 2_000,
+    });
+    return stdout
+      .split(/\r?\n/)
+      .map((line) => line.trim())
+      .filter(Boolean)
+      .map((line) => new Date(line))
+      .filter((date) => !Number.isNaN(date.valueOf()));
+  } catch {
+    return [];
+  }
 }
 
 function filterPublished(files: ContentMarkdownFile[], config: ResolvedSilicaConfig): ContentMarkdownFile[] {

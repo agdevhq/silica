@@ -46,41 +46,37 @@ export function DarkModeToggle({ className }: DarkModeToggleProps) {
 
   const isLight = mounted && theme === "light";
   const isDark = mounted && theme === "dark";
+  const nextTheme: Theme = theme === "dark" ? "light" : "dark";
 
   return (
-    <div
-      role="radiogroup"
-      aria-label="Color theme"
-      className={`inline-flex items-center rounded-full border border-border bg-muted/50 p-0.5 ${className ?? ""}`}
+    <button
+      type="button"
+      role="switch"
+      aria-checked={isDark}
+      aria-label={`Switch to ${nextTheme} mode`}
+      onClick={() => setAndPersist(nextTheme)}
+      className={`inline-flex items-center rounded-full border border-border bg-muted/50 p-0.5 transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ${className ?? ""}`}
     >
-      <button
-        type="button"
-        role="radio"
-        aria-checked={isLight}
-        aria-label="Switch to light mode"
-        onClick={() => setAndPersist("light")}
+      <span
+        aria-hidden="true"
         className={`inline-flex size-6 items-center justify-center rounded-full transition-colors ${
           isLight
             ? "bg-background text-foreground shadow-sm"
-            : "text-muted-foreground hover:text-foreground"
+            : "text-muted-foreground"
         }`}
       >
         <SunIcon className="size-3.5" aria-hidden="true" />
-      </button>
-      <button
-        type="button"
-        role="radio"
-        aria-checked={isDark}
-        aria-label="Switch to dark mode"
-        onClick={() => setAndPersist("dark")}
+      </span>
+      <span
+        aria-hidden="true"
         className={`inline-flex size-6 items-center justify-center rounded-full transition-colors ${
           isDark
             ? "bg-background text-foreground shadow-sm"
-            : "text-muted-foreground hover:text-foreground"
+            : "text-muted-foreground"
         }`}
       >
         <MoonIcon className="size-3.5" aria-hidden="true" />
-      </button>
-    </div>
+      </span>
+    </button>
   );
 }

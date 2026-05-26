@@ -36,4 +36,20 @@ describe("renderMarkdown", () => {
     expect(html).toContain('class="silica-callout-title"');
     expect(html).toContain("<mark>Silica</mark>");
   }, 15_000);
+
+  it("sanitizes raw HTML and escapes OFM-injected labels", async () => {
+    const result = await renderMarkdown(
+      "[[<img src=x onerror=alert(1)>]]\n\n<script>alert(1)</script>\n\n<img src=x onerror=alert(1)>",
+      {
+        slug: "index",
+        allSlugs: ["index"],
+      },
+    );
+
+    const html = renderToStaticMarkup(<>{result.content}</>);
+
+    expect(html).not.toContain("<script");
+    expect(html).not.toContain('<img src="x" onerror=');
+    expect(html).toContain("&lt;img src=x");
+  }, 15_000);
 });

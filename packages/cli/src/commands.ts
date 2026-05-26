@@ -51,4 +51,3 @@ export async function startCommand(): Promise<void> {
   const nextRoot = await materializeNextApp({ projectRoot: process.cwd() });
   await runStart(nextRoot);
 }
-

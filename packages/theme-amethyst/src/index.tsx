@@ -27,7 +27,7 @@ const THEME_INIT_SCRIPT = String.raw`
 })();
 `;
 
-export function Layout({ manifest, config, children }: ThemeLayoutProps) {
+export function Layout({ navigation, config, children }: ThemeLayoutProps) {
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
@@ -35,7 +35,7 @@ export function Layout({ manifest, config, children }: ThemeLayoutProps) {
       </head>
       <body className="min-h-svh bg-background font-sans text-foreground antialiased">
         <SidebarProvider>
-          <Sidebar manifest={manifest} config={config} />
+          <Sidebar navigation={navigation} config={config} />
           <SidebarInset>
             <header className="sticky top-0 z-10 flex h-12 shrink-0 items-center gap-2 border-b border-border bg-background px-3 md:hidden">
               <SidebarTrigger />

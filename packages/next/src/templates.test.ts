@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   getSilicaTemplates,
   nextConfigTemplate,
+  proxyTemplate,
   themeModuleTemplate,
   tsconfigTemplate,
 } from "./templates.js";
@@ -31,6 +32,26 @@ describe("generated templates", () => {
     expect(themeModuleTemplate("./themes/my-theme")).toContain(
       'from "../../themes/my-theme"',
     );
+  });
+
+  it("bakes resolved auth settings into generated proxy", () => {
+    expect(
+      proxyTemplate({
+        projectRoot: "/tmp/site",
+        title: "Test",
+        description: "Test",
+        contentDir: "content",
+        theme: "default",
+        auth: {
+          enabled: true,
+          provider: "google",
+          allowedDomains: ["example.com"],
+          allowedEmails: [],
+        },
+        wikilinks: { strategy: "shortest", strict: false },
+        filters: { removeDrafts: true, explicitPublish: false },
+      }),
+    ).toContain('"authEnabled": true');
   });
 
   it("renders the tsconfig extends placeholder when a user config exists", () => {

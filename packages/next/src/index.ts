@@ -2,6 +2,7 @@ export {
   getSilicaTemplates,
   nextConfigTemplate,
   packageJsonTemplate,
+  proxyTemplate,
   themeModuleTemplate,
   tsconfigTemplate,
   type TemplateFile,

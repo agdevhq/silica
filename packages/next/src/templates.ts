@@ -1,6 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import type { ResolvedSilicaConfig } from "@silicajs/core/runtime";
 
 export type TemplateFile = {
   path: string;
@@ -24,6 +25,30 @@ export function themeModuleTemplate(themeValue: unknown): string {
     '"{{themeSpecifier}}"',
     JSON.stringify(resolveThemeSpecifier(themeValue)),
   );
+}
+
+export function proxyTemplate(config: ResolvedSilicaConfig): string {
+  return `import type { NextRequest } from "next/server";
+import { silicaProxy } from "@silicajs/next/proxy";
+
+const silicaProxyConfig = ${JSON.stringify(
+    {
+      authEnabled: Boolean(config.auth),
+      allowedDomains: config.auth?.allowedDomains ?? [],
+      allowedEmails: config.auth?.allowedEmails ?? [],
+    },
+    null,
+    2,
+  )} as const;
+
+export function proxy(request: NextRequest) {
+  return silicaProxy(request, silicaProxyConfig);
+}
+
+export const config = {
+  matcher: ["/((?!_next/static|_next/image|favicon.ico).*)"],
+};
+`;
 }
 
 export function tsconfigTemplate(hasUserTsconfig: boolean): string {
@@ -53,7 +78,8 @@ function resolveThemeSpecifier(themeValue: unknown): string {
         : "default";
 
   if (!themeName || themeName === "default") return "@silicajs/theme-amethyst";
-  if (themeName.startsWith(".")) return `../../${themeName.replace(/^\.\//, "")}`;
+  if (themeName.startsWith("."))
+    return `../../${themeName.replace(/^\.\//, "")}`;
   return themeName;
 }
 

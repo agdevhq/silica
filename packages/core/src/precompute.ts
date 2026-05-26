@@ -8,7 +8,14 @@ import { loadConfig } from "./config.js";
 import { scanContent, type ContentMarkdownFile } from "./files.js";
 import { asFullSlug, slugToHref } from "./path.js";
 import { analyzeMarkdown } from "./pipeline/index.js";
-import type { BrokenLink, Graph, Manifest, ManifestEntry, PrecomputeResult, ResolvedSilicaConfig } from "./types.js";
+import type {
+  BrokenLink,
+  Graph,
+  Manifest,
+  ManifestEntry,
+  PrecomputeResult,
+  ResolvedSilicaConfig,
+} from "./types.js";
 
 const execFileAsync = promisify(execFile);
 
@@ -17,7 +24,9 @@ export type PrecomputeOptions = {
   config?: ResolvedSilicaConfig;
 };
 
-export async function precompute(options: PrecomputeOptions = {}): Promise<PrecomputeResult> {
+export async function precompute(
+  options: PrecomputeOptions = {},
+): Promise<PrecomputeResult> {
   const projectRoot = options.projectRoot ?? process.cwd();
   const config = options.config ?? (await loadConfig(projectRoot));
   const scan = await scanContent(projectRoot, config);
@@ -27,12 +36,22 @@ export async function precompute(options: PrecomputeOptions = {}): Promise<Preco
   const graphLinks: Record<string, string[]> = {};
   const brokenLinks: BrokenLink[] = [];
   const searchRecords: SearchRecord[] = [];
+  const relativeGitPaths = markdownFiles.map((file) =>
+    normalizeGitPath(path.join(config.contentDir, file.relativePath)),
+  );
+  const gitDatesByPath = await getGitDatesForFiles(
+    projectRoot,
+    relativeGitPaths,
+  );
 
   await fs.ensureDir(path.join(projectRoot, ".silica"));
   await fs.ensureDir(path.join(projectRoot, ".silica/next/public/silica"));
 
   for (const file of markdownFiles) {
-    const gitDates = await getGitDates(projectRoot, path.join(config.contentDir, file.relativePath));
+    const gitDates =
+      gitDatesByPath.get(
+        normalizeGitPath(path.join(config.contentDir, file.relativePath)),
+      ) ?? {};
     const analysis = await analyzeMarkdown(file.raw, {
       slug: asFullSlug(file.slug),
       allSlugs,
@@ -48,8 +67,17 @@ export async function precompute(options: PrecomputeOptions = {}): Promise<Preco
       tags: analysis.tags,
       file: file.absolutePath,
       relativeFile: file.relativePath,
-      created: stringifyDate(getDate(file.frontmatter.created) ?? getDate(file.frontmatter.date) ?? gitDates.created ?? file.stats.birthtime),
-      modified: stringifyDate(getDate(file.frontmatter.modified) ?? gitDates.modified ?? file.stats.mtime),
+      created: stringifyDate(
+        getDate(file.frontmatter.created) ??
+          getDate(file.frontmatter.date) ??
+          gitDates.created ??
+          file.stats.birthtime,
+      ),
+      modified: stringifyDate(
+        getDate(file.frontmatter.modified) ??
+          gitDates.modified ??
+          file.stats.mtime,
+      ),
       frontmatter: file.frontmatter,
     };
     entries.push(entry);
@@ -72,15 +100,26 @@ export async function precompute(options: PrecomputeOptions = {}): Promise<Preco
   const buildId = crypto.randomUUID();
   const searchIndex = await buildSearchIndex(searchRecords);
 
-  await writeJson(path.join(projectRoot, ".silica/manifest.json"), manifest);
+  await writeJson(
+    path.join(projectRoot, ".silica/manifest.json"),
+    serializeManifest(manifest),
+  );
   await writeJson(path.join(projectRoot, ".silica/graph.json"), graph);
   await writeJson(path.join(projectRoot, ".silica/config.json"), config);
-  await writeJson(path.join(projectRoot, ".silica/search-index.json"), searchIndex);
-  await fs.writeFile(path.join(projectRoot, ".silica/build-id.txt"), `${buildId}\n`);
+  await writeJson(
+    path.join(projectRoot, ".silica/search-index.json"),
+    searchIndex,
+  );
+  await fs.writeFile(
+    path.join(projectRoot, ".silica/build-id.txt"),
+    `${buildId}\n`,
+  );
   await writeSitemapAndRobots(projectRoot, config, manifest);
 
   if (config.wikilinks.strict && brokenLinks.length > 0) {
-    const message = brokenLinks.map((link) => `${link.source} -> ${link.target}`).join("\n");
+    const message = brokenLinks
+      .map((link) => `${link.source} -> ${link.target}`)
+      .join("\n");
     throw new Error(`Broken wikilinks detected:\n${message}`);
   }
 
@@ -93,43 +132,88 @@ export async function precompute(options: PrecomputeOptions = {}): Promise<Preco
   };
 }
 
-export async function getGitDates(projectRoot: string, relativePath: string): Promise<{ created?: Date; modified?: Date }> {
-  const normalizedPath = relativePath.replace(/\\/g, "/");
-  const logDates = await gitLogDates(projectRoot, normalizedPath);
-  if (logDates.length === 0) return {};
-
+function serializeManifest(
+  manifest: Manifest,
+): Omit<Manifest, "allSlugs" | "bySlug"> {
   return {
-    modified: logDates[0],
-    created: logDates.at(-1),
+    version: manifest.version,
+    generatedAt: manifest.generatedAt,
+    contentDir: manifest.contentDir,
+    entries: manifest.entries,
   };
 }
 
-async function gitLogDates(projectRoot: string, relativePath: string): Promise<Date[]> {
-  try {
-    const { stdout } = await execFileAsync("git", ["log", "--follow", "--format=%aI", "--", relativePath], {
-      cwd: projectRoot,
-      timeout: 2_000,
-    });
-    return stdout
-      .split(/\r?\n/)
-      .map((line) => line.trim())
-      .filter(Boolean)
-      .map((line) => new Date(line))
-      .filter((date) => !Number.isNaN(date.valueOf()));
-  } catch {
-    return [];
-  }
+export async function getGitDates(
+  projectRoot: string,
+  relativePath: string,
+): Promise<{ created?: Date; modified?: Date }> {
+  return (
+    (
+      await getGitDatesForFiles(projectRoot, [normalizeGitPath(relativePath)])
+    ).get(normalizeGitPath(relativePath)) ?? {}
+  );
 }
 
-function filterPublished(files: ContentMarkdownFile[], config: ResolvedSilicaConfig): ContentMarkdownFile[] {
+async function getGitDatesForFiles(
+  projectRoot: string,
+  relativePaths: string[],
+): Promise<Map<string, { created?: Date; modified?: Date }>> {
+  const wanted = new Set(relativePaths.map(normalizeGitPath));
+  const datesByPath = new Map<string, { created?: Date; modified?: Date }>();
+  if (wanted.size === 0) return datesByPath;
+
+  try {
+    const { stdout } = await execFileAsync(
+      "git",
+      ["log", "--format=__SILICA_COMMIT__%aI", "--name-only", "--", ...wanted],
+      {
+        cwd: projectRoot,
+        timeout: 2_000,
+      },
+    );
+    let commitDate: Date | undefined;
+    for (const line of stdout.split(/\r?\n/)) {
+      const trimmed = line.trim();
+      if (!trimmed) continue;
+      if (trimmed.startsWith("__SILICA_COMMIT__")) {
+        const parsed = new Date(trimmed.slice("__SILICA_COMMIT__".length));
+        commitDate = Number.isNaN(parsed.valueOf()) ? undefined : parsed;
+        continue;
+      }
+      const relativePath = normalizeGitPath(trimmed);
+      if (!commitDate || !wanted.has(relativePath)) continue;
+      const dates = datesByPath.get(relativePath) ?? {};
+      dates.modified ??= commitDate;
+      dates.created = commitDate;
+      datesByPath.set(relativePath, dates);
+    }
+  } catch {
+    return datesByPath;
+  }
+  return datesByPath;
+}
+
+function normalizeGitPath(relativePath: string): string {
+  return relativePath.replace(/\\/g, "/");
+}
+
+function filterPublished(
+  files: ContentMarkdownFile[],
+  config: ResolvedSilicaConfig,
+): ContentMarkdownFile[] {
   return files.filter((file) => {
-    if (config.filters.removeDrafts && file.frontmatter.draft === true) return false;
-    if (config.filters.explicitPublish && file.frontmatter.publish !== true) return false;
+    if (config.filters.removeDrafts && file.frontmatter.draft === true)
+      return false;
+    if (config.filters.explicitPublish && file.frontmatter.publish !== true)
+      return false;
     return true;
   });
 }
 
-function makeManifest(config: ResolvedSilicaConfig, entries: ManifestEntry[]): Manifest {
+function makeManifest(
+  config: ResolvedSilicaConfig,
+  entries: ManifestEntry[],
+): Manifest {
   const sorted = entries.sort((a, b) => a.slug.localeCompare(b.slug));
   return {
     version: 1,
@@ -141,7 +225,10 @@ function makeManifest(config: ResolvedSilicaConfig, entries: ManifestEntry[]): M
   };
 }
 
-function makeGraph(links: Record<string, string[]>, brokenLinks: BrokenLink[]): Graph {
+function makeGraph(
+  links: Record<string, string[]>,
+  brokenLinks: BrokenLink[],
+): Graph {
   const backlinks: Record<string, string[]> = {};
   for (const [source, targets] of Object.entries(links)) {
     links[source] = [...new Set(targets)].sort();
@@ -171,19 +258,35 @@ async function copyAssets(
   const destinationRoot = path.join(projectRoot, ".silica/next/public/silica");
   await fs.emptyDir(destinationRoot);
   for (const asset of assets) {
-    await fs.ensureDir(path.dirname(path.join(destinationRoot, asset.relativePath)));
-    await fs.copyFile(asset.absolutePath, path.join(destinationRoot, asset.relativePath));
+    await fs.ensureDir(
+      path.dirname(path.join(destinationRoot, asset.relativePath)),
+    );
+    await fs.copyFile(
+      asset.absolutePath,
+      path.join(destinationRoot, asset.relativePath),
+    );
   }
 
   await fs.ensureDir(path.join(projectRoot, ".silica/next/public"));
   await fs.writeFile(path.join(destinationRoot, ".gitkeep"), "");
 }
 
-async function writeSitemapAndRobots(projectRoot: string, config: ResolvedSilicaConfig, manifest: Manifest): Promise<void> {
+async function writeSitemapAndRobots(
+  projectRoot: string,
+  config: ResolvedSilicaConfig,
+  manifest: Manifest,
+): Promise<void> {
   const publicRoot = path.join(projectRoot, ".silica/next/public");
   await fs.ensureDir(publicRoot);
-  const baseUrl = (config.baseUrl ?? "http://localhost:3000").replace(/\/$/, "");
-  const urls = manifest.entries.map((entry) => `  <url><loc>${baseUrl}${slugToHref(entry.slug)}</loc></url>`).join("\n");
+  const baseUrl = (config.baseUrl ?? "http://localhost:3000").replace(
+    /\/$/,
+    "",
+  );
+  const urls = manifest.entries
+    .map(
+      (entry) => `  <url><loc>${baseUrl}${slugToHref(entry.slug)}</loc></url>`,
+    )
+    .join("\n");
   if (!(await fs.pathExists(path.join(projectRoot, "public/sitemap.xml")))) {
     await fs.writeFile(
       path.join(publicRoot, "sitemap.xml"),
@@ -191,7 +294,10 @@ async function writeSitemapAndRobots(projectRoot: string, config: ResolvedSilica
     );
   }
   if (!(await fs.pathExists(path.join(projectRoot, "public/robots.txt")))) {
-    await fs.writeFile(path.join(publicRoot, "robots.txt"), `User-agent: *\nAllow: /\nSitemap: ${baseUrl}/sitemap.xml\n`);
+    await fs.writeFile(
+      path.join(publicRoot, "robots.txt"),
+      `User-agent: *\nAllow: /\nSitemap: ${baseUrl}/sitemap.xml\n`,
+    );
   }
 }
 

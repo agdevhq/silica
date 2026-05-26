@@ -19,5 +19,18 @@ export async function getLayoutProps() {
     loadManifest(),
     loadResolvedConfig(),
   ]);
-  return { manifest, config };
+  return {
+    navigation: {
+      entries: manifest.entries.map((entry) => ({
+        slug: entry.slug,
+        title: entry.title,
+      })),
+    },
+    config: {
+      title: config.title,
+      description: config.description,
+      baseUrl: config.baseUrl,
+      authEnabled: Boolean(config.auth),
+    },
+  };
 }

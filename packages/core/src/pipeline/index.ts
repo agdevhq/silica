@@ -6,6 +6,7 @@ import remarkGfm from "remark-gfm";
 import remarkMath from "remark-math";
 import remarkRehype from "remark-rehype";
 import rehypeRaw from "rehype-raw";
+import rehypeSanitize, { defaultSchema } from "rehype-sanitize";
 import rehypeKatex from "rehype-katex";
 import rehypeSlug from "rehype-slug";
 import rehypeAutolinkHeadings from "rehype-autolink-headings";
@@ -77,6 +78,25 @@ const headingLinkIcon = {
   ],
 } as const;
 
+const sanitizeSchema = {
+  ...defaultSchema,
+  attributes: {
+    ...defaultSchema.attributes,
+    span: [
+      ...(defaultSchema.attributes?.span ?? []),
+      ["className", "silica-broken-link"],
+    ],
+    strong: [
+      ...(defaultSchema.attributes?.strong ?? []),
+      ["className", "silica-callout-title"],
+      ["dataCallout"],
+      ["data-callout"],
+    ],
+    mark: defaultSchema.attributes?.mark ?? [],
+  },
+  tagNames: [...(defaultSchema.tagNames ?? []), "mark"],
+};
+
 export async function renderMarkdown(
   raw: string,
   context: RenderContext,
@@ -85,14 +105,20 @@ export async function renderMarkdown(
   const transformed = transformObsidianMarkdown(parsed.content, context);
   const processor = baseProcessor()
     .use(rehypeRaw)
-    .use(rehypeKatex)
-    .use(rehypeShiki, {
+    .use(rehypeSanitize, sanitizeSchema)
+    .use(rehypeKatex);
+
+  if (hasCodeFence(transformed.markdown)) {
+    processor.use(rehypeShiki, {
       themes: {
         light: "github-light",
         dark: "github-dark",
       },
       defaultColor: "light-dark()",
-    })
+    });
+  }
+
+  processor
     .use(rehypeSlug)
     .use(rehypeAutolinkHeadings, {
       behavior: "wrap",
@@ -219,6 +245,10 @@ function extractPlainText(markdown: string): string {
     .replace(/[#>*_\-~`]+/g, " ")
     .replace(/\s+/g, " ")
     .trim();
+}
+
+function hasCodeFence(markdown: string): boolean {
+  return /(^|\n)(```|~~~)/.test(markdown);
 }
 
 function normalizeTag(tag: string): string {

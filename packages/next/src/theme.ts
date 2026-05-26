@@ -7,9 +7,23 @@ import type {
   TocItem,
 } from "@silicajs/core/runtime";
 
+export type ThemeNavigationEntry = {
+  slug: string;
+  title: string;
+};
+
+export type ThemeLayoutConfig = {
+  title: string;
+  description: string;
+  baseUrl?: string;
+  authEnabled: boolean;
+};
+
 export type ThemeLayoutProps = {
-  manifest: Manifest;
-  config: ResolvedSilicaConfig;
+  navigation: {
+    entries: ThemeNavigationEntry[];
+  };
+  config: ThemeLayoutConfig;
   children: React.ReactNode;
 };
 

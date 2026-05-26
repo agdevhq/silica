@@ -1,6 +1,6 @@
 import { precompute } from "@silicajs/core";
 import { materializeNextApp } from "./materialize.js";
-import { runNext, startNext } from "./next.js";
+import { runNext, runStart, startNext } from "./next.js";
 import { scaffoldProject } from "./scaffold.js";
 import { watchContent } from "./watch.js";
 
@@ -47,7 +47,7 @@ export async function buildCommand(): Promise<void> {
 
 export async function startCommand(): Promise<void> {
   const nextRoot = await materializeNextApp({ projectRoot: process.cwd() });
-  await runNext("start", nextRoot);
+  await runStart(nextRoot);
 }
 
 function reportBrokenLinks(links: Array<{ source: string; target: string }>): void {

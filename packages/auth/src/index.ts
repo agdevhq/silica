@@ -54,4 +54,6 @@ export function silicaAuth(options: SilicaAuthOptions = {}) {
 }
 
 export { hasAllowlist, isEmailAllowed };
+export { getSilicaSession, hasSilicaSessionCookie, isSilicaRequestAllowed } from "./session.js";
 export type { AllowlistConfig };
+export type { SilicaSession, SilicaSessionOptions } from "./session.js";

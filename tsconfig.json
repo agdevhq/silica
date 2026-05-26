@@ -10,10 +10,5 @@
     "examples/**/*.tsx",
     "vitest.config.ts"
   ],
-  "exclude": [
-    "node_modules",
-    "**/dist",
-    "**/.silica",
-    "**/.next"
-  ]
+  "exclude": ["node_modules", "**/dist", "**/.silica", "**/.next"]
 }

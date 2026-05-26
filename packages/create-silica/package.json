@@ -1,11 +1,11 @@
 {
-  "name": "@silicajs/create",
+  "name": "create-silica",
   "version": "0.1.0",
-  "description": "Scaffold a new Silica vault.",
+  "description": "User-facing npx wrapper for creating a Silica vault.",
   "type": "module",
   "license": "MIT",
   "bin": {
-    "silicajs-create": "./dist/index.js"
+    "create-silica": "./dist/index.js"
   },
   "exports": {
     ".": {
@@ -22,6 +22,6 @@
     "lint": "tsc --noEmit"
   },
   "dependencies": {
-    "@silicajs/cli": "0.1.0"
+    "@silicajs/create": "0.1.0"
   }
 }

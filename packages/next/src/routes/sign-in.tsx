@@ -9,9 +9,14 @@ export default async function SignInPage() {
       <h1>Sign in</h1>
       <p>Use your Google account to access {config.title}.</p>
       {authEnabled ? (
-        <a className="silica-primary-link" href="/api/auth/sign-in/google">
-          Continue with Google
-        </a>
+        <form action="/api/auth/sign-in/social" method="post">
+          <input type="hidden" name="provider" value="google" />
+          <input type="hidden" name="callbackURL" value="/" />
+          <input type="hidden" name="errorCallbackURL" value="/not-allowed" />
+          <button className="silica-primary-link" type="submit">
+            Continue with Google
+          </button>
+        </form>
       ) : (
         <p>Authentication is not enabled for this site.</p>
       )}

@@ -22,7 +22,7 @@ export {
   type SimpleSlug,
 } from "./path.js";
 export { analyzeMarkdown, getDescription, getTags, getTitle, renderMarkdown } from "./pipeline/index.js";
-export { precompute, type PrecomputeOptions } from "./precompute.js";
+export { getGitDates, precompute, type PrecomputeOptions } from "./precompute.js";
 export type {
   AnalyzeResult,
   BrokenLink,

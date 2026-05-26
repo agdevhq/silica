@@ -40,7 +40,8 @@ npm run dev
 | `@silicajs/auth` | Better Auth wrapper and allowlist helpers. |
 | `@silicajs/search` | FlexSearch index build/load/query helpers. |
 | `@silicajs/theme-default` | Default persistent-chrome theme. |
-| `create-silica` | `npx create-silica` wrapper around `silica create`. |
+| `@silicajs/create` | Internal scaffolder wrapper around `silica create`. |
+| `create-silica` | User-facing `npx create-silica` package. |
 
 ## Architecture
 

@@ -18,6 +18,8 @@ describe("silica CLI helpers", () => {
     expect(await fs.pathExists(path.join(root, "content/index.md"))).toBe(true);
     expect(await fs.pathExists(path.join(root, "silica.config.ts"))).toBe(true);
     expect(await fs.pathExists(path.join(root, ".github/workflows/deploy.yml"))).toBe(true);
+    expect(await fs.readFile(path.join(root, "Dockerfile"), "utf8")).toContain("find . -path '*/server.js'");
+    expect(await fs.readFile(path.join(root, ".github/workflows/deploy.yml"), "utf8")).toContain("Optional SSH deploy");
     expect(await fs.pathExists(path.join(root, "app"))).toBe(false);
     expect(await fs.pathExists(path.join(root, "next.config.ts"))).toBe(false);
   });

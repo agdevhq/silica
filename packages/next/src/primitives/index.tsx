@@ -1,3 +1,6 @@
+"use client";
+
+import { useEffect, useMemo, useState } from "react";
 import type { Graph, Manifest, TocItem } from "@silicajs/core/runtime";
 
 export type ExplorerProps = {
@@ -94,10 +97,29 @@ export function Backlinks({ graph, slug, manifest }: BacklinksProps) {
 }
 
 export function SearchTrigger() {
+  const [open, setOpen] = useState(false);
+
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") {
+        event.preventDefault();
+        setOpen((value) => !value);
+      }
+      if (event.key === "Escape") {
+        setOpen(false);
+      }
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, []);
+
   return (
-    <a className="silica-search-trigger" href="/api/search?q=">
-      Search <kbd>⌘K</kbd>
-    </a>
+    <>
+      <button className="silica-search-trigger" type="button" onClick={() => setOpen(true)}>
+        Search <kbd>⌘K</kbd>
+      </button>
+      {open ? <SearchPalette onClose={() => setOpen(false)} /> : null}
+    </>
   );
 }
 
@@ -105,23 +127,95 @@ export type SearchPaletteProps = {
   onClose?: () => void;
 };
 
-export function SearchPalette({ onClose: _onClose }: SearchPaletteProps) {
+type SearchResult = {
+  slug: string;
+  title: string;
+  excerpt: string;
+};
+
+export function SearchPalette({ onClose }: SearchPaletteProps) {
+  const [query, setQuery] = useState("");
+  const [results, setResults] = useState<SearchResult[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    const trimmed = query.trim();
+    if (!trimmed) {
+      setResults([]);
+      setIsLoading(false);
+      return () => controller.abort();
+    }
+
+    setIsLoading(true);
+    const timeout = window.setTimeout(() => {
+      fetch(`/api/search?q=${encodeURIComponent(trimmed)}`, { signal: controller.signal })
+        .then((response) => (response.ok ? response.json() : { results: [] }))
+        .then((payload: { results?: SearchResult[] }) => {
+          setResults(payload.results ?? []);
+        })
+        .catch((error: unknown) => {
+          if (error instanceof DOMException && error.name === "AbortError") return;
+          setResults([]);
+        })
+        .finally(() => setIsLoading(false));
+    }, 120);
+
+    return () => {
+      window.clearTimeout(timeout);
+      controller.abort();
+    };
+  }, [query]);
+
   return (
-    <div className="silica-search-overlay" role="dialog" aria-modal="true">
+    <div className="silica-search-overlay" role="dialog" aria-modal="true" onMouseDown={onClose}>
       <div className="silica-search-palette">
-        <form className="silica-search-row" action="/api/search">
-          <input name="q" placeholder="Search your vault…" />
-          <button type="submit">Search</button>
-        </form>
+        <div className="silica-search-row" onMouseDown={(event) => event.stopPropagation()}>
+          <input autoFocus name="q" placeholder="Search your vault…" value={query} onChange={(event) => setQuery(event.target.value)} />
+          <button type="button" onClick={onClose} aria-label="Close search">
+            ×
+          </button>
+        </div>
+        <ul onMouseDown={(event) => event.stopPropagation()}>
+          {isLoading ? <li className="silica-search-empty">Searching…</li> : null}
+          {!isLoading && query.trim() && results.length === 0 ? <li className="silica-search-empty">No results</li> : null}
+          {results.map((result) => (
+            <li key={result.slug}>
+              <a href={slugToHref(result.slug)} onClick={onClose}>
+                <strong>{result.title}</strong>
+                <span>{result.excerpt}</span>
+              </a>
+            </li>
+          ))}
+        </ul>
       </div>
     </div>
   );
 }
 
 export function DarkModeToggle() {
+  const [theme, setTheme] = useState<"light" | "dark">("light");
+
+  useEffect(() => {
+    const stored = window.localStorage.getItem("silica-theme");
+    const initial = stored === "dark" || stored === "light" ? stored : "light";
+    setTheme(initial);
+    document.documentElement.dataset.theme = initial;
+  }, []);
+
   return (
-    <button className="silica-dark-toggle" type="button" aria-label="Dark mode toggle">
-      Theme
+    <button
+      className="silica-dark-toggle"
+      type="button"
+      aria-label="Dark mode toggle"
+      onClick={() => {
+        const nextTheme = theme === "dark" ? "light" : "dark";
+        setTheme(nextTheme);
+        document.documentElement.dataset.theme = nextTheme;
+        window.localStorage.setItem("silica-theme", nextTheme);
+      }}
+    >
+      {theme === "dark" ? "Light" : "Dark"}
     </button>
   );
 }
@@ -156,7 +250,10 @@ export type TagsListProps = {
 };
 
 export function TagsList({ manifest, tag }: TagsListProps) {
-  const entries = manifest.entries.filter((entry) => entry.tags.includes(tag)).sort((a, b) => a.title.localeCompare(b.title));
+  const entries = useMemo(
+    () => manifest.entries.filter((entry) => entry.tags.includes(tag)).sort((a, b) => a.title.localeCompare(b.title)),
+    [manifest.entries, tag],
+  );
   return (
     <section className="silica-tag-list">
       <h1>#{tag}</h1>

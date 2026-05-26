@@ -1,3 +1,4 @@
+import { cpSync } from "node:fs";
 import { defineConfig } from "tsup";
 
 export default defineConfig({
@@ -6,6 +7,7 @@ export default defineConfig({
     "src/**/*.tsx",
     "!src/**/*.test.ts",
     "!src/**/*.test.tsx",
+    "!src/template-files/**/*",
   ],
   format: ["esm"],
   bundle: false,
@@ -26,6 +28,9 @@ export default defineConfig({
     "next/server",
     "react",
     "react-dom",
-    "react/jsx-runtime"
+    "react/jsx-runtime",
   ],
+  onSuccess: async () => {
+    cpSync("src/template-files", "dist/template-files", { recursive: true });
+  },
 });

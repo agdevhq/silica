@@ -1,0 +1,11 @@
+{
+  "private": true,
+  "name": ".silica-next",
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start"
+  }
+}

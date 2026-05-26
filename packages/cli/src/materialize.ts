@@ -1,6 +1,7 @@
 import path from "node:path";
 import fs from "fs-extra";
-import { getSilicaTemplates, nextConfigTemplate, packageJsonTemplate, tsconfigTemplate } from "@silicajs/next";
+import { loadConfig } from "@silicajs/core";
+import { getSilicaTemplates, nextConfigTemplate, packageJsonTemplate, themeModuleTemplate, tsconfigTemplate } from "@silicajs/next";
 
 export type MaterializeOptions = {
   projectRoot?: string;
@@ -10,6 +11,7 @@ export async function materializeNextApp(options: MaterializeOptions = {}): Prom
   const projectRoot = options.projectRoot ?? process.cwd();
   const nextRoot = path.join(projectRoot, ".silica/next");
   const publicRoot = path.join(nextRoot, "public");
+  const config = await loadConfig(projectRoot);
 
   await fs.ensureDir(nextRoot);
   await fs.remove(path.join(nextRoot, "app"));
@@ -22,6 +24,7 @@ export async function materializeNextApp(options: MaterializeOptions = {}): Prom
   }
 
   await fs.writeFile(path.join(nextRoot, "next.config.ts"), nextConfigTemplate());
+  await fs.writeFile(path.join(nextRoot, "silica-theme.ts"), themeModuleTemplate(config.theme));
   await fs.writeFile(path.join(nextRoot, "package.json"), packageJsonTemplate());
   await fs.writeFile(path.join(nextRoot, "tsconfig.json"), `${tsconfigTemplate(await fs.pathExists(path.join(projectRoot, "tsconfig.json")))}\n`);
   await fs.writeFile(path.join(nextRoot, "next-env.d.ts"), '/// <reference types="next" />\n/// <reference types="next/image-types/global" />\n');

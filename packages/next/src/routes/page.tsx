@@ -3,7 +3,7 @@ import { cacheLife, cacheTag } from "next/cache";
 import { notFound } from "next/navigation";
 import { renderMarkdown } from "@silicajs/core/runtime";
 import { loadBuildId, loadGraph, loadManifest, loadResolvedConfig, normalizeRouteSlug } from "../server-data.js";
-import { resolveTheme } from "../theme.js";
+import { resolveTheme, type SilicaTheme } from "../theme.js";
 
 export async function generateStaticParams() {
   const manifest = await getPageManifest();
@@ -40,7 +40,7 @@ export default async function Page({ params }: PageProps) {
   return <VaultContent slug={slug} />;
 }
 
-export async function VaultContent({ slug }: { slug: string }) {
+export async function VaultContent({ slug, theme: providedTheme }: { slug: string; theme?: SilicaTheme }) {
   "use cache";
   cacheLife("max");
   const buildId = await loadBuildId();
@@ -57,7 +57,7 @@ export async function VaultContent({ slug }: { slug: string }) {
     assetBaseUrl: "/silica",
     wikilinkStrategy: config.wikilinks.strategy,
   });
-  const theme = await resolveTheme(config);
+  const theme = providedTheme ?? (await resolveTheme(config));
 
   return (
     <theme.PageRenderer

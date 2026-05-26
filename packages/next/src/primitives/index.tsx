@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { Command } from "cmdk";
 import type { Graph, Manifest, TocItem } from "@silicajs/core/runtime";
 
 export type ExplorerProps = {
@@ -169,26 +170,34 @@ export function SearchPalette({ onClose }: SearchPaletteProps) {
 
   return (
     <div className="silica-search-overlay" role="dialog" aria-modal="true" onMouseDown={onClose}>
-      <div className="silica-search-palette">
+      <Command className="silica-search-palette" shouldFilter={false}>
         <div className="silica-search-row" onMouseDown={(event) => event.stopPropagation()}>
-          <input autoFocus name="q" placeholder="Search your vault…" value={query} onChange={(event) => setQuery(event.target.value)} />
+          <Command.Input
+            autoFocus
+            name="q"
+            placeholder="Search your vault…"
+            value={query}
+            onValueChange={setQuery}
+          />
           <button type="button" onClick={onClose} aria-label="Close search">
             ×
           </button>
         </div>
-        <ul onMouseDown={(event) => event.stopPropagation()}>
-          {isLoading ? <li className="silica-search-empty">Searching…</li> : null}
-          {!isLoading && query.trim() && results.length === 0 ? <li className="silica-search-empty">No results</li> : null}
+        <Command.List onMouseDown={(event) => event.stopPropagation()}>
+          {isLoading ? <Command.Loading className="silica-search-empty">Searching…</Command.Loading> : null}
+          {!isLoading && query.trim() && results.length === 0 ? (
+            <Command.Empty className="silica-search-empty">No results</Command.Empty>
+          ) : null}
           {results.map((result) => (
-            <li key={result.slug}>
+            <Command.Item key={result.slug} value={`${result.title} ${result.slug}`} asChild>
               <a href={slugToHref(result.slug)} onClick={onClose}>
                 <strong>{result.title}</strong>
                 <span>{result.excerpt}</span>
               </a>
-            </li>
+            </Command.Item>
           ))}
-        </ul>
-      </div>
+        </Command.List>
+      </Command>
     </div>
   );
 }

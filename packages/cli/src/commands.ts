@@ -3,7 +3,7 @@ import { reportBrokenWikilinks } from "./diagnostics.js";
 import { materializeNextApp } from "./materialize.js";
 import { runNext, runStart, startNext } from "./next.js";
 import { scaffoldProject } from "./scaffold.js";
-import { watchContent } from "./watch.js";
+import { resolveDevPort, watchContent } from "./watch.js";
 
 export async function createCommand(directory: string): Promise<void> {
   await scaffoldProject(directory);
@@ -21,8 +21,9 @@ export async function devCommand(): Promise<void> {
     const { subprocess } = await startNext("dev", nextRoot);
     const watcher = watchContent({
       projectRoot,
+      port: resolveDevPort(),
       onConfigChange: async () => {
-        console.log("[silica] silica.config.ts changed; restarting Next.js");
+        console.log("[silica] config or theme changed; restarting Next.js");
         shouldRestart = true;
         subprocess.kill("SIGTERM");
       },

@@ -8,7 +8,7 @@ export type WatchOptions = {
 };
 
 export function watchContent({ projectRoot, port = 3000, onConfigChange }: WatchOptions) {
-  const watcher = watch(["content/**/*", "silica.config.ts"], {
+  const watcher = watch(["content/**/*", "themes/**/*", "silica.config.ts"], {
     cwd: projectRoot,
     ignoreInitial: true,
   });
@@ -17,7 +17,7 @@ export function watchContent({ projectRoot, port = 3000, onConfigChange }: Watch
   watcher.on("all", (_event, filePath) => {
     pending ??= Promise.resolve()
       .then(async () => {
-        if (filePath === "silica.config.ts") {
+        if (requiresRestart(filePath)) {
           await onConfigChange?.();
           return;
         }
@@ -31,4 +31,13 @@ export function watchContent({ projectRoot, port = 3000, onConfigChange }: Watch
   });
 
   return watcher;
+}
+
+export function requiresRestart(filePath: string): boolean {
+  return filePath === "silica.config.ts" || filePath.startsWith("themes/");
+}
+
+export function resolveDevPort(env: NodeJS.ProcessEnv = process.env): number {
+  const parsed = Number(env.PORT);
+  return Number.isInteger(parsed) && parsed > 0 ? parsed : 3000;
 }

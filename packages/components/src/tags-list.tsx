@@ -3,6 +3,7 @@ import type { Manifest } from "@silicajs/core/runtime";
 
 import { TagBadge } from "@silicajs/ui/components/tag-badge";
 
+import { SilicaLink } from "./routing.js";
 import { slugToHref } from "./slug.js";
 
 export type TagsListProps = {
@@ -17,7 +18,7 @@ export function TagsList({ manifest, tag, className }: TagsListProps) {
       manifest.entries
         .filter((entry) => entry.tags.includes(tag))
         .sort((a, b) => a.title.localeCompare(b.title)),
-    [manifest.entries, tag]
+    [manifest.entries, tag],
   );
   const relatedTags = React.useMemo(() => {
     const counts = new Map<string, number>();
@@ -47,14 +48,24 @@ export function TagsList({ manifest, tag, className }: TagsListProps) {
       {relatedTags.length > 0 ? (
         <div className="mb-6 flex flex-wrap gap-2">
           {relatedTags.map((t) => (
-            <TagBadge key={t} tag={t} href={`/tags/${t}`} />
+            <TagBadge
+              key={t}
+              tag={t}
+              href={`/tags/${t}`}
+              render={
+                <SilicaLink
+                  href={`/tags/${t}`}
+                  className="cursor-pointer text-foreground/80 no-underline transition-colors hover:text-foreground"
+                />
+              }
+            />
           ))}
         </div>
       ) : null}
       <ul className="flex flex-col gap-2">
         {entries.map((entry) => (
           <li key={entry.slug}>
-            <a
+            <SilicaLink
               href={slugToHref(entry.slug)}
               className="block rounded-md px-3 py-2 transition-colors hover:bg-muted"
             >
@@ -64,7 +75,7 @@ export function TagsList({ manifest, tag, className }: TagsListProps) {
                   {entry.description}
                 </div>
               ) : null}
-            </a>
+            </SilicaLink>
           </li>
         ))}
       </ul>

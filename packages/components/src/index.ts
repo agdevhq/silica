@@ -14,6 +14,15 @@ export {
   type SearchTriggerProps,
 } from "./search.js";
 export {
+  SilicaLink,
+  SilicaRoutingProvider,
+  useSilicaRouting,
+  type SilicaLinkComponent,
+  type SilicaLinkProps,
+  type SilicaRoutingContextValue,
+  type SilicaRoutingProviderProps,
+} from "./routing.js";
+export {
   TableOfContents,
   type TableOfContentsProps,
 } from "./table-of-contents.js";

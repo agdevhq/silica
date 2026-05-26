@@ -17,6 +17,7 @@ import {
   SidebarMenuSub,
 } from "@silicajs/ui/components/sidebar";
 
+import { useSilicaRouting, type SilicaLinkComponent } from "./routing.js";
 import { prettySegment, slugToHref } from "./slug.js";
 
 const STORAGE_KEY = "silica-tree-expanded";
@@ -113,9 +114,11 @@ export type VaultTreeProps = {
 
 export function VaultTree({
   entries,
-  currentSlug,
+  currentSlug: currentSlugProp,
   showHomeLink = true,
 }: VaultTreeProps) {
+  const { Link, currentSlug: routedCurrentSlug } = useSilicaRouting();
+  const currentSlug = currentSlugProp ?? routedCurrentSlug;
   const { nodes, homeEntry } = React.useMemo(
     () => buildTreeFromEntries(entries),
     [entries],
@@ -163,7 +166,7 @@ export function VaultTree({
     <SidebarMenu>
       {showHomeLink ? (
         <SidebarMenuItem>
-          <SidebarMenuButton isActive={homeIsActive} render={<a href="/" />}>
+          <SidebarMenuButton isActive={homeIsActive} render={<Link href="/" />}>
             <span className="truncate">{homeEntry?.title ?? "Home"}</span>
           </SidebarMenuButton>
         </SidebarMenuItem>
@@ -175,6 +178,7 @@ export function VaultTree({
           activeId={activeId}
           expanded={expanded}
           onToggle={handleToggle}
+          Link={Link}
         />
       ))}
     </SidebarMenu>
@@ -186,6 +190,7 @@ type VaultTreeNodeProps = {
   activeId: string | undefined;
   expanded: Set<string>;
   onToggle: (id: string, open: boolean) => void;
+  Link: SilicaLinkComponent;
 };
 
 function VaultTreeNode({
@@ -193,6 +198,7 @@ function VaultTreeNode({
   activeId,
   expanded,
   onToggle,
+  Link,
 }: VaultTreeNodeProps) {
   const hasChildren = node.children.length > 0;
   const isActive = activeId === node.key;
@@ -205,7 +211,7 @@ function VaultTreeNode({
       <SidebarMenuItem>
         <SidebarMenuButton
           isActive={isActive}
-          {...(href ? { render: <a href={href} /> } : {})}
+          {...(href ? { render: <Link href={href} /> } : {})}
         >
           <span className="truncate">{label}</span>
         </SidebarMenuButton>
@@ -221,7 +227,7 @@ function VaultTreeNode({
           open={isOpen}
           onOpenChange={(open) => onToggle(node.key, open)}
         >
-          <SidebarMenuButton isActive={isActive} render={<a href={href} />}>
+          <SidebarMenuButton isActive={isActive} render={<Link href={href} />}>
             <span className="truncate">{label}</span>
           </SidebarMenuButton>
           <CollapsibleTrigger
@@ -243,6 +249,7 @@ function VaultTreeNode({
                   activeId={activeId}
                   expanded={expanded}
                   onToggle={onToggle}
+                  Link={Link}
                 />
               ))}
             </SidebarMenuSub>
@@ -274,6 +281,7 @@ function VaultTreeNode({
                 activeId={activeId}
                 expanded={expanded}
                 onToggle={onToggle}
+                Link={Link}
               />
             ))}
           </SidebarMenuSub>

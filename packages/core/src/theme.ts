@@ -5,7 +5,7 @@ import type {
   ManifestEntry,
   ResolvedSilicaConfig,
   TocItem,
-} from "@silicajs/core/runtime";
+} from "./types.js";
 
 export type ThemeNavigationEntry = {
   slug: string;
@@ -19,12 +19,17 @@ export type ThemeLayoutConfig = {
   authEnabled: boolean;
 };
 
+export type ThemeProviderComponent = (props: {
+  children: React.ReactNode;
+}) => React.ReactNode;
+
 export type ThemeLayoutProps = {
   navigation: {
     entries: ThemeNavigationEntry[];
   };
   config: ThemeLayoutConfig;
   children: React.ReactNode;
+  Provider?: ThemeProviderComponent;
 };
 
 export type ThemePage = {

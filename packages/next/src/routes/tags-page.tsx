@@ -1,6 +1,6 @@
 import { cacheLife } from "next/cache";
 import { notFound } from "next/navigation";
-import { TagsList } from "../primitives/index.js";
+import { TagsList } from "@silicajs/components";
 import { loadManifest } from "../server-data.js";
 
 export type TagsPageProps = {

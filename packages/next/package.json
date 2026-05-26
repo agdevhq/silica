@@ -1,7 +1,7 @@
 {
   "name": "@silicajs/next",
   "version": "0.1.0",
-  "description": "Next.js runtime, routes, primitives, templates, and proxy for Silica.",
+  "description": "Next.js runtime, routes, templates, and proxy for Silica.",
   "type": "module",
   "license": "MIT",
   "exports": {
@@ -49,10 +49,6 @@
       "types": "./dist/proxy.d.ts",
       "import": "./dist/proxy.js"
     },
-    "./primitives": {
-      "types": "./dist/primitives/index.d.ts",
-      "import": "./dist/primitives/index.js"
-    },
     "./theme": {
       "types": "./dist/theme.d.ts",
       "import": "./dist/theme.js"
@@ -76,10 +72,10 @@
   },
   "dependencies": {
     "@silicajs/auth": "0.1.0",
+    "@silicajs/components": "0.1.0",
     "@silicajs/core": "0.1.0",
     "@silicajs/search": "0.1.0",
     "better-auth": "^1.6.11",
-    "cmdk": "^1.1.1",
     "katex": "^0.17.0"
   },
   "peerDependencies": {

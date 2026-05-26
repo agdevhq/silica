@@ -1,4 +1,5 @@
 import "katex/dist/katex.min.css";
+import "@silicajs/theme-amethyst/styles.css";
 import type { ReactNode } from "react";
 import theme from "../silica-theme";
 import { getLayoutProps } from "@silicajs/next/routes/layout";

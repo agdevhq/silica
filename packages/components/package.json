@@ -1,37 +1,39 @@
 {
-  "name": "@silicajs/theme-default",
+  "name": "@silicajs/components",
   "version": "0.1.0",
-  "description": "Default polished Silica knowledge-base theme.",
+  "description": "Silica-aware, framework-agnostic React composables built on @silicajs/ui.",
   "type": "module",
   "license": "MIT",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
-    },
-    "./styles.css": "./dist/styles.css"
+    }
   },
   "files": [
     "dist"
   ],
   "scripts": {
-    "build": "tsup && cp src/styles.css dist/styles.css",
+    "build": "tsup",
     "dev": "tsup --watch",
-    "test": "vitest run --passWithNoTests",
     "typecheck": "tsc --noEmit",
-    "lint": "tsc --noEmit"
+    "lint": "tsc --noEmit",
+    "test": "vitest run --passWithNoTests"
   },
   "dependencies": {
-    "@silicajs/next": "0.1.0",
-    "@tailwindcss/postcss": "^4.3.0",
-    "tailwindcss": "^4.3.0"
+    "@silicajs/core": "0.1.0",
+    "@silicajs/ui": "0.1.0",
+    "lucide-react": "^1.16.0"
   },
   "peerDependencies": {
     "react": "^19.2.0",
     "react-dom": "^19.2.0"
   },
   "devDependencies": {
+    "@types/react": "^19.2.10",
+    "@types/react-dom": "^19.2.3",
     "react": "^19.2.6",
-    "react-dom": "^19.2.6"
+    "react-dom": "^19.2.6",
+    "tsup": "^8.5.1"
   }
 }

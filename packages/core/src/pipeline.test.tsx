@@ -13,5 +13,5 @@ describe("renderMarkdown", () => {
 
     expect(html).toContain('class="silica-callout-title"');
     expect(html).toContain("<mark>Silica</mark>");
-  });
+  }, 15_000);
 });

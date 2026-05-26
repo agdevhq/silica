@@ -1,6 +1,6 @@
 import { precompute } from "@silicajs/core";
 import { materializeNextApp } from "./materialize.js";
-import { runNext } from "./next.js";
+import { runNext, startNext } from "./next.js";
 import { scaffoldProject } from "./scaffold.js";
 import { watchContent } from "./watch.js";
 
@@ -11,10 +11,30 @@ export async function createCommand(directory: string): Promise<void> {
 
 export async function devCommand(): Promise<void> {
   const projectRoot = process.cwd();
-  const nextRoot = await materializeNextApp({ projectRoot });
-  await precompute({ projectRoot });
-  watchContent({ projectRoot });
-  await runNext("dev", nextRoot);
+  let shouldRestart = true;
+
+  while (shouldRestart) {
+    shouldRestart = false;
+    const nextRoot = await materializeNextApp({ projectRoot });
+    await precompute({ projectRoot });
+    const { subprocess } = await startNext("dev", nextRoot);
+    const watcher = watchContent({
+      projectRoot,
+      onConfigChange: async () => {
+        console.log("[silica] silica.config.ts changed; restarting Next.js");
+        shouldRestart = true;
+        subprocess.kill("SIGTERM");
+      },
+    });
+
+    try {
+      await subprocess;
+    } catch (error) {
+      if (!shouldRestart) throw error;
+    } finally {
+      await watcher.close();
+    }
+  }
 }
 
 export async function buildCommand(): Promise<void> {

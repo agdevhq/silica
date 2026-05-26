@@ -29,9 +29,13 @@ export function silicaAuth(options: SilicaAuthOptions = {}) {
       cookieCache: {
         enabled: true,
         maxAge: 7 * 24 * 60 * 60,
+        strategy: "jwe",
+        refreshCache: true,
       },
     },
     account: {
+      storeAccountCookie: true,
+      storeStateStrategy: "cookie",
       accountLinking: {
         enabled: false,
       },

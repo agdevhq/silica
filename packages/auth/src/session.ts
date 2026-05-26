@@ -19,7 +19,7 @@ export async function getSilicaSession(request: Request | Headers, options: Sili
   try {
     return await getCookieCache<SilicaSession>(request, {
       secret: options.secret ?? process.env.BETTER_AUTH_SECRET,
-      strategy: options.strategy ?? "compact",
+      strategy: options.strategy ?? "jwe",
     });
   } catch {
     return null;

@@ -1,5 +1,11 @@
-import type { ThemeLayoutProps, ThemePageProps } from "@silicajs/next/theme";
-import { Backlinks, Breadcrumbs, TableOfContents } from "@silicajs/components";
+import type { ReactNode } from "react";
+import type { ThemeLayoutProps, ThemePageProps } from "@silicajs/core/theme";
+import {
+  Backlinks,
+  Breadcrumbs,
+  SilicaLink,
+  TableOfContents,
+} from "@silicajs/components";
 import {
   SidebarInset,
   SidebarProvider,
@@ -7,6 +13,10 @@ import {
 } from "@silicajs/ui/components/sidebar";
 
 import { Sidebar } from "./sidebar.js";
+
+function DefaultProvider({ children }: { children: ReactNode }) {
+  return <>{children}</>;
+}
 
 const THEME_INIT_SCRIPT = String.raw`
 (function () {
@@ -27,28 +37,35 @@ const THEME_INIT_SCRIPT = String.raw`
 })();
 `;
 
-export function Layout({ navigation, config, children }: ThemeLayoutProps) {
+export function Layout({
+  navigation,
+  config,
+  children,
+  Provider = DefaultProvider,
+}: ThemeLayoutProps) {
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
       </head>
       <body className="min-h-svh bg-background font-sans text-foreground antialiased">
-        <SidebarProvider>
-          <Sidebar navigation={navigation} config={config} />
-          <SidebarInset>
-            <header className="sticky top-0 z-10 flex h-12 shrink-0 items-center gap-2 border-b border-border bg-background px-3 md:hidden">
-              <SidebarTrigger />
-              <a
-                href="/"
-                className="truncate text-sm font-semibold tracking-tight text-foreground"
-              >
-                {config.title}
-              </a>
-            </header>
-            {children}
-          </SidebarInset>
-        </SidebarProvider>
+        <Provider>
+          <SidebarProvider>
+            <Sidebar navigation={navigation} config={config} />
+            <SidebarInset>
+              <header className="sticky top-0 z-10 flex h-12 shrink-0 items-center gap-2 border-b border-border bg-background px-3 md:hidden">
+                <SidebarTrigger />
+                <SilicaLink
+                  href="/"
+                  className="truncate text-sm font-semibold tracking-tight text-foreground"
+                >
+                  {config.title}
+                </SilicaLink>
+              </header>
+              {children}
+            </SidebarInset>
+          </SidebarProvider>
+        </Provider>
       </body>
     </html>
   );
@@ -74,14 +91,14 @@ export function PageRenderer({ page, graph, manifest }: ThemePageProps) {
           {page.entry.tags.length > 0 ? (
             <div className="flex flex-wrap gap-2 pt-1">
               {page.entry.tags.map((tag) => (
-                <a
+                <SilicaLink
                   key={tag}
                   href={`/tags/${tag}`}
                   className="inline-flex h-6 items-center rounded-full border border-border px-2 text-xs text-muted-foreground transition-colors hover:border-primary/40 hover:text-foreground"
                 >
                   <span className="text-muted-foreground/70">#</span>
                   <span className="ml-0.5">{tag}</span>
-                </a>
+                </SilicaLink>
               ))}
             </div>
           ) : null}

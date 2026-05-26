@@ -19,6 +19,7 @@ import {
 import { Button } from "@silicajs/ui/components/button";
 import { SearchIcon } from "lucide-react";
 
+import { useSilicaRouting } from "./routing.js";
 import { slugToHref } from "./slug.js";
 
 type SearchResult = {
@@ -58,7 +59,10 @@ export function SearchTrigger({
         onClick={() => setOpen(true)}
         className={className}
       >
-        <SearchIcon data-icon="inline-start" className="text-muted-foreground" />
+        <SearchIcon
+          data-icon="inline-start"
+          className="text-muted-foreground"
+        />
         <span className="flex-1 text-left text-muted-foreground">
           {placeholder}
         </span>
@@ -80,6 +84,7 @@ export type SearchPaletteProps = {
 };
 
 export function SearchPalette({ open, onOpenChange }: SearchPaletteProps) {
+  const { navigate } = useSilicaRouting();
   const [query, setQuery] = React.useState("");
   const [results, setResults] = React.useState<SearchResult[]>([]);
   const [isLoading, setIsLoading] = React.useState(false);
@@ -111,7 +116,8 @@ export function SearchPalette({ open, onOpenChange }: SearchPaletteProps) {
           setResults(payload.results ?? []);
         })
         .catch((error: unknown) => {
-          if (error instanceof DOMException && error.name === "AbortError") return;
+          if (error instanceof DOMException && error.name === "AbortError")
+            return;
           setResults([]);
         })
         .finally(() => setIsLoading(false));
@@ -156,7 +162,7 @@ export function SearchPalette({ open, onOpenChange }: SearchPaletteProps) {
                 key={result.slug}
                 value={`${result.title} ${result.slug}`}
                 onSelect={() => {
-                  window.location.href = slugToHref(result.slug);
+                  navigate(slugToHref(result.slug));
                   close();
                 }}
               >

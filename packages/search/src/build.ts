@@ -1,5 +1,10 @@
 import { Document } from "flexsearch";
-import type { SearchIndexConfig, SearchRecord, SerializedSearchIndex } from "./types.js";
+import type {
+  SearchIndexConfig,
+  SearchRecord,
+  SerializedSearchIndex,
+} from "./types.js";
+import { makeExcerpt } from "./excerpt.js";
 
 export const DEFAULT_SEARCH_CONFIG: SearchIndexConfig = {
   tokenize: "forward",
@@ -10,11 +15,17 @@ export const DEFAULT_SEARCH_CONFIG: SearchIndexConfig = {
   },
 };
 
-export function createSearchDocument(config: SearchIndexConfig = DEFAULT_SEARCH_CONFIG): Document {
-  return new Document(config as unknown as ConstructorParameters<typeof Document>[0]);
+export function createSearchDocument(
+  config: SearchIndexConfig = DEFAULT_SEARCH_CONFIG,
+): Document {
+  return new Document(
+    config as unknown as ConstructorParameters<typeof Document>[0],
+  );
 }
 
-export async function buildSearchIndex(records: SearchRecord[]): Promise<SerializedSearchIndex> {
+export async function buildSearchIndex(
+  records: SearchRecord[],
+): Promise<SerializedSearchIndex> {
   const index = createSearchDocument();
 
   for (const record of records) {
@@ -32,7 +43,10 @@ export async function buildSearchIndex(records: SearchRecord[]): Promise<Seriali
   return {
     version: 1,
     config: DEFAULT_SEARCH_CONFIG,
-    records,
+    records: records.map(({ content, ...record }) => ({
+      ...record,
+      excerpt: makeExcerpt(content, record.description ?? record.title),
+    })),
     exported,
     builtAt: new Date().toISOString(),
   };

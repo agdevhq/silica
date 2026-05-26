@@ -10,7 +10,10 @@ export type OfmTransformResult = {
 const WIKI_EMBED = /!\[\[([^\]]+)]]/g;
 const WIKI_LINK = /\[\[([^\]]+)]]/g;
 
-export function transformObsidianMarkdown(markdown: string, context: RenderContext): OfmTransformResult {
+export function transformObsidianMarkdown(
+  markdown: string,
+  context: RenderContext,
+): OfmTransformResult {
   const links = new Set<string>();
   const brokenLinks: BrokenLink[] = [];
   const assetBase = context.assetBaseUrl ?? "/silica";
@@ -26,21 +29,26 @@ export function transformObsidianMarkdown(markdown: string, context: RenderConte
         return `![${alt}](${src})`;
       }
       const resolved = resolveLinkedSlug(target, context, brokenLinks);
-      if (!resolved) return `<span class="silica-broken-link">${label || target}</span>`;
+      if (!resolved)
+        return `<span class="silica-broken-link">${escapeHtml(label || target)}</span>`;
       links.add(resolved);
       return `[${label || target}](${slugToHref(resolved)})`;
     })
     .replace(WIKI_LINK, (_match, inner: string) => {
       const [target, label] = splitWikiTarget(inner);
       const resolved = resolveLinkedSlug(target, context, brokenLinks);
-      if (!resolved) return `<span class="silica-broken-link">${label || target}</span>`;
+      if (!resolved)
+        return `<span class="silica-broken-link">${escapeHtml(label || target)}</span>`;
       links.add(resolved);
       return `[${label || target}](${slugToHref(resolved)})`;
     })
-    .replace(/^> \[!(\w+)]\s*(.*)$/gm, (_match, kind: string, title: string) => {
-      const display = title || kind[0]!.toUpperCase() + kind.slice(1);
-      return `> <strong class="silica-callout-title" data-callout="${kind.toLowerCase()}">${display}</strong>`;
-    });
+    .replace(
+      /^> \[!(\w+)]\s*(.*)$/gm,
+      (_match, kind: string, title: string) => {
+        const display = title || kind[0]!.toUpperCase() + kind.slice(1);
+        return `> <strong class="silica-callout-title" data-callout="${kind.toLowerCase()}">${escapeHtml(display)}</strong>`;
+      },
+    );
 
   transformed = rewriteRelativeAssets(transformed, assetBase);
 
@@ -56,7 +64,11 @@ function splitWikiTarget(inner: string): [string, string?] {
   return [(target ?? "").trim(), label?.trim()];
 }
 
-function resolveLinkedSlug(target: string, context: RenderContext, brokenLinks: BrokenLink[]): string | undefined {
+function resolveLinkedSlug(
+  target: string,
+  context: RenderContext,
+  brokenLinks: BrokenLink[],
+): string | undefined {
   const resolved = resolveWikiLink(
     context.slug,
     target,
@@ -77,8 +89,20 @@ function isAssetTarget(target: string): boolean {
 }
 
 function rewriteRelativeAssets(markdown: string, assetBase: string): string {
-  return markdown.replace(/(!?\[[^\]]*])\((?!https?:|#|\/)([^)]+)\)/g, (match, label: string, target: string) => {
-    if (!isAssetTarget(target)) return match;
-    return `${label}(${assetBase}/${target.replace(/^\.?\//, "")})`;
-  });
+  return markdown.replace(
+    /(!?\[[^\]]*])\((?!https?:|#|\/)([^)]+)\)/g,
+    (match, label: string, target: string) => {
+      if (!isAssetTarget(target)) return match;
+      return `${label}(${assetBase}/${target.replace(/^\.?\//, "")})`;
+    },
+  );
+}
+
+function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
 }

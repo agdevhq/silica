@@ -5,6 +5,7 @@ import {
   getSilicaTemplates,
   nextConfigTemplate,
   packageJsonTemplate,
+  proxyTemplate,
   themeModuleTemplate,
   tsconfigTemplate,
 } from "@silicajs/next";
@@ -13,7 +14,9 @@ export type MaterializeOptions = {
   projectRoot?: string;
 };
 
-export async function materializeNextApp(options: MaterializeOptions = {}): Promise<string> {
+export async function materializeNextApp(
+  options: MaterializeOptions = {},
+): Promise<string> {
   const projectRoot = options.projectRoot ?? process.cwd();
   const nextRoot = path.join(projectRoot, ".silica/next");
   const publicRoot = path.join(nextRoot, "public");
@@ -29,19 +32,40 @@ export async function materializeNextApp(options: MaterializeOptions = {}): Prom
     await fs.writeFile(destination, template.content);
   }
 
-  await fs.writeFile(path.join(nextRoot, "next.config.ts"), nextConfigTemplate());
-  await fs.writeFile(path.join(nextRoot, "silica-theme.ts"), themeModuleTemplate(config.theme));
-  await fs.writeFile(path.join(nextRoot, "package.json"), packageJsonTemplate());
-  await fs.writeFile(path.join(nextRoot, "tsconfig.json"), `${tsconfigTemplate(await fs.pathExists(path.join(projectRoot, "tsconfig.json")))}\n`);
-  await fs.writeFile(path.join(nextRoot, "next-env.d.ts"), '/// <reference types="next" />\n/// <reference types="next/image-types/global" />\n');
+  await fs.writeFile(
+    path.join(nextRoot, "next.config.ts"),
+    nextConfigTemplate(),
+  );
+  await fs.writeFile(path.join(nextRoot, "proxy.ts"), proxyTemplate(config));
+  await fs.writeFile(
+    path.join(nextRoot, "silica-theme.ts"),
+    themeModuleTemplate(config.theme),
+  );
+  await fs.writeFile(
+    path.join(nextRoot, "package.json"),
+    packageJsonTemplate(),
+  );
+  await fs.writeFile(
+    path.join(nextRoot, "tsconfig.json"),
+    `${tsconfigTemplate(await fs.pathExists(path.join(projectRoot, "tsconfig.json")))}\n`,
+  );
+  await fs.writeFile(
+    path.join(nextRoot, "next-env.d.ts"),
+    '/// <reference types="next" />\n/// <reference types="next/image-types/global" />\n',
+  );
   await syncEnvFiles(projectRoot, nextRoot);
   await overlayPublic(projectRoot, publicRoot);
   return nextRoot;
 }
 
-async function syncEnvFiles(projectRoot: string, nextRoot: string): Promise<void> {
+async function syncEnvFiles(
+  projectRoot: string,
+  nextRoot: string,
+): Promise<void> {
   const entries = await fs.readdir(projectRoot).catch(() => []);
-  for (const entry of entries.filter((name) => name === ".env" || name.startsWith(".env."))) {
+  for (const entry of entries.filter(
+    (name) => name === ".env" || name.startsWith(".env."),
+  )) {
     const source = path.join(projectRoot, entry);
     const destination = path.join(nextRoot, entry);
     await fs.remove(destination);
@@ -53,7 +77,10 @@ async function syncEnvFiles(projectRoot: string, nextRoot: string): Promise<void
   }
 }
 
-async function overlayPublic(projectRoot: string, publicRoot: string): Promise<void> {
+async function overlayPublic(
+  projectRoot: string,
+  publicRoot: string,
+): Promise<void> {
   const sourceRoot = path.join(projectRoot, "public");
   if (!(await fs.pathExists(sourceRoot))) return;
   await fs.ensureDir(publicRoot);
@@ -63,7 +90,11 @@ async function overlayPublic(projectRoot: string, publicRoot: string): Promise<v
     const destination = path.join(publicRoot, entry);
     await fs.remove(destination);
     try {
-      await fs.symlink(source, destination, (await fs.stat(source)).isDirectory() ? "dir" : "file");
+      await fs.symlink(
+        source,
+        destination,
+        (await fs.stat(source)).isDirectory() ? "dir" : "file",
+      );
     } catch {
       await fs.copy(source, destination);
     }

@@ -1,6 +1,10 @@
-import { makeExcerpt, normalizeSearchText } from "./excerpt.js";
+import { normalizeSearchText } from "./excerpt.js";
 import type { LoadedSearchIndex } from "./load.js";
-import type { SearchQueryOptions, SearchRecord, SearchResult } from "./types.js";
+import type {
+  SearchQueryOptions,
+  SearchResult,
+  StoredSearchRecord,
+} from "./types.js";
 
 type FlexDocumentResult = {
   field?: string;
@@ -16,7 +20,9 @@ export function querySearchIndex(
   if (!normalized) return [];
 
   const limit = options.limit ?? 10;
-  const tagFilter = new Set((options.tags ?? []).map((tag) => tag.toLowerCase()));
+  const tagFilter = new Set(
+    (options.tags ?? []).map((tag) => tag.toLowerCase()),
+  );
   const rawResults = loaded.document.search(normalized, {
     limit: Math.max(limit * 4, 20),
     enrich: false,
@@ -24,36 +30,38 @@ export function querySearchIndex(
 
   const scoreById = new Map<string, number>();
   for (const fieldResult of rawResults) {
-    const fieldWeight = fieldResult.field === "title" ? 5 : fieldResult.field === "tags" ? 3 : 1;
+    const fieldWeight =
+      fieldResult.field === "title" ? 5 : fieldResult.field === "tags" ? 3 : 1;
     for (const id of fieldResult.result) {
       const key = String(id);
       scoreById.set(key, (scoreById.get(key) ?? 0) + fieldWeight);
     }
   }
 
-  const recordsById = new Map(loaded.artifact.records.map((record) => [record.id, record]));
-
   return [...scoreById.entries()]
     .map(([id, score]) => {
-      const record = recordsById.get(id);
+      const record = loaded.recordsById.get(id);
       if (!record) return undefined;
-      if (tagFilter.size > 0 && !record.tags.some((tag) => tagFilter.has(tag.toLowerCase()))) {
+      if (
+        tagFilter.size > 0 &&
+        !record.tags.some((tag) => tagFilter.has(tag.toLowerCase()))
+      ) {
         return undefined;
       }
-      return toResult(record, normalized, score);
+      return toResult(record, score);
     })
     .filter((result): result is SearchResult => Boolean(result))
     .sort((a, b) => b.score - a.score || a.title.localeCompare(b.title))
     .slice(0, limit);
 }
 
-function toResult(record: SearchRecord, query: string, score: number): SearchResult {
+function toResult(record: StoredSearchRecord, score: number): SearchResult {
   return {
     slug: record.slug,
     title: record.title,
     description: record.description,
     tags: record.tags,
-    excerpt: makeExcerpt(record.content, query),
+    excerpt: record.excerpt,
     score,
   };
 }

@@ -1,5 +1,22 @@
-export { analyzeMarkdown, getDescription, getTags, getTitle, renderMarkdown } from "./pipeline/index.js";
-export { hrefToSlug, resolveWikiLink, simplifySlug, slugToHref } from "./path.js";
+export {
+  formatPropertyLabel,
+  formatPropertyValue,
+  getPageProperties,
+  type PageProperty,
+} from "./pipeline/frontmatter.js";
+export {
+  analyzeMarkdown,
+  getDescription,
+  getTags,
+  getTitle,
+  renderMarkdown,
+} from "./pipeline/index.js";
+export {
+  hrefToSlug,
+  resolveWikiLink,
+  simplifySlug,
+  slugToHref,
+} from "./path.js";
 export type {
   AnalyzeResult,
   BrokenLink,

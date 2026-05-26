@@ -6,6 +6,7 @@ import {
   Breadcrumbs,
   DarkModeToggle,
   Explorer,
+  PageProperties,
   SearchTrigger,
   TableOfContents,
   UserMenu,
@@ -58,6 +59,7 @@ export function PageRenderer({ page, graph, manifest }: ThemePageProps) {
               ))}
             </div>
           ) : null}
+          <PageProperties frontmatter={page.frontmatter} />
         </header>
         <div className="silica-content">{page.content}</div>
         <Backlinks graph={graph} slug={page.slug} manifest={manifest} />

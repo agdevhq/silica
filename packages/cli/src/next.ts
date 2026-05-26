@@ -8,7 +8,10 @@ export type NextSubprocess = {
   subprocess: ResultPromise;
 };
 
-export async function runNext(command: NextCommand, nextRoot: string): Promise<void> {
+export async function runNext(
+  command: NextCommand,
+  nextRoot: string,
+): Promise<void> {
   const { subprocess } = await startNext(command, nextRoot);
   await subprocess;
 }
@@ -20,6 +23,7 @@ export async function runStart(nextRoot: string): Promise<void> {
     return;
   }
 
+  await prepareStandaloneAssets(nextRoot, standaloneServer);
   installStackTraceRewrite(nextRoot);
   const subprocess = execa("node", [standaloneServer], {
     stdin: "inherit",
@@ -37,7 +41,10 @@ export async function runStart(nextRoot: string): Promise<void> {
   await subprocess;
 }
 
-export async function startNext(command: NextCommand, nextRoot: string): Promise<NextSubprocess> {
+export async function startNext(
+  command: NextCommand,
+  nextRoot: string,
+): Promise<NextSubprocess> {
   installStackTraceRewrite(nextRoot);
   const subprocess = execa("next", [command, nextRoot], {
     stdin: "inherit",
@@ -56,21 +63,43 @@ export async function startNext(command: NextCommand, nextRoot: string): Promise
   return { subprocess };
 }
 
-export async function findStandaloneServer(nextRoot: string): Promise<string | undefined> {
+export async function findStandaloneServer(
+  nextRoot: string,
+): Promise<string | undefined> {
   const standaloneRoot = path.join(nextRoot, ".next/standalone");
   if (!(await fs.pathExists(standaloneRoot))) return undefined;
   return findFile(standaloneRoot, "server.js");
 }
 
+export async function prepareStandaloneAssets(
+  nextRoot: string,
+  standaloneServer: string,
+): Promise<void> {
+  const serverRoot = path.dirname(standaloneServer);
+  await syncStandaloneAsset(
+    path.join(nextRoot, ".next/static"),
+    path.join(serverRoot, ".next/static"),
+  );
+  await syncStandaloneAsset(
+    path.join(nextRoot, "public"),
+    path.join(serverRoot, "public"),
+  );
+}
+
 export function installStackTraceRewrite(nextRoot: string): void {
   const previous = Error.prepareStackTrace;
   Error.prepareStackTrace = (error, stack) => {
-    const rendered = previous ? previous(error, stack) : `${error.name}: ${error.message}\n${stack.join("\n")}`;
+    const rendered = previous
+      ? previous(error, stack)
+      : `${error.name}: ${error.message}\n${stack.join("\n")}`;
     return rewriteFrameworkPaths(String(rendered), nextRoot);
   };
 }
 
-export function rewriteFrameworkPaths(output: string, nextRoot: string): string {
+export function rewriteFrameworkPaths(
+  output: string,
+  nextRoot: string,
+): string {
   const normalizedRoot = nextRoot.replace(/\\/g, "/");
   const escapedWindowsRoot = normalizedRoot.replace(/\//g, "\\");
   return output
@@ -91,7 +120,26 @@ async function makeNextEnv(): Promise<NodeJS.ProcessEnv> {
   };
 }
 
-async function findFile(root: string, filename: string): Promise<string | undefined> {
+async function syncStandaloneAsset(
+  source: string,
+  destination: string,
+): Promise<void> {
+  if (!(await fs.pathExists(source))) return;
+  if (path.resolve(source) === path.resolve(destination)) return;
+
+  await fs.remove(destination);
+  await fs.ensureDir(path.dirname(destination));
+  try {
+    await fs.symlink(source, destination, "dir");
+  } catch {
+    await fs.copy(source, destination);
+  }
+}
+
+async function findFile(
+  root: string,
+  filename: string,
+): Promise<string | undefined> {
   const entries = await fs.readdir(root, { withFileTypes: true });
   for (const entry of entries) {
     const absolute = path.join(root, entry.name);

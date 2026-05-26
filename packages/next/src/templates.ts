@@ -7,7 +7,7 @@ export function getSilicaTemplates(): TemplateFile[] {
   return [
     {
       path: "app/layout.tsx",
-      content: `import "@silicajs/theme-default/styles.css";\nimport type { ReactNode } from "react";\nimport theme from "../silica-theme";\nimport { getLayoutProps } from "@silicajs/next/routes/layout";\nexport { generateMetadata } from "@silicajs/next/routes/layout";\n\nexport default async function RootLayout({ children }: { children: ReactNode }) {\n  const props = await getLayoutProps();\n  return <theme.Layout {...props}>{children}</theme.Layout>;\n}\n`,
+      content: `import "katex/dist/katex.min.css";\nimport "@silicajs/theme-default/styles.css";\nimport type { ReactNode } from "react";\nimport theme from "../silica-theme";\nimport { getLayoutProps } from "@silicajs/next/routes/layout";\nexport { generateMetadata } from "@silicajs/next/routes/layout";\n\nexport default async function RootLayout({ children }: { children: ReactNode }) {\n  const props = await getLayoutProps();\n  return <theme.Layout {...props}>{children}</theme.Layout>;\n}\n`,
     },
     {
       path: "app/[[...slug]]/page.tsx",

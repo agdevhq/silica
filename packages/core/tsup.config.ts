@@ -8,6 +8,7 @@ export default defineConfig({
   clean: true,
   external: [
     "@silicajs/search",
+    "@shikijs/rehype",
     "fast-glob",
     "fs-extra",
     "github-slugger",

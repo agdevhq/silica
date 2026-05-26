@@ -14,7 +14,9 @@
       "import": "./dist/runtime.js"
     }
   },
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "build": "tsup",
     "dev": "tsup --watch",
@@ -23,6 +25,7 @@
     "lint": "tsc --noEmit"
   },
   "dependencies": {
+    "@shikijs/rehype": "^4.1.0",
     "@silicajs/search": "0.1.0",
     "fast-glob": "^3.3.3",
     "fs-extra": "^11.3.5",

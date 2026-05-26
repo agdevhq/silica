@@ -8,6 +8,7 @@ import remarkRehype from "remark-rehype";
 import rehypeKatex from "rehype-katex";
 import rehypeSlug from "rehype-slug";
 import rehypeAutolinkHeadings from "rehype-autolink-headings";
+import rehypeShiki from "@shikijs/rehype";
 import rehypeReact from "rehype-react";
 import { Fragment, jsx, jsxs } from "react/jsx-runtime";
 import { visit } from "unist-util-visit";
@@ -26,6 +27,12 @@ export async function renderMarkdown(raw: string, context: RenderContext): Promi
   const transformed = transformObsidianMarkdown(parsed.content, context);
   const processor = baseProcessor()
     .use(rehypeKatex)
+    .use(rehypeShiki, {
+      themes: {
+        light: "github-light",
+        dark: "github-dark",
+      },
+    })
     .use(rehypeSlug)
     .use(rehypeAutolinkHeadings, { behavior: "wrap" })
     .use(rehypeCollectTocAndLinks)

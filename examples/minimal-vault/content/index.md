@@ -17,3 +17,5 @@ Open [[notes/auth|Auth notes]] or [[notes/search|Search notes]] to explore links
 const framework = "Silica";
 console.log(`${framework} renders markdown at request time and caches it.`);
 ```
+
+Inline math works too: $E = mc^2$.

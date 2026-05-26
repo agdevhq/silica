@@ -11,7 +11,9 @@
     },
     "./styles.css": "./dist/styles.css"
   },
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "build": "tsup && cp src/styles.css dist/styles.css",
     "dev": "tsup --watch",
@@ -20,7 +22,9 @@
     "lint": "tsc --noEmit"
   },
   "dependencies": {
-    "@silicajs/next": "0.1.0"
+    "@silicajs/next": "0.1.0",
+    "@tailwindcss/postcss": "^4.3.0",
+    "tailwindcss": "^4.3.0"
   },
   "peerDependencies": {
     "react": "^19.2.0",

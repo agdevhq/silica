@@ -44,7 +44,7 @@ export async function VaultContent({ slug, theme: providedTheme }: { slug: strin
   "use cache";
   cacheLife("max");
   const buildId = await loadBuildId();
-  cacheTag(`build:${buildId}`, `page:${slug}`);
+  cacheTag("build", `build:${buildId}`, `page:${slug}`);
 
   const [manifest, graph, config] = await Promise.all([loadManifest(), loadGraph(), loadResolvedConfig()]);
   const entry = manifest.bySlug[slug];

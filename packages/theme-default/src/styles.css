@@ -341,6 +341,12 @@ a {
   font-size: 0.875rem;
 }
 
+.silica-search-empty {
+  padding: 0.85rem;
+  color: var(--silica-muted);
+  font-size: 0.9rem;
+}
+
 .silica-status-page {
   max-width: 36rem;
   margin: 12vh auto;

@@ -73,3 +73,28 @@ The dogfood fixture lives in `examples/minimal-vault`.
 - `content/`
 
 This keeps runtime content rendering available while serving through a minimal Node image.
+
+### Docker
+
+Projects scaffolded with `silica create` include a Dockerfile:
+
+```bash
+docker build -t my-silica-site .
+docker run --env-file .env -p 3000:3000 my-silica-site
+```
+
+The generated image starts the traced Next.js standalone `server.js` and serves `.silica/next/public` plus vault assets under `/silica/*`.
+
+### Plain Node
+
+```bash
+npm ci
+npm run build
+npm run start
+```
+
+`silica start` runs the standalone output when present, falling back to `next start` for development-like environments.
+
+### Railway / Fly.io
+
+Use the scaffolded Dockerfile as the deployment target. Configure the same environment variables as `.env.example` (`BETTER_AUTH_SECRET`, `BETTER_AUTH_URL`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`) in the platform dashboard. For Fly.io, expose internal port `3000`; for Railway, the container listens on `$PORT`/`3000` through the Next server.

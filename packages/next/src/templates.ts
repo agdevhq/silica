@@ -7,11 +7,11 @@ export function getSilicaTemplates(): TemplateFile[] {
   return [
     {
       path: "app/layout.tsx",
-      content: `import "@silicajs/theme-default/styles.css";\nexport { default, generateMetadata } from "@silicajs/next/routes/layout";\n`,
+      content: `import "@silicajs/theme-default/styles.css";\nimport type { ReactNode } from "react";\nimport theme from "../silica-theme";\nimport { getLayoutProps } from "@silicajs/next/routes/layout";\nexport { generateMetadata } from "@silicajs/next/routes/layout";\n\nexport default async function RootLayout({ children }: { children: ReactNode }) {\n  const props = await getLayoutProps();\n  return <theme.Layout {...props}>{children}</theme.Layout>;\n}\n`,
     },
     {
       path: "app/[[...slug]]/page.tsx",
-      content: `export { default, generateMetadata, generateStaticParams } from "@silicajs/next/routes/page";\n`,
+      content: `import theme from "../../silica-theme";\nimport { VaultContent } from "@silicajs/next/routes/page";\nexport { generateMetadata, generateStaticParams } from "@silicajs/next/routes/page";\n\nexport default async function Page({ params }: { params: Promise<{ slug?: string[] }> | { slug?: string[] } }) {\n  const resolvedParams = await params;\n  const slug = resolvedParams?.slug?.length ? resolvedParams.slug.join("/") : "index";\n  return <VaultContent slug={slug} theme={theme} />;\n}\n`,
     },
     {
       path: "app/tags/[tag]/page.tsx",
@@ -50,6 +50,24 @@ export function getSilicaTemplates(): TemplateFile[] {
 
 export function nextConfigTemplate(): string {
   return `import type { NextConfig } from "next";\n\nconst nextConfig: NextConfig = {\n  cacheComponents: true,\n  output: "standalone",\n  transpilePackages: [\n    "@silicajs/core",\n    "@silicajs/next",\n    "@silicajs/auth",\n    "@silicajs/search",\n    "@silicajs/theme-default"\n  ],\n  serverExternalPackages: ["flexsearch"],\n  outputFileTracingIncludes: {\n    "/*": ["../../content/**/*", "../manifest.json", "../graph.json", "../search-index.json", "../build-id.txt"]\n  },\n  experimental: {\n    externalDir: true,\n    serverSourceMaps: true\n  },\n};\n\nexport default nextConfig;\n`;
+}
+
+export function themeModuleTemplate(themeValue: unknown): string {
+  const themeName =
+    typeof themeValue === "object" && themeValue !== null && "name" in themeValue
+      ? String((themeValue as { name?: string }).name ?? "default")
+      : typeof themeValue === "string"
+        ? themeValue
+        : "default";
+
+  const specifier =
+    !themeName || themeName === "default"
+      ? "@silicajs/theme-default"
+      : themeName.startsWith(".")
+        ? `../../${themeName.replace(/^\.\//, "")}`
+        : themeName;
+
+  return `import * as themeModule from ${JSON.stringify(specifier)};\n\nconst theme = (themeModule.default ?? themeModule) as typeof themeModule;\n\nexport const Layout = theme.Layout;\nexport const PageRenderer = theme.PageRenderer;\nexport default theme;\n`;
 }
 
 export function tsconfigTemplate(hasUserTsconfig: boolean): string {

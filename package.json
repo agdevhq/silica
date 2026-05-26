@@ -12,12 +12,14 @@
   "scripts": {
     "build": "turbo run build",
     "dev": "turbo run dev --parallel",
+    "e2e": "npm run build && playwright test",
     "lint": "turbo run lint",
     "test": "turbo run test",
     "typecheck": "turbo run typecheck",
     "format": "prettier --check ."
   },
   "devDependencies": {
+    "@playwright/test": "^1.60.0",
     "@types/fs-extra": "^11.0.4",
     "@types/node": "^25.9.1",
     "@types/react": "^19.2.7",

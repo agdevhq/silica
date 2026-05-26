@@ -1,3 +1,4 @@
+import "./styles.css";
 import { Suspense } from "react";
 import type { ThemeLayoutProps, ThemePageProps } from "@silicajs/next/theme";
 import {

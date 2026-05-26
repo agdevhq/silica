@@ -1,9 +1,17 @@
-import { execa } from "execa";
+import { execa, type ResultPromise } from "execa";
 import { loadConfig } from "@silicajs/core";
 
 export type NextCommand = "dev" | "build" | "start";
+export type NextSubprocess = {
+  subprocess: ResultPromise;
+};
 
 export async function runNext(command: NextCommand, nextRoot: string): Promise<void> {
+  const { subprocess } = await startNext(command, nextRoot);
+  await subprocess;
+}
+
+export async function startNext(command: NextCommand, nextRoot: string): Promise<NextSubprocess> {
   installStackTraceRewrite(nextRoot);
   const config = await loadConfig(process.cwd());
   const subprocess = execa("next", [command, nextRoot], {
@@ -26,7 +34,7 @@ export async function runNext(command: NextCommand, nextRoot: string): Promise<v
     process.stderr.write(rewriteFrameworkPaths(chunk.toString(), nextRoot));
   });
 
-  await subprocess;
+  return { subprocess };
 }
 
 export function installStackTraceRewrite(nextRoot: string): void {

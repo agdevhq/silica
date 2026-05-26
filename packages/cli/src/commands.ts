@@ -1,4 +1,5 @@
 import { precompute } from "@silicajs/core";
+import { reportBrokenWikilinks } from "./diagnostics.js";
 import { materializeNextApp } from "./materialize.js";
 import { runNext, runStart, startNext } from "./next.js";
 import { scaffoldProject } from "./scaffold.js";
@@ -41,7 +42,7 @@ export async function buildCommand(): Promise<void> {
   const projectRoot = process.cwd();
   const nextRoot = await materializeNextApp({ projectRoot });
   const result = await precompute({ projectRoot });
-  reportBrokenLinks(result.brokenLinks);
+  reportBrokenWikilinks(result.brokenLinks);
   await runNext("build", nextRoot);
 }
 
@@ -50,10 +51,3 @@ export async function startCommand(): Promise<void> {
   await runStart(nextRoot);
 }
 
-function reportBrokenLinks(links: Array<{ source: string; target: string }>): void {
-  if (links.length === 0) return;
-  console.warn("[silica] broken wikilinks:");
-  for (const link of links) {
-    console.warn(`  ${link.source} -> ${link.target}`);
-  }
-}

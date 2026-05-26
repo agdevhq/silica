@@ -16,10 +16,12 @@ export default defineConfig({
   clean: true,
   external: [
     "@silicajs/auth",
+    "@silicajs/components",
     "@silicajs/core",
     "@silicajs/core/runtime",
     "@silicajs/search",
-    "@silicajs/theme-default",
+    "@silicajs/theme-amethyst",
+    "@silicajs/ui",
     "better-auth/next-js",
     "fs-extra",
     "next",

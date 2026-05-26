@@ -18,6 +18,7 @@ describe("generated templates", () => {
       "app/not-found.tsx",
       "app/sign-in/page.tsx",
       "app/tags/[tag]/page.tsx",
+      "postcss.config.mjs",
       "proxy.ts",
     ]);
   });

@@ -35,11 +35,13 @@ npm run dev
 | Package | Purpose |
 | --- | --- |
 | `@silicajs/core` | Config loading, Quartz-inspired slug/path helpers, markdown rendering, and precompute artifacts. |
-| `@silicajs/next` | Generated Next.js routes, server data loaders, proxy, templates, and primitives. |
+| `@silicajs/ui` | Generic shadcn-style component library (Base UI + Tailwind v4). Authored via the shadcn CLI. |
+| `@silicajs/components` | Silica-aware, framework-agnostic React composables (vault tree, breadcrumbs, ToC, backlinks, search, …) built on `@silicajs/ui`. |
+| `@silicajs/next` | Generated Next.js routes, server data loaders, proxy, and templates. |
 | `@silicajs/cli` | `silica create/dev/build/start` and `.silica/next` materialization. |
 | `@silicajs/auth` | Better Auth wrapper and allowlist helpers. |
 | `@silicajs/search` | FlexSearch index build/load/query helpers. |
-| `@silicajs/theme-default` | Default persistent-chrome theme. |
+| `@silicajs/theme-amethyst` | Default amethyst/violet theme — pure composition over `@silicajs/ui` + `@silicajs/components`. |
 | `@silicajs/create` | Internal scaffolder wrapper around `silica create`. |
 | `create-silica` | User-facing `npx create-silica` package. |
 
@@ -48,7 +50,7 @@ npm run dev
 1. `@silicajs/cli` materializes `.silica/next/` from templates in `@silicajs/next`.
 2. `@silicajs/core` scans `content/`, filters drafts, builds `manifest.json`, `graph.json`, `search-index.json`, and copies assets to `.silica/next/public/silica/`.
 3. Next.js 16 renders vault pages from `.silica/next/app/[[...slug]]/page.tsx`. The cached `VaultContent` server component reads markdown from disk and returns a React tree.
-4. The theme owns persistent layout chrome while primitives provide explorer, breadcrumbs, ToC, backlinks, dark mode, and search UI.
+4. The theme owns persistent layout chrome while `@silicajs/components` provides the vault tree, breadcrumbs, ToC, backlinks, dark mode, and search UI on top of `@silicajs/ui` primitives.
 5. Auth is enforced in generated `proxy.ts` before cached page content is served.
 
 ## Development

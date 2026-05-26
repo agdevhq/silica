@@ -1,0 +1,45 @@
+{
+  "name": "@silicajs/theme-amethyst",
+  "version": "0.1.0",
+  "description": "Amethyst theme for Silica — Tailwind v4 + Base UI, violet accent, Mintlify-style layout.",
+  "type": "module",
+  "license": "MIT",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./styles.css": "./dist/styles.css"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "typecheck": "tsc --noEmit",
+    "lint": "tsc --noEmit",
+    "test": "vitest run --passWithNoTests"
+  },
+  "dependencies": {
+    "@silicajs/components": "0.1.0",
+    "@silicajs/core": "0.1.0",
+    "@silicajs/next": "0.1.0",
+    "@silicajs/ui": "0.1.0",
+    "@tailwindcss/typography": "^0.5.18",
+    "lucide-react": "^1.16.0"
+  },
+  "peerDependencies": {
+    "next": "^16.2.0",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0"
+  },
+  "devDependencies": {
+    "@types/react": "^19.2.10",
+    "@types/react-dom": "^19.2.3",
+    "next": "^16.2.6",
+    "react": "^19.2.6",
+    "react-dom": "^19.2.6",
+    "tsup": "^8.5.1"
+  }
+}

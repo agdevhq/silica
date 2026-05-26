@@ -10,15 +10,24 @@ export async function scaffoldProject(targetDir: string): Promise<void> {
   await fs.ensureDir(path.join(root, "content/notes"));
   await fs.ensureDir(path.join(root, ".github/workflows"));
   await fs.writeFile(path.join(root, "content/index.md"), indexMarkdown());
-  await fs.writeFile(path.join(root, "content/notes/getting-started.md"), gettingStartedMarkdown());
+  await fs.writeFile(
+    path.join(root, "content/notes/getting-started.md"),
+    gettingStartedMarkdown(),
+  );
   await fs.writeFile(path.join(root, "silica.config.ts"), silicaConfig());
   await fs.writeFile(path.join(root, "tsconfig.json"), tsconfig());
-  await fs.writeFile(path.join(root, "package.json"), packageJson(path.basename(root)));
+  await fs.writeFile(
+    path.join(root, "package.json"),
+    packageJson(path.basename(root)),
+  );
   await fs.writeFile(path.join(root, ".env.example"), envExample());
   await fs.writeFile(path.join(root, ".gitignore"), gitignore());
   await fs.writeFile(path.join(root, "README.md"), readme(path.basename(root)));
   await fs.writeFile(path.join(root, "Dockerfile"), dockerfile());
-  await fs.writeFile(path.join(root, ".github/workflows/deploy.yml"), workflow());
+  await fs.writeFile(
+    path.join(root, ".github/workflows/deploy.yml"),
+    workflow(),
+  );
 }
 
 function indexMarkdown(): string {
@@ -87,11 +96,11 @@ function gitignore(): string {
 }
 
 function readme(name: string): string {
-  return `# ${name}\n\nA Silica vault.\n\n## Commands\n\n- \`npm run dev\` — materialize and run the hidden Next.js app.\n- \`npm run build\` — precompute content and build for production.\n- \`npm run start\` — serve the production build.\n\n## Auth\n\nCopy \`.env.example\` to \`.env\` and fill in Better Auth / Google OAuth values before enabling \`auth\` in \`silica.config.ts\`.\n\n## Docker\n\nThe scaffolded Dockerfile builds the generated standalone Next.js output and starts the traced \`server.js\` from wherever Next places it inside the standalone tree.\n`;
+  return `# ${name}\n\nA Silica vault.\n\n## Commands\n\n- \`npm run dev\` — materialize and run the hidden Next.js app.\n- \`npm run build\` — precompute content and build for production.\n- \`npm run start\` — serve the production build.\n\n## Auth\n\nCopy \`.env.example\` to \`.env\` and fill in Better Auth / Google OAuth values before enabling \`auth\` in \`silica.config.ts\`. Auth requires at least one \`allowedDomains\` or \`allowedEmails\` entry and a strong \`BETTER_AUTH_SECRET\` in production.\n\n## Docker\n\nThe scaffolded Dockerfile builds the generated standalone Next.js output and starts the traced \`server.js\` from wherever Next places it inside the standalone tree.\n`;
 }
 
 function dockerfile(): string {
-  return `FROM node:22-alpine AS deps\nWORKDIR /app\nCOPY package*.json ./\nRUN npm ci\n\nFROM deps AS build\nCOPY . .\nRUN npm run build\n\nFROM node:22-alpine AS runner\nWORKDIR /app\nENV NODE_ENV=production\nCOPY --from=build /app/.silica/next/.next/standalone ./\nCOPY --from=build /app/.silica/next/.next/static ./.silica/next/.next/static\nCOPY --from=build /app/.silica/next/public ./.silica/next/public\nCOPY --from=build /app/content ./content\nCOPY --from=build /app/.silica ./.silica\nEXPOSE 3000\nCMD ["sh", "-c", "node $(find . -path '*/server.js' -print -quit)"]\n`;
+  return `FROM node:22-alpine AS deps\nWORKDIR /app\nCOPY package*.json ./\nRUN npm ci\n\nFROM deps AS build\nCOPY . .\nRUN npm run build\n\nFROM node:22-alpine AS runner\nWORKDIR /app\nENV NODE_ENV=production\nENV SILICA_PROJECT_ROOT=/app\nCOPY --from=build /app/.silica/next/.next/standalone ./\nCOPY --from=build /app/.silica/next/.next/static ./.silica/next/.next/static\nCOPY --from=build /app/.silica/next/public ./.silica/next/public\nCOPY --from=build /app/content ./content\nCOPY --from=build /app/.silica ./.silica\nEXPOSE 3000\nCMD ["sh", "-c", "node $(find . -path '*/server.js' -print -quit)"]\n`;
 }
 
 function workflow(): string {

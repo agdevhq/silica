@@ -2,7 +2,6 @@
 
 import * as React from "react";
 import { ChevronRight } from "lucide-react";
-import type { Manifest, ManifestEntry } from "@silicajs/core/runtime";
 
 import { cn } from "@silicajs/ui/lib/utils";
 import {
@@ -22,11 +21,16 @@ import { prettySegment, slugToHref } from "./slug.js";
 
 const STORAGE_KEY = "silica-tree-expanded";
 
+export type VaultTreeEntry = {
+  slug: string;
+  title: string;
+};
+
 type FolderNode = {
   key: string;
   name: string;
   fullPath: string;
-  entry?: ManifestEntry;
+  entry?: VaultTreeEntry;
   children: FolderNode[];
 };
 
@@ -34,15 +38,15 @@ function emptyNode(name: string, fullPath: string): FolderNode {
   return { key: fullPath || "/", name, fullPath, children: [] };
 }
 
-function buildTreeFromManifest(manifest: Manifest): {
+function buildTreeFromEntries(entries: VaultTreeEntry[]): {
   nodes: FolderNode[];
-  homeEntry?: ManifestEntry;
+  homeEntry?: VaultTreeEntry;
 } {
   const root = emptyNode("", "");
   const byPath = new Map<string, FolderNode>([["", root]]);
-  let homeEntry: ManifestEntry | undefined;
+  let homeEntry: VaultTreeEntry | undefined;
 
-  for (const entry of manifest.entries) {
+  for (const entry of entries) {
     if (entry.slug === "index") {
       homeEntry = entry;
       continue;
@@ -102,19 +106,19 @@ function activeIdFromSlug(slug: string | undefined): string | undefined {
 }
 
 export type VaultTreeProps = {
-  manifest: Manifest;
+  entries: VaultTreeEntry[];
   currentSlug?: string;
   showHomeLink?: boolean;
 };
 
 export function VaultTree({
-  manifest,
+  entries,
   currentSlug,
   showHomeLink = true,
 }: VaultTreeProps) {
   const { nodes, homeEntry } = React.useMemo(
-    () => buildTreeFromManifest(manifest),
-    [manifest]
+    () => buildTreeFromEntries(entries),
+    [entries],
   );
 
   const activeId = activeIdFromSlug(currentSlug);

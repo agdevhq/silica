@@ -1,27 +1,36 @@
 import { readFile } from "node:fs/promises";
 import { createSearchDocument } from "./build.js";
-import type { SerializedSearchIndex } from "./types.js";
+import type { SerializedSearchIndex, StoredSearchRecord } from "./types.js";
 
 export type LoadedSearchIndex = {
   document: ReturnType<typeof createSearchDocument>;
   artifact: SerializedSearchIndex;
+  recordsById: Map<string, StoredSearchRecord>;
 };
 
 const globalCache = globalThis as typeof globalThis & {
   __silicaSearchIndexes?: Map<string, LoadedSearchIndex>;
 };
 
-export async function hydrateSearchIndex(artifact: SerializedSearchIndex): Promise<LoadedSearchIndex> {
+export async function hydrateSearchIndex(
+  artifact: SerializedSearchIndex,
+): Promise<LoadedSearchIndex> {
   const document = createSearchDocument(artifact.config);
 
   for (const [key, data] of Object.entries(artifact.exported)) {
     document.import(key, data);
   }
 
-  return { document, artifact };
+  return {
+    document,
+    artifact,
+    recordsById: new Map(artifact.records.map((record) => [record.id, record])),
+  };
 }
 
-export async function loadSearchIndex(artifactPath: string): Promise<LoadedSearchIndex> {
+export async function loadSearchIndex(
+  artifactPath: string,
+): Promise<LoadedSearchIndex> {
   const cache = (globalCache.__silicaSearchIndexes ??= new Map());
   const cached = cache.get(artifactPath);
   if (cached) return cached;

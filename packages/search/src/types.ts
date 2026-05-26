@@ -7,10 +7,14 @@ export type SearchRecord = {
   tags: string[];
 };
 
+export type StoredSearchRecord = Omit<SearchRecord, "content"> & {
+  excerpt: string;
+};
+
 export type SerializedSearchIndex = {
   version: 1;
   config: SearchIndexConfig;
-  records: SearchRecord[];
+  records: StoredSearchRecord[];
   exported: Record<string, string>;
   builtAt: string;
 };

@@ -1,7 +1,10 @@
 "use client";
 
 import { Suspense } from "react";
-import type { Manifest, ResolvedSilicaConfig } from "@silicajs/core/runtime";
+import type {
+  ThemeLayoutConfig,
+  ThemeNavigationEntry,
+} from "@silicajs/next/theme";
 import {
   DarkModeToggle,
   SearchTrigger,
@@ -21,11 +24,13 @@ import {
 import { useCurrentSlug } from "./use-current-slug.js";
 
 export type SidebarProps = {
-  manifest: Manifest;
-  config: ResolvedSilicaConfig;
+  navigation: {
+    entries: ThemeNavigationEntry[];
+  };
+  config: ThemeLayoutConfig;
 };
 
-export function Sidebar({ manifest, config }: SidebarProps) {
+export function Sidebar({ navigation, config }: SidebarProps) {
   const currentSlug = useCurrentSlug();
   return (
     <ShadcnSidebar>
@@ -46,11 +51,11 @@ export function Sidebar({ manifest, config }: SidebarProps) {
       <SidebarContent>
         <SidebarGroup>
           <SidebarGroupContent>
-            <VaultTree manifest={manifest} currentSlug={currentSlug} />
+            <VaultTree entries={navigation.entries} currentSlug={currentSlug} />
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
-      {config.auth ? (
+      {config.authEnabled ? (
         <SidebarFooter className="border-t border-sidebar-border">
           <Suspense fallback={null}>
             <UserMenu />

@@ -1,23 +1,42 @@
 import { NextRequest, NextResponse } from "next/server";
 import { hasSilicaSessionCookie, isSilicaRequestAllowed } from "@silicajs/auth";
 
-const PUBLIC_PREFIXES = ["/_next", "/silica", "/api/auth", "/api/search", "/__silica/revalidate"];
-const PUBLIC_PATHS = ["/sign-in", "/not-allowed", "/favicon.ico", "/robots.txt", "/sitemap.xml"];
+export type SilicaProxyOptions = {
+  authEnabled?: boolean;
+  allowedDomains?: readonly string[];
+  allowedEmails?: readonly string[];
+};
 
-export async function silicaProxy(request: NextRequest) {
+const PUBLIC_PREFIXES = ["/_next", "/api/auth", "/__silica/revalidate"];
+const PUBLIC_PATHS = ["/sign-in", "/not-allowed", "/favicon.ico"];
+
+export async function silicaProxy(
+  request: NextRequest,
+  options: SilicaProxyOptions = {},
+) {
   const { pathname } = request.nextUrl;
+
+  const authEnabled =
+    options.authEnabled ?? process.env.SILICA_AUTH_ENABLED === "true";
+  if (!authEnabled) return NextResponse.next();
   if (isPublicPath(pathname)) return NextResponse.next();
 
-  if (process.env.SILICA_AUTH_ENABLED !== "true") return NextResponse.next();
-
-  const allowedDomains = parseList(process.env.SILICA_ALLOWED_DOMAINS);
-  const allowedEmails = parseList(process.env.SILICA_ALLOWED_EMAILS);
-  const hasValidatedSession = await isSilicaRequestAllowed(request, {
-      secret: process.env.BETTER_AUTH_SECRET,
-      allowedDomains,
-      allowedEmails,
-    });
-  const hasDevelopmentCookieFallback = !process.env.BETTER_AUTH_SECRET && hasSilicaSessionCookie(request);
+  const allowedDomains =
+    options.allowedDomains ?? parseList(process.env.SILICA_ALLOWED_DOMAINS);
+  const allowedEmails =
+    options.allowedEmails ?? parseList(process.env.SILICA_ALLOWED_EMAILS);
+  const secret = process.env.BETTER_AUTH_SECRET;
+  const hasValidatedSession = secret
+    ? await isSilicaRequestAllowed(request, {
+        secret: process.env.BETTER_AUTH_SECRET,
+        allowedDomains: [...allowedDomains],
+        allowedEmails: [...allowedEmails],
+      })
+    : false;
+  const hasDevelopmentCookieFallback =
+    process.env.NODE_ENV !== "production" &&
+    !secret &&
+    hasSilicaSessionCookie(request);
 
   if (!hasValidatedSession && !hasDevelopmentCookieFallback) {
     const signInUrl = request.nextUrl.clone();
@@ -34,7 +53,10 @@ export const config = {
 };
 
 function isPublicPath(pathname: string): boolean {
-  return PUBLIC_PATHS.includes(pathname) || PUBLIC_PREFIXES.some((prefix) => pathname.startsWith(prefix));
+  return (
+    PUBLIC_PATHS.includes(pathname) ||
+    PUBLIC_PREFIXES.some((prefix) => pathname.startsWith(prefix))
+  );
 }
 
 function parseList(value: string | undefined): string[] {

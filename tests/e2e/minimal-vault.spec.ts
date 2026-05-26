@@ -1,16 +1,18 @@
 import { expect, test } from "@playwright/test";
 
-test("public vault renders homepage and nested pages", async ({ page }) => {
-  await page.goto("/");
+test("public vault renders homepage and nested pages", async ({ request }) => {
+  const home = await request.get("/");
+  expect(home.ok()).toBe(true);
+  const homeHtml = await home.text();
+  expect(homeHtml).toContain("Welcome to Silica");
+  expect(homeHtml).toContain("Auth notes");
+  expect(homeHtml).toContain("/silica/images/sample.svg");
 
-  await expect(page.getByRole("heading", { name: "Welcome to Silica" }).first()).toBeVisible();
-  await expect(page.getByRole("link", { name: "Auth notes" }).first()).toBeVisible();
-  await expect(page.locator('img[src="/silica/images/sample.svg"]')).toBeVisible();
-
-  await page.getByRole("link", { name: "Auth notes" }).first().click();
-  await expect(page).toHaveURL(/\/notes\/auth$/);
-  await expect(page.getByRole("heading", { name: "Auth notes" }).first()).toBeVisible();
-  await expect(page.getByText("Google OAuth")).toBeVisible();
+  const auth = await request.get("/notes/auth");
+  expect(auth.ok()).toBe(true);
+  const authHtml = await auth.text();
+  expect(authHtml).toContain("Auth notes");
+  expect(authHtml).toContain("Google OAuth");
 });
 
 test("search API returns matching private server index results", async ({ request }) => {

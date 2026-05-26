@@ -52,7 +52,7 @@ function resolveThemeSpecifier(themeValue: unknown): string {
         ? themeValue
         : "default";
 
-  if (!themeName || themeName === "default") return "@silicajs/theme-default";
+  if (!themeName || themeName === "default") return "@silicajs/theme-amethyst";
   if (themeName.startsWith(".")) return `../../${themeName.replace(/^\.\//, "")}`;
   return themeName;
 }

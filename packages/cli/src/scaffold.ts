@@ -64,7 +64,7 @@ function packageJson(name: string): string {
         "@silicajs/cli": "^0.1.0",
         "@silicajs/core": "^0.1.0",
         "@silicajs/next": "^0.1.0",
-        "@silicajs/theme-default": "^0.1.0",
+        "@silicajs/theme-amethyst": "^0.1.0",
         next: "^16.2.6",
         react: "^19.2.6",
         "react-dom": "^19.2.6",

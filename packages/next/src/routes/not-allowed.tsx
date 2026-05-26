@@ -1,4 +1,4 @@
-import { NotAllowed } from "../primitives/index.js";
+import { NotAllowed } from "@silicajs/components";
 
 export default function NotAllowedPage() {
   return <NotAllowed />;

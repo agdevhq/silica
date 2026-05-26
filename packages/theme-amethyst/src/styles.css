@@ -1,0 +1,118 @@
+@import "@silicajs/ui/globals.css";
+@plugin "@tailwindcss/typography";
+
+@source "../../ui/src/**/*.{ts,tsx}";
+@source "../../components/src/**/*.{ts,tsx}";
+@source "../src/**/*.{ts,tsx}";
+
+/*
+ * Every neutral/foreground token we override must be declared in BOTH :root
+ * and .dark. Because the imported base globals.css declares its .dark { ... }
+ * BEFORE our :root { ... } in the compiled output, any :root override we leave
+ * out of .dark would leak its light value into <html class="dark"> via the
+ * tied-specificity, last-source-wins cascade rule.
+ */
+
+:root {
+  --radius: 0.625rem;
+
+  /* Amethyst accents */
+  --primary: oklch(0.55 0.22 295);
+  --primary-foreground: oklch(0.99 0 0);
+  --ring: oklch(0.55 0.22 295 / 0.5);
+  --accent: oklch(0.96 0.04 295);
+  --accent-foreground: oklch(0.25 0.1 295);
+  --sidebar-primary: oklch(0.55 0.22 295);
+  --sidebar-primary-foreground: oklch(0.99 0 0);
+  --sidebar-accent: oklch(0.96 0.04 295);
+  --sidebar-accent-foreground: oklch(0.25 0.1 295);
+  --sidebar-ring: oklch(0.55 0.22 295 / 0.5);
+
+  /* Violet-tinted neutrals (shadcn "mauve" structure, hue shifted to 295). */
+  --foreground: oklch(0.145 0.008 295);
+  --card-foreground: oklch(0.145 0.008 295);
+  --popover-foreground: oklch(0.145 0.008 295);
+  --secondary: oklch(0.96 0.003 295);
+  --secondary-foreground: oklch(0.212 0.019 295);
+  --muted: oklch(0.96 0.003 295);
+  --muted-foreground: oklch(0.542 0.034 295);
+  --border: oklch(0.922 0.005 295);
+  --input: oklch(0.922 0.005 295);
+  --sidebar: var(--background);
+  --sidebar-foreground: oklch(0.145 0.008 295);
+  --sidebar-border: oklch(0.922 0.005 295);
+}
+
+.dark {
+  /* Amethyst accents */
+  --primary: oklch(0.72 0.18 295);
+  --primary-foreground: oklch(0.12 0.02 295);
+  --ring: oklch(0.72 0.18 295 / 0.4);
+  --accent: oklch(0.2 0.06 295);
+  --accent-foreground: oklch(0.96 0.04 295);
+  --sidebar-primary: oklch(0.72 0.18 295);
+  --sidebar-primary-foreground: oklch(0.12 0.02 295);
+  --sidebar-accent: oklch(0.2 0.06 295);
+  --sidebar-accent-foreground: oklch(0.96 0.04 295);
+  --sidebar-ring: oklch(0.72 0.18 295 / 0.4);
+
+  /* Violet-tinted neutrals — defensively re-declares every token our :root
+     touches so the base .dark values don't get overridden by our :root via
+     last-source-wins cascade. Foregrounds stay pure white; chroma in dark
+     mode is invisible above ~0.97 lightness anyway. */
+  --background: oklch(0.145 0.008 295);
+  --foreground: oklch(0.985 0 0);
+  --card: oklch(0.212 0.019 295);
+  --card-foreground: oklch(0.985 0 0);
+  --popover: oklch(0.212 0.019 295);
+  --popover-foreground: oklch(0.985 0 0);
+  --secondary: oklch(0.263 0.024 295);
+  --secondary-foreground: oklch(0.985 0 0);
+  --muted: oklch(0.263 0.024 295);
+  --muted-foreground: oklch(0.711 0.019 295);
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 15%);
+  --sidebar: var(--background);
+  --sidebar-foreground: oklch(0.985 0 0);
+  --sidebar-border: oklch(1 0 0 / 10%);
+}
+
+/*
+ * Map @tailwindcss/typography's prose tokens onto our theme tokens.
+ * NOT wrapped in @layer — the typography plugin emits its defaults
+ * unlayered, which would beat any @layer components override.
+ */
+.prose {
+  --tw-prose-body: var(--foreground);
+  --tw-prose-headings: var(--foreground);
+  --tw-prose-lead: var(--muted-foreground);
+  --tw-prose-links: var(--primary);
+  --tw-prose-bold: var(--foreground);
+  --tw-prose-counters: var(--muted-foreground);
+  --tw-prose-bullets: var(--muted-foreground);
+  --tw-prose-hr: var(--border);
+  --tw-prose-quotes: var(--muted-foreground);
+  --tw-prose-quote-borders: var(--border);
+  --tw-prose-captions: var(--muted-foreground);
+  --tw-prose-code: var(--foreground);
+  --tw-prose-pre-code: var(--foreground);
+  --tw-prose-pre-bg: var(--muted);
+  --tw-prose-th-borders: var(--border);
+  --tw-prose-td-borders: var(--border);
+  --tw-prose-invert-body: var(--foreground);
+  --tw-prose-invert-headings: var(--foreground);
+  --tw-prose-invert-lead: var(--muted-foreground);
+  --tw-prose-invert-links: var(--primary);
+  --tw-prose-invert-bold: var(--foreground);
+  --tw-prose-invert-counters: var(--muted-foreground);
+  --tw-prose-invert-bullets: var(--muted-foreground);
+  --tw-prose-invert-hr: var(--border);
+  --tw-prose-invert-quotes: var(--muted-foreground);
+  --tw-prose-invert-quote-borders: var(--border);
+  --tw-prose-invert-captions: var(--muted-foreground);
+  --tw-prose-invert-code: var(--foreground);
+  --tw-prose-invert-pre-code: var(--foreground);
+  --tw-prose-invert-pre-bg: var(--muted);
+  --tw-prose-invert-th-borders: var(--border);
+  --tw-prose-invert-td-borders: var(--border);
+}

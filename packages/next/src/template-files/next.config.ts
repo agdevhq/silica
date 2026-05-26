@@ -8,7 +8,9 @@ const nextConfig: NextConfig = {
     "@silicajs/next",
     "@silicajs/auth",
     "@silicajs/search",
-    "@silicajs/theme-default",
+    "@silicajs/components",
+    "@silicajs/ui",
+    "@silicajs/theme-amethyst",
   ],
   serverExternalPackages: ["flexsearch"],
   outputFileTracingIncludes: {

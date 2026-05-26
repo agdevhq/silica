@@ -20,6 +20,7 @@ export default defineConfig({
     "react/jsx-runtime",
     "rehype-autolink-headings",
     "rehype-katex",
+    "rehype-raw",
     "rehype-react",
     "rehype-slug",
     "remark-frontmatter",

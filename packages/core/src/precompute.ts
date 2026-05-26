@@ -184,11 +184,15 @@ async function writeSitemapAndRobots(projectRoot: string, config: ResolvedSilica
   await fs.ensureDir(publicRoot);
   const baseUrl = (config.baseUrl ?? "http://localhost:3000").replace(/\/$/, "");
   const urls = manifest.entries.map((entry) => `  <url><loc>${baseUrl}${slugToHref(entry.slug)}</loc></url>`).join("\n");
-  await fs.writeFile(
-    path.join(publicRoot, "sitemap.xml"),
-    `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls}\n</urlset>\n`,
-  );
-  await fs.writeFile(path.join(publicRoot, "robots.txt"), `User-agent: *\nAllow: /\nSitemap: ${baseUrl}/sitemap.xml\n`);
+  if (!(await fs.pathExists(path.join(projectRoot, "public/sitemap.xml")))) {
+    await fs.writeFile(
+      path.join(publicRoot, "sitemap.xml"),
+      `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls}\n</urlset>\n`,
+    );
+  }
+  if (!(await fs.pathExists(path.join(projectRoot, "public/robots.txt")))) {
+    await fs.writeFile(path.join(publicRoot, "robots.txt"), `User-agent: *\nAllow: /\nSitemap: ${baseUrl}/sitemap.xml\n`);
+  }
 }
 
 async function writeJson(filePath: string, value: unknown): Promise<void> {

@@ -131,6 +131,7 @@ export async function renderMarkdown(
       Fragment,
       jsx,
       jsxs,
+      components: context.components,
     });
 
   const file = await processor.process(transformed.markdown);

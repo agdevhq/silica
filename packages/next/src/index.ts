@@ -15,9 +15,4 @@ export {
   loadManifest,
   loadResolvedConfig,
 } from "./server-data.js";
-export {
-  type SilicaTheme,
-  type ThemeLayoutProps,
-  type ThemePage,
-  type ThemePageProps,
-} from "./theme.js";
+export { SilicaNextRoutingProvider } from "./routing-provider.js";

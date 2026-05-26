@@ -7,21 +7,26 @@ export type TagBadgeProps = {
   tag: string;
   href: string;
   className?: string;
+  render?: React.ReactElement;
 };
 
-export function TagBadge({ tag, href, className }: TagBadgeProps) {
+export function TagBadge({ tag, href, className, render }: TagBadgeProps) {
   return (
     <Badge
       variant="outline"
       className={cn("hover:border-primary/40", className)}
       render={
-        <a
-          href={href}
-          className="cursor-pointer text-foreground/80 no-underline transition-colors hover:text-foreground"
-        />
+        render ?? (
+          <a
+            href={href}
+            className="cursor-pointer text-foreground/80 no-underline transition-colors hover:text-foreground"
+          />
+        )
       }
     >
-      <span aria-hidden="true" className="text-muted-foreground">#</span>
+      <span aria-hidden="true" className="text-muted-foreground">
+        #
+      </span>
       <span>{tag}</span>
     </Badge>
   );

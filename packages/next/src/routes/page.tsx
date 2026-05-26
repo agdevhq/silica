@@ -1,7 +1,9 @@
 import fs from "node:fs/promises";
+import type { AnchorHTMLAttributes } from "react";
 import { cacheLife, cacheTag } from "next/cache";
 import { notFound } from "next/navigation";
 import { renderMarkdown } from "@silicajs/core/runtime";
+import { SilicaLink } from "@silicajs/components/routing";
 import {
   loadBuildId,
   loadGraph,
@@ -9,7 +11,18 @@ import {
   loadResolvedConfig,
   normalizeRouteSlug,
 } from "../server-data.js";
-import type { SilicaTheme } from "../theme.js";
+import type { SilicaTheme } from "@silicajs/core/theme";
+
+function MarkdownLink({
+  href,
+  ...props
+}: AnchorHTMLAttributes<HTMLAnchorElement>) {
+  if (href && href.startsWith("/") && !href.startsWith("/silica/")) {
+    return <SilicaLink href={href} {...props} />;
+  }
+
+  return <a href={href} {...props} />;
+}
 
 export async function generateStaticParams() {
   const manifest = await getPageManifest();
@@ -66,6 +79,9 @@ export async function VaultContent({
     allSlugs: manifest.allSlugs,
     assetBaseUrl: "/silica",
     wikilinkStrategy: config.wikilinks.strategy,
+    components: {
+      a: MarkdownLink,
+    },
   });
 
   return (

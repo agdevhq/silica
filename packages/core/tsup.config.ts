@@ -1,7 +1,7 @@
 import { defineConfig } from "tsup";
 
 export default defineConfig({
-  entry: ["src/index.ts", "src/runtime.ts"],
+  entry: ["src/index.ts", "src/runtime.ts", "src/theme.ts"],
   format: ["esm"],
   dts: true,
   sourcemap: true,
@@ -30,6 +30,6 @@ export default defineConfig({
     "remark-rehype",
     "shiki",
     "unified",
-    "unist-util-visit"
+    "unist-util-visit",
   ],
 });

@@ -18,6 +18,15 @@ export {
   slugToHref,
 } from "./path.js";
 export type {
+  SilicaTheme,
+  ThemeLayoutConfig,
+  ThemeLayoutProps,
+  ThemeNavigationEntry,
+  ThemePage,
+  ThemePageProps,
+  ThemeProviderComponent,
+} from "./theme.js";
+export type {
   AnalyzeResult,
   BrokenLink,
   Graph,

@@ -7,6 +7,7 @@ import {
   CardTitle,
 } from "@silicajs/ui/components/card";
 
+import { SilicaLink } from "./routing.js";
 import { slugToHref } from "./slug.js";
 
 export type BacklinksProps = {
@@ -16,7 +17,12 @@ export type BacklinksProps = {
   className?: string;
 };
 
-export function Backlinks({ graph, slug, manifest, className }: BacklinksProps) {
+export function Backlinks({
+  graph,
+  slug,
+  manifest,
+  className,
+}: BacklinksProps) {
   const backlinks = graph.backlinks[slug] ?? [];
   if (backlinks.length === 0) return null;
   return (
@@ -30,12 +36,12 @@ export function Backlinks({ graph, slug, manifest, className }: BacklinksProps) 
             const entry = manifest.bySlug[source];
             return (
               <li key={source}>
-                <a
+                <SilicaLink
                   href={slugToHref(source)}
                   className="text-primary hover:underline"
                 >
                   {entry?.title ?? source}
-                </a>
+                </SilicaLink>
               </li>
             );
           })}

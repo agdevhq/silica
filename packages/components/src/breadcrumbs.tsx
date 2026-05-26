@@ -9,6 +9,7 @@ import {
   BreadcrumbSeparator,
 } from "@silicajs/ui/components/breadcrumb";
 
+import { SilicaLink } from "./routing.js";
 import { prettySegment } from "./slug.js";
 
 export type BreadcrumbsProps = {
@@ -26,7 +27,7 @@ export function Breadcrumbs({ slug, className }: BreadcrumbsProps) {
           {segments.length === 0 ? (
             <BreadcrumbPage>Home</BreadcrumbPage>
           ) : (
-            <BreadcrumbLink render={<a href="/">Home</a>} />
+            <BreadcrumbLink render={<SilicaLink href="/">Home</SilicaLink>} />
           )}
         </BreadcrumbItem>
         {segments.map((segment, index) => {
@@ -40,7 +41,9 @@ export function Breadcrumbs({ slug, className }: BreadcrumbsProps) {
                 {isLast ? (
                   <BreadcrumbPage>{label}</BreadcrumbPage>
                 ) : (
-                  <BreadcrumbLink render={<a href={`/${acc}`}>{label}</a>} />
+                  <BreadcrumbLink
+                    render={<SilicaLink href={`/${acc}`}>{label}</SilicaLink>}
+                  />
                 )}
               </BreadcrumbItem>
             </React.Fragment>

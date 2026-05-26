@@ -49,10 +49,6 @@
       "types": "./dist/proxy.d.ts",
       "import": "./dist/proxy.js"
     },
-    "./theme": {
-      "types": "./dist/theme.d.ts",
-      "import": "./dist/theme.js"
-    },
     "./theme-layout": {
       "types": "./dist/theme-layout.d.ts",
       "import": "./dist/theme-layout.js"
@@ -60,9 +56,15 @@
     "./theme-page": {
       "types": "./dist/theme-page.d.ts",
       "import": "./dist/theme-page.js"
+    },
+    "./routing-provider": {
+      "types": "./dist/routing-provider.d.ts",
+      "import": "./dist/routing-provider.js"
     }
   },
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "build": "tsup",
     "dev": "tsup --watch",

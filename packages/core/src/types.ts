@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import type { AnchorHTMLAttributes, ComponentType, ReactNode } from "react";
 import type { SearchRecord } from "@silicajs/search";
 import type { FullSlug } from "./path.js";
 
@@ -96,6 +96,9 @@ export type RenderContext = {
   allSlugs: string[];
   assetBaseUrl?: string;
   wikilinkStrategy?: "absolute" | "relative" | "shortest";
+  components?: {
+    a?: ComponentType<AnchorHTMLAttributes<HTMLAnchorElement>>;
+  };
 };
 
 export type RenderResult = {

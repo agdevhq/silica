@@ -1,5 +1,7 @@
 ---
 title: Hidden draft
+description: Excluded from the manifest when removeDrafts is enabled.
+tags: [draft]
 draft: true
 ---
 

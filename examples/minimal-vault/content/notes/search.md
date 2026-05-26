@@ -2,6 +2,12 @@
 title: Search notes
 description: Server-side search keeps the index private.
 tags: [search]
+date: 2026-05-23
+created: 2026-05-23
+modified: 2026-05-24
+engine: flexsearch
+latency_target_ms: 100
+indexed_fields: [title, content, tags]
 ---
 
 # Search notes

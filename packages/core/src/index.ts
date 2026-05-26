@@ -1,5 +1,11 @@
 export { defineConfig, loadConfig, resolveConfig } from "./config.js";
-export { isMarkdownFile, scanContent, type ContentAssetFile, type ContentMarkdownFile, type ContentScan } from "./files.js";
+export {
+  isMarkdownFile,
+  scanContent,
+  type ContentAssetFile,
+  type ContentMarkdownFile,
+  type ContentScan,
+} from "./files.js";
 export {
   asFilePath,
   asFullSlug,
@@ -21,8 +27,24 @@ export {
   type RelativeURL,
   type SimpleSlug,
 } from "./path.js";
-export { analyzeMarkdown, getDescription, getTags, getTitle, renderMarkdown } from "./pipeline/index.js";
-export { getGitDates, precompute, type PrecomputeOptions } from "./precompute.js";
+export {
+  formatPropertyLabel,
+  formatPropertyValue,
+  getPageProperties,
+  type PageProperty,
+} from "./pipeline/frontmatter.js";
+export {
+  analyzeMarkdown,
+  getDescription,
+  getTags,
+  getTitle,
+  renderMarkdown,
+} from "./pipeline/index.js";
+export {
+  getGitDates,
+  precompute,
+  type PrecomputeOptions,
+} from "./precompute.js";
 export type {
   AnalyzeResult,
   BrokenLink,

@@ -2,6 +2,12 @@
 title: Auth notes
 description: Better Auth integration notes.
 tags: [security, auth]
+date: 2026-05-22
+created: 2026-05-21
+modified: 2026-05-22
+owner: platform team
+review_cycle: quarterly
+provider: google
 ---
 
 # Auth notes

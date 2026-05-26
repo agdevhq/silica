@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { Command } from "cmdk";
+import { getPageProperties } from "@silicajs/core/runtime";
 import type { Graph, Manifest, TocItem } from "@silicajs/core/runtime";
 
 export type ExplorerProps = {
@@ -9,7 +10,9 @@ export type ExplorerProps = {
 };
 
 export function Explorer({ manifest }: ExplorerProps) {
-  const entries = [...manifest.entries].sort((a, b) => a.slug.localeCompare(b.slug));
+  const entries = [...manifest.entries].sort((a, b) =>
+    a.slug.localeCompare(b.slug),
+  );
   return (
     <nav className="silica-explorer" aria-label="Vault pages">
       <a className="silica-explorer-home" href="/">
@@ -51,6 +54,26 @@ export function Breadcrumbs({ slug }: BreadcrumbsProps) {
   );
 }
 
+export type PagePropertiesProps = {
+  frontmatter: Record<string, unknown>;
+};
+
+export function PageProperties({ frontmatter }: PagePropertiesProps) {
+  const properties = getPageProperties(frontmatter);
+  if (properties.length === 0) return null;
+
+  return (
+    <dl className="silica-page-properties">
+      {properties.map((property) => (
+        <div key={property.key} className="silica-page-property">
+          <dt>{property.label}</dt>
+          <dd>{property.value}</dd>
+        </div>
+      ))}
+    </dl>
+  );
+}
+
 export type TableOfContentsProps = {
   toc: TocItem[];
 };
@@ -62,7 +85,12 @@ export function TableOfContents({ toc }: TableOfContentsProps) {
       <p>On this page</p>
       <ul>
         {toc.map((item) => (
-          <li key={item.id} style={{ paddingInlineStart: `${Math.max(0, item.depth - 2) * 0.75}rem` }}>
+          <li
+            key={item.id}
+            style={{
+              paddingInlineStart: `${Math.max(0, item.depth - 2) * 0.75}rem`,
+            }}
+          >
             <a href={`#${item.id}`}>{item.text}</a>
           </li>
         ))}
@@ -116,7 +144,11 @@ export function SearchTrigger() {
 
   return (
     <>
-      <button className="silica-search-trigger" type="button" onClick={() => setOpen(true)}>
+      <button
+        className="silica-search-trigger"
+        type="button"
+        onClick={() => setOpen(true)}
+      >
         Search <kbd>⌘K</kbd>
       </button>
       {open ? <SearchPalette onClose={() => setOpen(false)} /> : null}
@@ -150,13 +182,16 @@ export function SearchPalette({ onClose }: SearchPaletteProps) {
 
     setIsLoading(true);
     const timeout = window.setTimeout(() => {
-      fetch(`/api/search?q=${encodeURIComponent(trimmed)}`, { signal: controller.signal })
+      fetch(`/api/search?q=${encodeURIComponent(trimmed)}`, {
+        signal: controller.signal,
+      })
         .then((response) => (response.ok ? response.json() : { results: [] }))
         .then((payload: { results?: SearchResult[] }) => {
           setResults(payload.results ?? []);
         })
         .catch((error: unknown) => {
-          if (error instanceof DOMException && error.name === "AbortError") return;
+          if (error instanceof DOMException && error.name === "AbortError")
+            return;
           setResults([]);
         })
         .finally(() => setIsLoading(false));
@@ -169,9 +204,17 @@ export function SearchPalette({ onClose }: SearchPaletteProps) {
   }, [query]);
 
   return (
-    <div className="silica-search-overlay" role="dialog" aria-modal="true" onMouseDown={onClose}>
+    <div
+      className="silica-search-overlay"
+      role="dialog"
+      aria-modal="true"
+      onMouseDown={onClose}
+    >
       <Command className="silica-search-palette" shouldFilter={false}>
-        <div className="silica-search-row" onMouseDown={(event) => event.stopPropagation()}>
+        <div
+          className="silica-search-row"
+          onMouseDown={(event) => event.stopPropagation()}
+        >
           <Command.Input
             autoFocus
             name="q"
@@ -184,12 +227,22 @@ export function SearchPalette({ onClose }: SearchPaletteProps) {
           </button>
         </div>
         <Command.List onMouseDown={(event) => event.stopPropagation()}>
-          {isLoading ? <Command.Loading className="silica-search-empty">Searching…</Command.Loading> : null}
+          {isLoading ? (
+            <Command.Loading className="silica-search-empty">
+              Searching…
+            </Command.Loading>
+          ) : null}
           {!isLoading && query.trim() && results.length === 0 ? (
-            <Command.Empty className="silica-search-empty">No results</Command.Empty>
+            <Command.Empty className="silica-search-empty">
+              No results
+            </Command.Empty>
           ) : null}
           {results.map((result) => (
-            <Command.Item key={result.slug} value={`${result.title} ${result.slug}`} asChild>
+            <Command.Item
+              key={result.slug}
+              value={`${result.title} ${result.slug}`}
+              asChild
+            >
               <a href={slugToHref(result.slug)} onClick={onClose}>
                 <strong>{result.title}</strong>
                 <span>{result.excerpt}</span>
@@ -260,7 +313,10 @@ export type TagsListProps = {
 
 export function TagsList({ manifest, tag }: TagsListProps) {
   const entries = useMemo(
-    () => manifest.entries.filter((entry) => entry.tags.includes(tag)).sort((a, b) => a.title.localeCompare(b.title)),
+    () =>
+      manifest.entries
+        .filter((entry) => entry.tags.includes(tag))
+        .sort((a, b) => a.title.localeCompare(b.title)),
     [manifest.entries, tag],
   );
   return (
@@ -278,7 +334,9 @@ export function TagsList({ manifest, tag }: TagsListProps) {
 }
 
 function pretty(segment: string): string {
-  return segment.replace(/-/g, " ").replace(/\b\w/g, (letter) => letter.toUpperCase());
+  return segment
+    .replace(/-/g, " ")
+    .replace(/\b\w/g, (letter) => letter.toUpperCase());
 }
 
 function slugToHref(slug: string): string {

@@ -20,25 +20,9 @@ export function nextConfigTemplate(): string {
 }
 
 export function themeModuleTemplate(themeValue: unknown): string {
-  const themeName =
-    typeof themeValue === "object" &&
-    themeValue !== null &&
-    "name" in themeValue
-      ? String((themeValue as { name?: string }).name ?? "default")
-      : typeof themeValue === "string"
-        ? themeValue
-        : "default";
-
-  const specifier =
-    !themeName || themeName === "default"
-      ? "@silicajs/theme-default"
-      : themeName.startsWith(".")
-        ? `../../${themeName.replace(/^\.\//, "")}`
-        : themeName;
-
   return readTemplateFile("silica-theme.ts").replace(
     '"{{themeSpecifier}}"',
-    JSON.stringify(specifier),
+    JSON.stringify(resolveThemeSpecifier(themeValue)),
   );
 }
 
@@ -56,6 +40,21 @@ export function packageJsonTemplate(): string {
 
 function readTemplateFile(filename: string): string {
   return fs.readFileSync(path.join(templateFilesRoot, filename), "utf8");
+}
+
+function resolveThemeSpecifier(themeValue: unknown): string {
+  const themeName =
+    typeof themeValue === "object" &&
+    themeValue !== null &&
+    "name" in themeValue
+      ? String((themeValue as { name?: string }).name ?? "default")
+      : typeof themeValue === "string"
+        ? themeValue
+        : "default";
+
+  if (!themeName || themeName === "default") return "@silicajs/theme-default";
+  if (themeName.startsWith(".")) return `../../${themeName.replace(/^\.\//, "")}`;
+  return themeName;
 }
 
 function readTemplateDirectory(root: string, current = root): TemplateFile[] {

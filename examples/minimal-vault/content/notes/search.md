@@ -10,8 +10,6 @@ latency_target_ms: 100
 indexed_fields: [title, content, tags]
 ---
 
-# Search notes
-
 FlexSearch is built during precompute and lazy-loaded by the `/api/search` route.
 
 The command palette calls the server instead of shipping a full private index to browsers.

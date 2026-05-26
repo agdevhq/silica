@@ -10,8 +10,6 @@ status: published
 audience: framework contributors
 ---
 
-# Welcome to Silica
-
 Silica turns a folder of Markdown into a polished, authenticated knowledge site.
 
 Open [[notes/auth|Auth notes]], [[notes/search|Search notes]], or [[notes/frontmatter|Frontmatter notes]] to explore links and backlinks.

@@ -13,9 +13,19 @@ import rehypeShiki from "@shikijs/rehype";
 import rehypeReact from "rehype-react";
 import { Fragment, jsx, jsxs } from "react/jsx-runtime";
 import { visit } from "unist-util-visit";
-import type { AnalyzeResult, RenderContext, RenderResult, TocItem } from "../types.js";
+import type {
+  AnalyzeResult,
+  RenderContext,
+  RenderResult,
+  TocItem,
+} from "../types.js";
 import { transformObsidianMarkdown } from "./ofm.js";
-import { getDataArray, mergeBrokenLinks, rehypeCollectTocAndLinks, rehypeExternalLinks } from "./plugins.js";
+import {
+  getDataArray,
+  mergeBrokenLinks,
+  rehypeCollectTocAndLinks,
+  rehypeExternalLinks,
+} from "./plugins.js";
 
 type MdastNode = {
   type: string;
@@ -23,7 +33,54 @@ type MdastNode = {
   children?: MdastNode[];
 };
 
-export async function renderMarkdown(raw: string, context: RenderContext): Promise<RenderResult> {
+const headingLinkIcon = {
+  type: "element",
+  tagName: "svg",
+  properties: {
+    ariaHidden: "true",
+    className: ["silica-heading-link-icon"],
+    fill: "none",
+    stroke: "currentColor",
+    strokeLinecap: "round",
+    strokeLinejoin: "round",
+    strokeWidth: 2,
+    viewBox: "0 0 24 24",
+  },
+  children: [
+    {
+      type: "element",
+      tagName: "path",
+      properties: {
+        d: "M9 17H7A5 5 0 0 1 7 7h2",
+      },
+      children: [],
+    },
+    {
+      type: "element",
+      tagName: "path",
+      properties: {
+        d: "M15 7h2a5 5 0 1 1 0 10h-2",
+      },
+      children: [],
+    },
+    {
+      type: "element",
+      tagName: "line",
+      properties: {
+        x1: 8,
+        x2: 16,
+        y1: 12,
+        y2: 12,
+      },
+      children: [],
+    },
+  ],
+} as const;
+
+export async function renderMarkdown(
+  raw: string,
+  context: RenderContext,
+): Promise<RenderResult> {
   const parsed = matter(raw);
   const transformed = transformObsidianMarkdown(parsed.content, context);
   const processor = baseProcessor()
@@ -36,7 +93,11 @@ export async function renderMarkdown(raw: string, context: RenderContext): Promi
       },
     })
     .use(rehypeSlug)
-    .use(rehypeAutolinkHeadings, { behavior: "wrap" })
+    .use(rehypeAutolinkHeadings, {
+      behavior: "wrap",
+      content: headingLinkIcon,
+      properties: { className: ["silica-heading-link"] },
+    })
     .use(rehypeCollectTocAndLinks)
     .use(rehypeExternalLinks)
     .use(rehypeReact, {
@@ -47,7 +108,10 @@ export async function renderMarkdown(raw: string, context: RenderContext): Promi
 
   const file = await processor.process(transformed.markdown);
   const frontmatter = parsed.data;
-  const links = unique([...transformed.links, ...getDataArray<string>(file.data, "links")]);
+  const links = unique([
+    ...transformed.links,
+    ...getDataArray<string>(file.data, "links"),
+  ]);
   const toc = getDataArray<TocItem>(file.data, "toc");
   const plainText = extractPlainText(parsed.content);
 
@@ -64,7 +128,10 @@ export async function renderMarkdown(raw: string, context: RenderContext): Promi
   };
 }
 
-export async function analyzeMarkdown(raw: string, context: RenderContext): Promise<AnalyzeResult> {
+export async function analyzeMarkdown(
+  raw: string,
+  context: RenderContext,
+): Promise<AnalyzeResult> {
   const parsed = matter(raw);
   const transformed = transformObsidianMarkdown(parsed.content, context);
   const plainText = extractPlainText(transformed.markdown);
@@ -82,8 +149,12 @@ export async function analyzeMarkdown(raw: string, context: RenderContext): Prom
   };
 }
 
-export function getTitle(frontmatter: Record<string, unknown>, plainText: string): string | undefined {
-  if (typeof frontmatter.title === "string" && frontmatter.title.trim()) return frontmatter.title.trim();
+export function getTitle(
+  frontmatter: Record<string, unknown>,
+  plainText: string,
+): string | undefined {
+  if (typeof frontmatter.title === "string" && frontmatter.title.trim())
+    return frontmatter.title.trim();
   const heading = plainText
     .split("\n")
     .map((line) => line.trim())
@@ -91,8 +162,14 @@ export function getTitle(frontmatter: Record<string, unknown>, plainText: string
   return heading?.replace(/^#+\s*/, "");
 }
 
-export function getDescription(frontmatter: Record<string, unknown>, plainText: string): string | undefined {
-  if (typeof frontmatter.description === "string" && frontmatter.description.trim()) {
+export function getDescription(
+  frontmatter: Record<string, unknown>,
+  plainText: string,
+): string | undefined {
+  if (
+    typeof frontmatter.description === "string" &&
+    frontmatter.description.trim()
+  ) {
     return frontmatter.description.trim();
   }
   const sentence = extractPlainText(plainText).slice(0, 180).trim();
@@ -101,15 +178,25 @@ export function getDescription(frontmatter: Record<string, unknown>, plainText: 
 
 export function getTags(frontmatter: Record<string, unknown>): string[] {
   const value = frontmatter.tags ?? frontmatter.tag;
-  if (Array.isArray(value)) return value.map(String).map(normalizeTag).filter(Boolean);
-  if (typeof value === "string") return value.split(/[,\s]+/).map(normalizeTag).filter(Boolean);
+  if (Array.isArray(value))
+    return value.map(String).map(normalizeTag).filter(Boolean);
+  if (typeof value === "string")
+    return value
+      .split(/[,\s]+/)
+      .map(normalizeTag)
+      .filter(Boolean);
   return [];
 }
 
 function baseProcessor() {
-  return unified().use(remarkParse).use(remarkFrontmatter, ["yaml"]).use(remarkGfm).use(remarkMath).use(remarkRehype, {
-    allowDangerousHtml: true,
-  });
+  return unified()
+    .use(remarkParse)
+    .use(remarkFrontmatter, ["yaml"])
+    .use(remarkGfm)
+    .use(remarkMath)
+    .use(remarkRehype, {
+      allowDangerousHtml: true,
+    });
 }
 
 function remarkCollectPlainText() {

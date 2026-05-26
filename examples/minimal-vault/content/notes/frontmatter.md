@@ -10,8 +10,6 @@ related_topics: [metadata, obsidian]
 example_custom_key: arbitrary values become page properties
 ---
 
-# Frontmatter notes
-
 Silica reads Obsidian-style YAML front matter between `---` fences at the top of each markdown file.
 
 ```yaml

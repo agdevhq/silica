@@ -1,12 +1,14 @@
 import { toNextJsHandler } from "better-auth/next-js";
 import { silicaAuth } from "@silicajs/auth";
+import { resolveRuntimeAuthConfig } from "../auth-config.js";
 import { loadResolvedConfig } from "../server-data.js";
 
 async function getAuth() {
   const config = await loadResolvedConfig();
+  const auth = resolveRuntimeAuthConfig(config);
   return silicaAuth({
-    allowedDomains: config.auth?.allowedDomains ?? [],
-    allowedEmails: config.auth?.allowedEmails ?? [],
+    allowedDomains: auth.allowedDomains,
+    allowedEmails: auth.allowedEmails,
   });
 }
 

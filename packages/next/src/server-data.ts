@@ -21,12 +21,19 @@ export async function loadManifest(): Promise<Manifest> {
     path.join(getSilicaRoot(), "manifest.json"),
   )) as Omit<Manifest, "allSlugs" | "bySlug"> &
     Partial<Pick<Manifest, "allSlugs" | "bySlug">>;
+  const entries = manifest.entries.map((entry) => ({
+    ...entry,
+    file: path.isAbsolute(entry.file)
+      ? entry.file
+      : path.join(getProjectRoot(), entry.file),
+  }));
   return {
     ...manifest,
-    allSlugs: manifest.allSlugs ?? manifest.entries.map((entry) => entry.slug),
+    entries,
+    allSlugs: manifest.allSlugs ?? entries.map((entry) => entry.slug),
     bySlug:
       manifest.bySlug ??
-      Object.fromEntries(manifest.entries.map((entry) => [entry.slug, entry])),
+      Object.fromEntries(entries.map((entry) => [entry.slug, entry])),
   };
 }
 

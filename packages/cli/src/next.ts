@@ -111,13 +111,37 @@ export function rewriteFrameworkPaths(
 
 async function makeNextEnv(): Promise<NodeJS.ProcessEnv> {
   const config = await loadConfig(process.cwd());
+  const authEnabled =
+    Boolean(config.auth) || process.env.SILICA_AUTH_ENABLED === "true";
+  const allowedDomains = uniqueList([
+    ...(config.auth?.allowedDomains ?? []),
+    ...parseList(process.env.SILICA_ALLOWED_DOMAINS),
+  ]);
+  const allowedEmails = uniqueList([
+    ...(config.auth?.allowedEmails ?? []),
+    ...parseList(process.env.SILICA_ALLOWED_EMAILS),
+  ]);
+
   return {
     ...process.env,
     SILICA_PROJECT_ROOT: process.cwd(),
-    SILICA_AUTH_ENABLED: config.auth ? "true" : "false",
-    SILICA_ALLOWED_DOMAINS: config.auth?.allowedDomains?.join(",") ?? "",
-    SILICA_ALLOWED_EMAILS: config.auth?.allowedEmails?.join(",") ?? "",
+    SILICA_AUTH_ENABLED: authEnabled ? "true" : "false",
+    SILICA_ALLOWED_DOMAINS: allowedDomains.join(","),
+    SILICA_ALLOWED_EMAILS: allowedEmails.join(","),
   };
+}
+
+function parseList(value: string | undefined): string[] {
+  return value
+    ? value
+        .split(",")
+        .map((item) => item.trim())
+        .filter(Boolean)
+    : [];
+}
+
+function uniqueList(values: readonly string[]): string[] {
+  return [...new Set(values.map((item) => item.trim()).filter(Boolean))];
 }
 
 async function syncStandaloneAsset(

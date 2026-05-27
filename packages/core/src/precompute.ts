@@ -36,6 +36,7 @@ export async function precompute(
   const graphLinks: Record<string, string[]> = {};
   const brokenLinks: BrokenLink[] = [];
   const searchRecords: SearchRecord[] = [];
+  const runtimeContentRoot = path.join(projectRoot, ".silica/content");
   const relativeGitPaths = markdownFiles.map((file) =>
     normalizeGitPath(path.join(config.contentDir, file.relativePath)),
   );
@@ -46,6 +47,7 @@ export async function precompute(
 
   await fs.ensureDir(path.join(projectRoot, ".silica"));
   await fs.ensureDir(path.join(projectRoot, ".silica/next/public/silica"));
+  await writeRuntimeMarkdown(runtimeContentRoot, markdownFiles);
 
   for (const file of markdownFiles) {
     const gitDates =
@@ -65,7 +67,7 @@ export async function precompute(
       title,
       description: analysis.description,
       tags: analysis.tags,
-      file: file.absolutePath,
+      file: normalizeGitPath(path.join(".silica/content", file.relativePath)),
       relativeFile: file.relativePath,
       created: stringifyDate(
         getDate(file.frontmatter.created) ??
@@ -130,6 +132,18 @@ export async function precompute(
     buildId,
     brokenLinks,
   };
+}
+
+async function writeRuntimeMarkdown(
+  runtimeContentRoot: string,
+  files: ContentMarkdownFile[],
+): Promise<void> {
+  await fs.emptyDir(runtimeContentRoot);
+  for (const file of files) {
+    const destination = path.join(runtimeContentRoot, file.relativePath);
+    await fs.ensureDir(path.dirname(destination));
+    await fs.writeFile(destination, file.raw);
+  }
 }
 
 function serializeManifest(

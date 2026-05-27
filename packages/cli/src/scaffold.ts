@@ -22,6 +22,7 @@ export async function scaffoldProject(targetDir: string): Promise<void> {
   );
   await fs.writeFile(path.join(root, ".env.example"), envExample());
   await fs.writeFile(path.join(root, ".gitignore"), gitignore());
+  await fs.writeFile(path.join(root, ".dockerignore"), dockerignore());
   await fs.writeFile(path.join(root, "README.md"), readme(path.basename(root)));
   await fs.writeFile(path.join(root, "Dockerfile"), dockerfile());
   await fs.writeFile(
@@ -95,12 +96,16 @@ function gitignore(): string {
   return `.silica/\nnode_modules/\n.env\n.env.*\n!.env.example\n`;
 }
 
+function dockerignore(): string {
+  return `.git\n.silica\nnode_modules\n.env\n.env.*\n!.env.example\n`;
+}
+
 function readme(name: string): string {
   return `# ${name}\n\nA Silica vault.\n\n## Commands\n\n- \`npm run dev\` — materialize and run the hidden Next.js app.\n- \`npm run build\` — precompute content and build for production.\n- \`npm run start\` — serve the production build.\n\n## Auth\n\nCopy \`.env.example\` to \`.env\` and fill in Better Auth / Google OAuth values before enabling \`auth\` in \`silica.config.ts\`. Auth requires at least one \`allowedDomains\` or \`allowedEmails\` entry and a strong \`BETTER_AUTH_SECRET\` in production.\n\n## Docker\n\nThe scaffolded Dockerfile builds the generated standalone Next.js output and starts the traced \`server.js\` from wherever Next places it inside the standalone tree.\n`;
 }
 
 function dockerfile(): string {
-  return `FROM node:22-alpine AS deps\nWORKDIR /app\nCOPY package*.json ./\nRUN npm ci\n\nFROM deps AS build\nCOPY . .\nRUN npm run build\n\nFROM node:22-alpine AS runner\nWORKDIR /app\nENV NODE_ENV=production\nENV SILICA_PROJECT_ROOT=/app\nCOPY --from=build /app/.silica/next/.next/standalone ./\nCOPY --from=build /app/.silica/next/.next/static ./.silica/next/.next/static\nCOPY --from=build /app/.silica/next/public ./.silica/next/public\nCOPY --from=build /app/content ./content\nCOPY --from=build /app/.silica ./.silica\nEXPOSE 3000\nCMD ["sh", "-c", "node $(find . -path '*/server.js' -print -quit)"]\n`;
+  return `FROM node:22-alpine AS deps\nWORKDIR /app\nCOPY package*.json ./\nRUN npm ci\n\nFROM deps AS build\nCOPY . .\nRUN npm run build\n\nFROM node:22-alpine AS runner\nWORKDIR /app\nENV NODE_ENV=production\nENV SILICA_PROJECT_ROOT=/app\nCOPY --from=build /app/.silica/next/.next/standalone ./\nCOPY --from=build /app/.silica/next/.next/static ./.silica/next/.next/static\nCOPY --from=build /app/.silica/next/public ./.silica/next/public\nCOPY --from=build /app/.silica ./.silica\nEXPOSE 3000\nCMD ["sh", "-c", "node $(find . -path '*/server.js' -print -quit)"]\n`;
 }
 
 function workflow(): string {

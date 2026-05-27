@@ -49,7 +49,7 @@ Avoid folders that only contain an `index.md` with no sibling pages. Prefer a si
 
 ## Breadcrumbs
 
-Pages nested under folders show breadcrumbs above the title (e.g. `features / search`). The home page omits breadcrumbs.
+Pages nested under folders show ancestor breadcrumbs above the title (e.g. `features` on the search page — not the current page name). Folder segments link only when that folder has its own page (`index.md` or a sibling file at the folder path). The home page omits breadcrumbs.
 
 ## Mobile
 

@@ -10,15 +10,16 @@ import {
 } from "@silicajs/ui/components/breadcrumb";
 
 import { SilicaLink } from "./routing.js";
-import { prettySegment } from "./slug.js";
+import { breadcrumbSegmentHref, prettySegment } from "./slug.js";
 
 export type BreadcrumbsProps = {
   slug: string;
+  allSlugs: readonly string[];
   className?: string;
 };
 
-export function Breadcrumbs({ slug, className }: BreadcrumbsProps) {
-  const segments = slug === "index" ? [] : slug.split("/");
+export function Breadcrumbs({ slug, allSlugs, className }: BreadcrumbsProps) {
+  const segments = slug === "index" ? [] : slug.split("/").slice(0, -1);
   let acc = "";
   return (
     <Breadcrumb className={className}>
@@ -30,20 +31,20 @@ export function Breadcrumbs({ slug, className }: BreadcrumbsProps) {
             <BreadcrumbLink render={<SilicaLink href="/">Home</SilicaLink>} />
           )}
         </BreadcrumbItem>
-        {segments.map((segment, index) => {
+        {segments.map((segment) => {
           acc = acc ? `${acc}/${segment}` : segment;
-          const isLast = index === segments.length - 1;
           const label = prettySegment(segment);
+          const href = breadcrumbSegmentHref(acc, allSlugs);
           return (
             <React.Fragment key={acc}>
               <BreadcrumbSeparator />
               <BreadcrumbItem>
-                {isLast ? (
-                  <BreadcrumbPage>{label}</BreadcrumbPage>
-                ) : (
+                {href ? (
                   <BreadcrumbLink
-                    render={<SilicaLink href={`/${acc}`}>{label}</SilicaLink>}
+                    render={<SilicaLink href={href}>{label}</SilicaLink>}
                   />
+                ) : (
+                  <BreadcrumbPage>{label}</BreadcrumbPage>
                 )}
               </BreadcrumbItem>
             </React.Fragment>

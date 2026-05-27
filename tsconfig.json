@@ -6,8 +6,8 @@
   "include": [
     "packages/**/*.ts",
     "packages/**/*.tsx",
-    "examples/**/*.ts",
-    "examples/**/*.tsx",
+    "docs/**/*.ts",
+    "docs/**/*.tsx",
     "vitest.config.ts"
   ],
   "exclude": [

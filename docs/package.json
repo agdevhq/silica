@@ -1,13 +1,13 @@
 {
-  "name": "minimal-vault",
+  "name": "docs",
   "version": "0.1.0",
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "node ../../packages/cli/dist/index.js dev",
-    "build": "node ../../packages/cli/dist/index.js build",
-    "start": "node ../../packages/cli/dist/index.js start",
-    "precompute": "node ../../packages/cli/dist/index.js build"
+    "dev": "node ../packages/cli/dist/index.js dev",
+    "build": "node ../packages/cli/dist/index.js build",
+    "start": "node ../packages/cli/dist/index.js start",
+    "precompute": "node ../packages/cli/dist/index.js build"
   },
   "dependencies": {
     "@silicajs/auth": "0.1.0",

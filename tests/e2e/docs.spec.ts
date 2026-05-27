@@ -4,14 +4,13 @@ test("public vault renders homepage and nested pages", async ({ request }) => {
   const home = await request.get("/");
   expect(home.ok()).toBe(true);
   const homeHtml = await home.text();
-  expect(homeHtml).toContain("Welcome to Silica");
-  expect(homeHtml).toContain("Auth notes");
-  expect(homeHtml).toContain("/silica/images/sample.svg");
+  expect(homeHtml).toContain("Silica");
+  expect(homeHtml).toContain("Authentication");
 
-  const auth = await request.get("/notes/auth");
+  const auth = await request.get("/auth");
   expect(auth.ok()).toBe(true);
   const authHtml = await auth.text();
-  expect(authHtml).toContain("Auth notes");
+  expect(authHtml).toContain("Authentication");
   expect(authHtml).toContain("Google OAuth");
 });
 
@@ -23,8 +22,8 @@ test("search API returns matching private server index results", async ({ reques
     results: Array<{ slug: string; title: string; excerpt: string }>;
   };
   expect(payload.results[0]).toMatchObject({
-    slug: "notes/auth",
-    title: "Auth notes",
+    slug: "auth",
+    title: "Authentication",
   });
   expect(payload.results[0]?.excerpt.toLowerCase()).toContain("oauth");
 });

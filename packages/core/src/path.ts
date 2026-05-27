@@ -8,7 +8,9 @@ declare const relativeUrlBrand: unique symbol;
 export type FilePath = string & { readonly [filePathBrand]: "FilePath" };
 export type FullSlug = string & { readonly [fullSlugBrand]: "FullSlug" };
 export type SimpleSlug = string & { readonly [simpleSlugBrand]: "SimpleSlug" };
-export type RelativeURL = string & { readonly [relativeUrlBrand]: "RelativeURL" };
+export type RelativeURL = string & {
+  readonly [relativeUrlBrand]: "RelativeURL";
+};
 
 export function asFilePath(value: string): FilePath {
   return normalizePath(value) as FilePath;
@@ -51,7 +53,10 @@ export function normalizeSlug(value: string): string {
   return (parts.join("/") || "index").replace(/\/index\/index$/, "/index");
 }
 
-export function slugifyFilePath(filePath: FilePath | string, contentDir = "content"): FullSlug {
+export function slugifyFilePath(
+  filePath: FilePath | string,
+  contentDir = "content",
+): FullSlug {
   const normalizedFile = normalizePath(filePath);
   const normalizedContent = normalizePath(contentDir);
   const relative = normalizedFile.startsWith(`${normalizedContent}/`)
@@ -83,8 +88,14 @@ export function pathToRoot(slug: FullSlug | string): RelativeURL {
   return asRelativeURL(depth === 0 ? "." : Array(depth).fill("..").join("/"));
 }
 
-export function resolveRelative(currentSlug: FullSlug | string, target: string): FullSlug {
-  const currentDir = normalizePath(currentSlug).split("/").slice(0, -1).join("/");
+export function resolveRelative(
+  currentSlug: FullSlug | string,
+  target: string,
+): FullSlug {
+  const currentDir = normalizePath(currentSlug)
+    .split("/")
+    .slice(0, -1)
+    .join("/");
   return asFullSlug(normalizeSlug(path.posix.join(currentDir, target)));
 }
 
@@ -98,7 +109,8 @@ export function resolveWikiLink(
   const normalizedTarget = normalizeSlug(rawPath ?? target);
   const candidates = new Set(allSlugs.map(normalizeSlug));
 
-  if (strategy === "absolute" && candidates.has(normalizedTarget)) return asFullSlug(normalizedTarget);
+  if (strategy === "absolute" && candidates.has(normalizedTarget))
+    return asFullSlug(normalizedTarget);
 
   if (strategy === "relative") {
     const relative = resolveRelative(currentSlug, normalizedTarget);
@@ -106,7 +118,8 @@ export function resolveWikiLink(
   }
 
   if (candidates.has(normalizedTarget)) return asFullSlug(normalizedTarget);
-  if (candidates.has(`${normalizedTarget}/index`)) return asFullSlug(`${normalizedTarget}/index`);
+  if (candidates.has(`${normalizedTarget}/index`))
+    return asFullSlug(`${normalizedTarget}/index`);
 
   const byBasename = [...candidates].filter((slug) => {
     const simplified = simplifySlug(slug).toString();

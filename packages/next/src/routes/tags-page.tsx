@@ -1,7 +1,7 @@
-import { cacheLife } from "next/cache";
+import { cacheLife, cacheTag } from "next/cache";
 import { notFound } from "next/navigation";
 import { TagsList } from "@silicajs/components";
-import { loadManifest } from "../server-data.js";
+import { loadBuildId, loadManifest } from "../server-data.js";
 
 export type TagsPageProps = {
   params: Promise<{ tag: string }> | { tag: string };
@@ -30,5 +30,7 @@ export default async function TagsPage({ params }: TagsPageProps) {
 async function getTagsManifest() {
   "use cache";
   cacheLife("max");
+  const buildId = await loadBuildId();
+  cacheTag("build", `build:${buildId}`);
   return loadManifest();
 }

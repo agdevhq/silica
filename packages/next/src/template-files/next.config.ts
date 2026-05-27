@@ -18,6 +18,7 @@ const nextConfig: NextConfig = {
       "../content/**/*",
       "../manifest.json",
       "../graph.json",
+      "../config.json",
       "../search-index.json",
       "../build-id.txt",
     ],

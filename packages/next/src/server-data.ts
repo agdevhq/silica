@@ -7,9 +7,12 @@ import type {
 } from "@silicajs/core/runtime";
 
 export function getProjectRoot(): string {
-  return (
-    process.env.SILICA_PROJECT_ROOT ?? path.resolve(process.cwd(), "../..")
-  );
+  const projectRoot = process.env.SILICA_PROJECT_ROOT;
+  if (!projectRoot) {
+    throw new Error("SILICA_PROJECT_ROOT must be set by the Silica CLI.");
+  }
+
+  return projectRoot;
 }
 
 export function getSilicaRoot(): string {

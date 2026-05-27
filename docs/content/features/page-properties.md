@@ -7,7 +7,7 @@ Any frontmatter key that is not reserved by Silica appears in a **Properties** p
 
 ## Reserved keys (not shown as properties)
 
-`title`, `description`, `date`, `created`, `modified`, `draft`, and `publish` are handled internally.
+`title`, `menu_label`, `description`, `date`, `created`, `modified`, `draft`, and `publish` are handled internally.
 
 ## Example
 

@@ -30,6 +30,7 @@ export {
 export {
   formatPropertyLabel,
   formatPropertyValue,
+  getMenuLabel,
   getPageProperties,
   type PageProperty,
 } from "./pipeline/frontmatter.js";

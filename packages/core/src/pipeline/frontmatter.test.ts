@@ -2,8 +2,30 @@ import { describe, expect, it } from "vitest";
 import {
   formatPropertyLabel,
   formatPropertyValue,
+  getMenuLabel,
   getPageProperties,
 } from "./frontmatter.js";
+
+describe("getMenuLabel", () => {
+  it("uses menu_label when set, otherwise falls back to title", () => {
+    expect(
+      getMenuLabel(
+        { menu_label: "Auth", title: "Authentication and Authorization" },
+        "Authentication and Authorization",
+      ),
+    ).toBe("Auth");
+    expect(getMenuLabel({ title: "Authentication" }, "Authentication")).toBe(
+      "Authentication",
+    );
+    expect(getMenuLabel({}, "From Title")).toBe("From Title");
+  });
+
+  it("ignores blank menu_label values", () => {
+    expect(getMenuLabel({ menu_label: "   " }, "Page Title")).toBe(
+      "Page Title",
+    );
+  });
+});
 
 describe("getPageProperties", () => {
   it("returns arbitrary keys and excludes silica-reserved frontmatter", () => {
@@ -13,6 +35,7 @@ describe("getPageProperties", () => {
         description: "Intro",
         tags: ["home"],
         draft: true,
+        menu_label: "Home",
         author: "Silica team",
         status: "published",
         reviewCycle: "monthly",

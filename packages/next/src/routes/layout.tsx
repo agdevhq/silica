@@ -31,7 +31,7 @@ export async function getLayoutProps() {
     navigation: {
       entries: manifest.entries.map((entry) => ({
         slug: entry.slug,
-        title: entry.title,
+        title: entry.menuLabel ?? entry.title,
       })),
     },
     config: {

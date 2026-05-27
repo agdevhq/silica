@@ -34,4 +34,4 @@ publish: true
 
 Any other YAML keys become **page properties** rendered under the title. Reserved keys are handled by Silica and are not shown again in the properties panel.
 
-This page sets `featured: true` and `date` as custom properties alongside the reserved fields.
+This page sets `featured: true` as a custom property; `date` is reserved and is not duplicated in the panel.

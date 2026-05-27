@@ -18,9 +18,9 @@ describe("getPageProperties", () => {
         reviewCycle: "monthly",
       }),
     ).toEqual([
-      { key: "author", label: "Author", value: "Silica team" },
-      { key: "reviewCycle", label: "Review Cycle", value: "monthly" },
-      { key: "status", label: "Status", value: "published" },
+      { key: "author", label: "author", value: "Silica team" },
+      { key: "reviewCycle", label: "review cycle", value: "monthly" },
+      { key: "status", label: "status", value: "published" },
     ]);
   });
 
@@ -33,18 +33,18 @@ describe("getPageProperties", () => {
         reviewedOn: new Date("2026-05-25T00:00:00.000Z"),
       }),
     ).toEqual([
-      { key: "featured", label: "Featured", value: "true" },
-      { key: "latencyTargetMs", label: "Latency Target Ms", value: "100" },
-      { key: "relatedTopics", label: "Related Topics", value: "search, auth" },
-      { key: "reviewedOn", label: "Reviewed On", value: "2026-05-25" },
+      { key: "featured", label: "featured", value: "true" },
+      { key: "latencyTargetMs", label: "latency target ms", value: "100" },
+      { key: "relatedTopics", label: "related topics", value: "search, auth" },
+      { key: "reviewedOn", label: "reviewed on", value: "2026-05-25" },
     ]);
   });
 });
 
 describe("formatPropertyLabel", () => {
   it("humanizes snake_case and camelCase keys", () => {
-    expect(formatPropertyLabel("review_cycle")).toBe("Review Cycle");
-    expect(formatPropertyLabel("latencyTargetMs")).toBe("Latency Target Ms");
+    expect(formatPropertyLabel("review_cycle")).toBe("review cycle");
+    expect(formatPropertyLabel("latencyTargetMs")).toBe("latency target ms");
   });
 });
 

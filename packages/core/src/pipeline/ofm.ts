@@ -1,5 +1,6 @@
 import { resolveWikiLink, slugToHref } from "../path.js";
 import type { BrokenLink, RenderContext } from "../types.js";
+import { collectInlineTagMatches, tagToHref } from "./tags.js";
 
 export type OfmTransformResult = {
   markdown: string;
@@ -44,7 +45,13 @@ export function transformObsidianMarkdown(
     })
     .replace(
       /^((?:>\s*)+)\[!([\w-]+)]([+-]?)\s*(.*)$/gm,
-      (_match, quotePrefix: string, kind: string, fold: string, title: string) => {
+      (
+        _match,
+        quotePrefix: string,
+        kind: string,
+        fold: string,
+        title: string,
+      ) => {
         const display = title || kind[0]!.toUpperCase() + kind.slice(1);
         const attrs = [
           `class="silica-callout-title"`,
@@ -58,6 +65,9 @@ export function transformObsidianMarkdown(
     );
 
   transformed = rewriteRelativeAssets(transformed, assetBase);
+  if (context.tags?.inline ?? true) {
+    transformed = linkInlineTags(transformed);
+  }
 
   return {
     markdown: transformed,
@@ -103,6 +113,21 @@ function rewriteRelativeAssets(markdown: string, assetBase: string): string {
       return `${label}(${assetBase}/${target.replace(/^\.?\//, "")})`;
     },
   );
+}
+
+function linkInlineTags(markdown: string): string {
+  const matches = collectInlineTagMatches(markdown);
+  if (matches.length === 0) return markdown;
+
+  let cursor = 0;
+  let output = "";
+  for (const match of matches) {
+    output += markdown.slice(cursor, match.start);
+    output += `[${match.raw}](${tagToHref(match.tag)})`;
+    cursor = match.end;
+  }
+  output += markdown.slice(cursor);
+  return output;
 }
 
 function escapeHtml(value: string): string {

@@ -10,7 +10,8 @@ describe("search index", () => {
         id: "index",
         slug: "index",
         title: "Welcome to Silica",
-        content: "Silica publishes Obsidian-flavored markdown with server side search.",
+        content:
+          "Silica publishes Obsidian-flavored markdown with server side search.",
         description: "Home",
         tags: ["home"],
       },
@@ -19,7 +20,7 @@ describe("search index", () => {
         slug: "notes/auth",
         title: "Authentication",
         content: "Google OAuth is handled by Better Auth in stateless mode.",
-        tags: ["security"],
+        tags: ["security/auth"],
       },
     ]);
 
@@ -28,5 +29,12 @@ describe("search index", () => {
 
     expect(results[0]?.slug).toBe("notes/auth");
     expect(results[0]?.excerpt.toLowerCase()).toContain("oauth");
+    expect(
+      querySearchIndex(loaded, "oauth", { tags: ["#security"] })[0]?.slug,
+    ).toBe("notes/auth");
+    expect(querySearchIndex(loaded, "", { tags: ["security"] })[0]?.slug).toBe(
+      "notes/auth",
+    );
+    expect(querySearchIndex(loaded, "oauth", { tags: ["home"] })).toEqual([]);
   });
 });

@@ -17,12 +17,18 @@ export function querySearchIndex(
   options: SearchQueryOptions = {},
 ): SearchResult[] {
   const normalized = normalizeSearchText(query);
-  if (!normalized) return [];
-
   const limit = options.limit ?? 10;
-  const tagFilter = new Set(
-    (options.tags ?? []).map((tag) => tag.toLowerCase()),
-  );
+  const tagFilter = (options.tags ?? []).map(normalizeTag).filter(Boolean);
+  if (!normalized && tagFilter.length === 0) return [];
+
+  if (!normalized) {
+    return [...loaded.recordsById.values()]
+      .filter((record) => matchesTagFilter(record, tagFilter))
+      .map((record) => toResult(record, 1))
+      .sort((a, b) => a.title.localeCompare(b.title))
+      .slice(0, limit);
+  }
+
   const rawResults = loaded.document.search(normalized, {
     limit: Math.max(limit * 4, 20),
     enrich: false,
@@ -42,17 +48,35 @@ export function querySearchIndex(
     .map(([id, score]) => {
       const record = loaded.recordsById.get(id);
       if (!record) return undefined;
-      if (
-        tagFilter.size > 0 &&
-        !record.tags.some((tag) => tagFilter.has(tag.toLowerCase()))
-      ) {
-        return undefined;
-      }
+      if (!matchesTagFilter(record, tagFilter)) return undefined;
       return toResult(record, score);
     })
     .filter((result): result is SearchResult => Boolean(result))
     .sort((a, b) => b.score - a.score || a.title.localeCompare(b.title))
     .slice(0, limit);
+}
+
+function normalizeTag(tag: string): string {
+  return tag.trim().replace(/^#/, "").toLowerCase();
+}
+
+function tagMatches(candidate: string, query: string): boolean {
+  const tag = normalizeTag(candidate);
+  const normalizedQuery = normalizeTag(query);
+  if (!tag || !normalizedQuery) return false;
+  return tag === normalizedQuery || tag.startsWith(`${normalizedQuery}/`);
+}
+
+function matchesTagFilter(
+  record: StoredSearchRecord,
+  tagFilter: string[],
+): boolean {
+  return (
+    tagFilter.length === 0 ||
+    record.tags.some((tag) =>
+      tagFilter.some((filterTag) => tagMatches(tag, filterTag)),
+    )
+  );
 }
 
 function toResult(record: StoredSearchRecord, score: number): SearchResult {

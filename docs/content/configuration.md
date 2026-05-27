@@ -20,6 +20,9 @@ export default defineConfig({
   wikilinks: {
     /* ... */
   },
+  tags: {
+    /* ... */
+  },
   filters: {
     /* ... */
   },
@@ -54,6 +57,16 @@ export default defineConfig({
 
 See [[writing/wikilinks|Wikilinks]].
 
+### Tags
+
+| Option        | Default | Description                                            |
+| ------------- | ------- | ------------------------------------------------------ |
+| `tags.inline` | `true`  | Recognize and link inline `#tags` written in note body |
+
+Set `tags.inline: false` if you only want tags from frontmatter.
+
+See [[writing/tags|Tags]].
+
 ### Content filters
 
 | Option                    | Default | Description                               |
@@ -80,4 +93,3 @@ See [[auth|Authentication]] for environment variables and setup.
 ## Config changes in dev
 
 Editing `silica.config.ts` triggers a full dev server restart. Content-only changes hot-reload without restarting.
-

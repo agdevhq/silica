@@ -19,7 +19,7 @@ describe("generated templates", () => {
       "app/not-allowed/page.tsx",
       "app/not-found.tsx",
       "app/sign-in/page.tsx",
-      "app/tags/[tag]/page.tsx",
+      "app/tags/[...tag]/page.tsx",
       "postcss.config.mjs",
       "proxy.ts",
     ]);
@@ -55,6 +55,7 @@ describe("generated templates", () => {
           allowedEmails: [],
         },
         wikilinks: { strategy: "shortest", strict: false },
+        tags: { inline: true },
         filters: { removeDrafts: true, explicitPublish: false },
       }),
     ).toContain('"authEnabled": true');

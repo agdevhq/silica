@@ -11,6 +11,8 @@ Open the command palette from the sidebar search button or press **⌘K** (Ctrl+
 
 Results include page title and excerpt. Selecting a result navigates to that page.
 
+Use `#tag` or `tag:#tag` to search by tag. Parent tags include nested tags, so `#project` also matches `#project/active`.
+
 ## How it works
 
 1. **Precompute** — `@silicajs/search` indexes title and content into `search-index.json`
@@ -27,3 +29,4 @@ By default, each page record includes:
 
 - `title`
 - Plain-text content (markdown stripped)
+- `tags`

@@ -73,6 +73,9 @@ export function resolveConfig(
       strategy: config.wikilinks?.strategy ?? "shortest",
       strict: config.wikilinks?.strict ?? false,
     },
+    tags: {
+      inline: config.tags?.inline ?? true,
+    },
     filters: {
       removeDrafts: config.filters?.removeDrafts ?? true,
       explicitPublish: config.filters?.explicitPublish ?? false,

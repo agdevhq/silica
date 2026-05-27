@@ -111,9 +111,15 @@ export type SilicaCalloutProps = HTMLAttributes<HTMLElement> & {
   "data-callout-open"?: string;
 };
 
+export type SilicaCodeBlockProps = HTMLAttributes<HTMLElement> & {
+  "data-language"?: string;
+  "data-language-label"?: string;
+};
+
 export type MarkdownComponents = {
   a?: ComponentType<AnchorHTMLAttributes<HTMLAnchorElement>>;
   "silica-callout"?: ComponentType<SilicaCalloutProps>;
+  "silica-code-block"?: ComponentType<SilicaCodeBlockProps>;
 };
 
 export type RenderResult = {

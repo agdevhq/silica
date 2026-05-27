@@ -84,6 +84,51 @@ describe("renderMarkdown", () => {
     expect(html).toContain("</aside>");
   }, 15_000);
 
+  it("wraps fenced code blocks with language metadata", async () => {
+    const result = await renderMarkdown(
+      "```ts\nconst x: number = 1;\n```\n\n```\nplain text only\n```\n",
+      {
+        slug: "index",
+        allSlugs: ["index"],
+      },
+    );
+
+    const html = renderToStaticMarkup(<>{result.content}</>);
+
+    expect(html).toContain("<silica-code-block");
+    expect(html).toContain('data-language="ts"');
+    expect(html).toContain('data-language-label="TypeScript"');
+    expect(
+      (html.match(/<silica-code-block/g) ?? []).length,
+    ).toBeGreaterThanOrEqual(2);
+    expect(html).toContain("<pre");
+  }, 15_000);
+
+  it("supports custom code block render components", async () => {
+    const result = await renderMarkdown("```ts\nconst x: number = 1;\n```", {
+      slug: "index",
+      allSlugs: ["index"],
+      components: {
+        "silica-code-block": ({
+          children,
+          "data-language": language,
+          "data-language-label": label,
+        }) => (
+          <figure data-rendered-code-block={language} data-title={label}>
+            {children}
+          </figure>
+        ),
+      },
+    });
+
+    const html = renderToStaticMarkup(<>{result.content}</>);
+
+    expect(html).toContain(
+      '<figure data-rendered-code-block="ts" data-title="TypeScript">',
+    );
+    expect(html).toContain("<pre");
+  }, 15_000);
+
   it("sanitizes raw HTML and escapes OFM-injected labels", async () => {
     const result = await renderMarkdown(
       "[[<img src=x onerror=alert(1)>]]\n\n<script>alert(1)</script>\n\n<img src=x onerror=alert(1)>",

@@ -5,6 +5,27 @@ import { getGitDates, precompute } from "./precompute.js";
 import { resolveConfig } from "./config.js";
 
 describe("precompute", () => {
+  it("uses menu_label for navigation labels without changing page title", async () => {
+    const root = path.join(process.cwd(), ".tmp-precompute-menu-label");
+    await fs.emptyDir(path.join(root, "content"));
+    await fs.writeFile(
+      path.join(root, "content/index.md"),
+      "---\ntitle: Authentication and Authorization\nmenu_label: Auth\n---\n# Authentication and Authorization",
+    );
+
+    const result = await precompute({
+      projectRoot: root,
+      config: resolveConfig({ title: "Test" }, root),
+    });
+
+    expect(result.manifest.entries[0]).toMatchObject({
+      title: "Authentication and Authorization",
+      menuLabel: "Auth",
+    });
+
+    await fs.remove(root);
+  });
+
   it("emits manifest, graph, search, and copies assets", async () => {
     const root = path.join(process.cwd(), ".tmp-precompute");
     await fs.emptyDir(path.join(root, "content"));

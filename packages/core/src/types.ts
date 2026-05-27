@@ -72,6 +72,7 @@ export type TocItem = {
 export type ManifestEntry = {
   slug: string;
   title: string;
+  menuLabel: string;
   description?: string;
   tags: string[];
   file: string;

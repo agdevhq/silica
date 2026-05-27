@@ -9,7 +9,8 @@ Silica reads Obsidian-style YAML front matter between `---` fences at the top of
 
 ```yaml
 ---
-title: Page title
+title: Authentication and Authorization Guide
+menu_label: Auth
 description: Used for meta tags and page headers
 date: 2026-05-25
 created: 2026-05-20
@@ -24,6 +25,7 @@ publish: true
 | Key                    | Purpose                                                 |
 | ---------------------- | ------------------------------------------------------- |
 | `title`                | Page title; falls back to the first heading or filename |
+| `menu_label`           | Sidebar label; falls back to `title` when omitted       |
 | `description`          | Meta description and subtitle under the page title      |
 | `date`                 | Publication date; used when `created` is missing        |
 | `created` / `modified` | Stored in the manifest; git history is a fallback       |

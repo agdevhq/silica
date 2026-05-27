@@ -13,6 +13,7 @@ const RESERVED_FRONTMATTER_KEYS = new Set([
   "date",
   "description",
   "draft",
+  "menu_label",
   "modified",
   "permalink",
   "publish",
@@ -20,6 +21,19 @@ const RESERVED_FRONTMATTER_KEYS = new Set([
   "tags",
   "title",
 ]);
+
+export function getMenuLabel(
+  frontmatter: Record<string, unknown>,
+  title: string,
+): string {
+  if (
+    typeof frontmatter.menu_label === "string" &&
+    frontmatter.menu_label.trim()
+  ) {
+    return frontmatter.menu_label.trim();
+  }
+  return title;
+}
 
 export function getPageProperties(
   frontmatter: Record<string, unknown>,

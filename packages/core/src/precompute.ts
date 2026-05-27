@@ -7,6 +7,7 @@ import { buildSearchIndex, type SearchRecord } from "@silicajs/search";
 import { loadConfig } from "./config.js";
 import { scanContent, type ContentMarkdownFile } from "./files.js";
 import { asFullSlug, slugToHref } from "./path.js";
+import { getMenuLabel } from "./pipeline/frontmatter.js";
 import { analyzeMarkdown } from "./pipeline/index.js";
 import type {
   BrokenLink,
@@ -63,9 +64,11 @@ export async function precompute(
     });
 
     const title = analysis.title ?? titleFromSlug(file.slug);
+    const menuLabel = getMenuLabel(file.frontmatter, title);
     const entry: ManifestEntry = {
       slug: file.slug,
       title,
+      menuLabel,
       description: analysis.description,
       tags: analysis.tags,
       file: normalizeGitPath(path.join(".silica/content", file.relativePath)),

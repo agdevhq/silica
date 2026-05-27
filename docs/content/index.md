@@ -1,5 +1,6 @@
 ---
-title: Silica
+title: Welcome to Silica
+menu_label: Home
 description: Publish Obsidian-flavored markdown vaults as polished websites.
 ---
 

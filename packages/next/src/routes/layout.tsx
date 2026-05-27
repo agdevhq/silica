@@ -1,4 +1,5 @@
 import { cacheLife } from "next/cache";
+import { resolveRuntimeAuthConfig } from "../auth-config.js";
 import { loadManifest, loadResolvedConfig } from "../server-data.js";
 
 export async function generateMetadata() {
@@ -19,6 +20,7 @@ export async function getLayoutProps() {
     loadManifest(),
     loadResolvedConfig(),
   ]);
+  const auth = resolveRuntimeAuthConfig(config);
   return {
     navigation: {
       entries: manifest.entries.map((entry) => ({
@@ -30,7 +32,7 @@ export async function getLayoutProps() {
       title: config.title,
       description: config.description,
       baseUrl: config.baseUrl,
-      authEnabled: Boolean(config.auth),
+      authEnabled: auth.authEnabled,
     },
   };
 }

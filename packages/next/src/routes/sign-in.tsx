@@ -1,9 +1,10 @@
 import { cacheLife } from "next/cache";
+import { resolveRuntimeAuthConfig } from "../auth-config.js";
 import { loadResolvedConfig } from "../server-data.js";
 
 export default async function SignInPage() {
   const config = await getSignInConfig();
-  const authEnabled = Boolean(config.auth);
+  const authEnabled = resolveRuntimeAuthConfig(config).authEnabled;
   return (
     <main className="silica-status-page">
       <h1>Sign in</h1>

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { hasSilicaSessionCookie, isSilicaRequestAllowed } from "@silicajs/auth";
+import { isSilicaRequestAllowed } from "@silicajs/auth";
 
 export type SilicaProxyOptions = {
   authEnabled?: boolean;
@@ -17,28 +17,28 @@ export async function silicaProxy(
   const { pathname } = request.nextUrl;
 
   const authEnabled =
-    options.authEnabled ?? process.env.SILICA_AUTH_ENABLED === "true";
+    options.authEnabled === true || process.env.SILICA_AUTH_ENABLED === "true";
   if (!authEnabled) return NextResponse.next();
-  if (isPublicPath(pathname)) return NextResponse.next();
+  if (isSilicaPublicPath(pathname)) return NextResponse.next();
 
-  const allowedDomains =
-    options.allowedDomains ?? parseList(process.env.SILICA_ALLOWED_DOMAINS);
-  const allowedEmails =
-    options.allowedEmails ?? parseList(process.env.SILICA_ALLOWED_EMAILS);
+  const allowedDomains = uniqueList([
+    ...(options.allowedDomains ?? []),
+    ...parseList(process.env.SILICA_ALLOWED_DOMAINS),
+  ]);
+  const allowedEmails = uniqueList([
+    ...(options.allowedEmails ?? []),
+    ...parseList(process.env.SILICA_ALLOWED_EMAILS),
+  ]);
   const secret = process.env.BETTER_AUTH_SECRET;
   const hasValidatedSession = secret
     ? await isSilicaRequestAllowed(request, {
         secret: process.env.BETTER_AUTH_SECRET,
-        allowedDomains: [...allowedDomains],
-        allowedEmails: [...allowedEmails],
+        allowedDomains,
+        allowedEmails,
       })
     : false;
-  const hasDevelopmentCookieFallback =
-    process.env.NODE_ENV !== "production" &&
-    !secret &&
-    hasSilicaSessionCookie(request);
 
-  if (!hasValidatedSession && !hasDevelopmentCookieFallback) {
+  if (!hasValidatedSession) {
     const signInUrl = request.nextUrl.clone();
     signInUrl.pathname = "/sign-in";
     signInUrl.searchParams.set("callbackUrl", request.nextUrl.pathname);
@@ -52,10 +52,12 @@ export const config = {
   matcher: ["/((?!_next/static|_next/image|favicon.ico).*)"],
 };
 
-function isPublicPath(pathname: string): boolean {
+export function isSilicaPublicPath(pathname: string): boolean {
   return (
     PUBLIC_PATHS.includes(pathname) ||
-    PUBLIC_PREFIXES.some((prefix) => pathname.startsWith(prefix))
+    PUBLIC_PREFIXES.some(
+      (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`),
+    )
   );
 }
 
@@ -66,4 +68,8 @@ function parseList(value: string | undefined): string[] {
         .map((item) => item.trim())
         .filter(Boolean)
     : [];
+}
+
+function uniqueList(values: readonly string[]): string[] {
+  return [...new Set(values.map((item) => item.trim()).filter(Boolean))];
 }

@@ -1,4 +1,7 @@
-# Silica
+<h1>
+  <img src="assets/logo.png" alt="" height="32" valign="top" style="margin-right: 6px;" />
+  Silica
+</h1>
 
 Silica is a framework for publishing Obsidian-flavored markdown vaults as polished, authenticated, server-rendered knowledge sites.
 

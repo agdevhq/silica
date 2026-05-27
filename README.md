@@ -1,5 +1,5 @@
 <h1>
-  <img src="assets/logo.png" alt="" height="32" valign="middle" style="margin-right: 6px;" />
+  <img src="assets/logo.png" alt="" height="42" valign="bottom" style="margin-right: 6px;" />
   Silica
 </h1>
 

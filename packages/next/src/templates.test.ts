@@ -10,10 +10,11 @@ import {
 describe("generated templates", () => {
   it("loads generated app templates from files", () => {
     expect(getSilicaTemplates().map((template) => template.path)).toEqual([
-      "app/__silica/revalidate/route.ts",
       "app/[[...slug]]/page.tsx",
       "app/api/auth/[...all]/route.ts",
       "app/api/search/route.ts",
+      "app/api/silica/dev-events/route.ts",
+      "app/api/silica/revalidate/route.ts",
       "app/layout.tsx",
       "app/not-allowed/page.tsx",
       "app/not-found.tsx",

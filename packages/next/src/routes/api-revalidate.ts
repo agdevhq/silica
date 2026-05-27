@@ -1,5 +1,6 @@
 import { revalidateTag } from "next/cache";
 import { NextResponse } from "next/server";
+import { notifyDevReload } from "../dev-reload.js";
 
 export async function POST(request: Request) {
   if (process.env.NODE_ENV === "production") {
@@ -13,5 +14,6 @@ export async function POST(request: Request) {
   const tag = url.searchParams.get("tag");
   if (!tag) return NextResponse.json({ error: "Missing tag" }, { status: 400 });
   revalidateTag(tag, "max");
+  notifyDevReload();
   return NextResponse.json({ ok: true, tag });
 }

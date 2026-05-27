@@ -1,6 +1,10 @@
-import { cacheLife } from "next/cache";
+import { cacheLife, cacheTag } from "next/cache";
 import { resolveRuntimeAuthConfig } from "../auth-config.js";
-import { loadManifest, loadResolvedConfig } from "../server-data.js";
+import {
+  loadBuildId,
+  loadManifest,
+  loadResolvedConfig,
+} from "../server-data.js";
 
 export async function generateMetadata() {
   const { config } = await getLayoutProps();
@@ -16,6 +20,8 @@ export async function generateMetadata() {
 export async function getLayoutProps() {
   "use cache";
   cacheLife("max");
+  const buildId = await loadBuildId();
+  cacheTag("build", `build:${buildId}`);
   const [manifest, config] = await Promise.all([
     loadManifest(),
     loadResolvedConfig(),

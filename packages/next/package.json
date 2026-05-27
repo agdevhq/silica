@@ -45,6 +45,14 @@
       "types": "./dist/routes/api-revalidate.d.ts",
       "import": "./dist/routes/api-revalidate.js"
     },
+    "./routes/api-dev-events": {
+      "types": "./dist/routes/api-dev-events.d.ts",
+      "import": "./dist/routes/api-dev-events.js"
+    },
+    "./dev-reload-client": {
+      "types": "./dist/dev-reload-client.d.ts",
+      "import": "./dist/dev-reload-client.js"
+    },
     "./proxy": {
       "types": "./dist/proxy.d.ts",
       "import": "./dist/proxy.js"
@@ -67,7 +75,6 @@
   ],
   "scripts": {
     "build": "tsup",
-    "dev": "tsup --watch",
     "test": "vitest run --passWithNoTests",
     "typecheck": "tsc --noEmit",
     "lint": "tsc --noEmit"

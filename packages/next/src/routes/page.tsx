@@ -46,6 +46,8 @@ export async function generateMetadata({ params }: PageProps) {
 async function getPageManifest() {
   "use cache";
   cacheLife("max");
+  const buildId = await loadBuildId();
+  cacheTag("build", `build:${buildId}`);
   return loadManifest();
 }
 

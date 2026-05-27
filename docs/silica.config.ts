@@ -1,8 +1,8 @@
 import { defineConfig } from "@silicajs/core";
 
 export default defineConfig({
-  title: "Minimal Silica Vault",
-  description: "Dogfood fixture for Silica",
+  title: "Silica Docs",
+  description: "Documentation for the Silica framework",
   baseUrl: "http://localhost:3000",
   theme: "default",
   wikilinks: {

@@ -25,18 +25,24 @@ const STORAGE_KEY = "silica-tree-expanded";
 export type VaultTreeEntry = {
   slug: string;
   title: string;
+  sortKey?: string;
 };
 
 type FolderNode = {
   key: string;
   name: string;
   fullPath: string;
+  sortKey?: string;
   entry?: VaultTreeEntry;
   children: FolderNode[];
 };
 
-function emptyNode(name: string, fullPath: string): FolderNode {
-  return { key: fullPath || "/", name, fullPath, children: [] };
+function emptyNode(
+  name: string,
+  fullPath: string,
+  sortKey?: string,
+): FolderNode {
+  return { key: fullPath || "/", name, fullPath, sortKey, children: [] };
 }
 
 function buildTreeFromEntries(entries: VaultTreeEntry[]): {
@@ -53,20 +59,24 @@ function buildTreeFromEntries(entries: VaultTreeEntry[]): {
       continue;
     }
     const segments = entry.slug.split("/");
+    const sortSegments = entry.sortKey?.split("/") ?? [];
     let parent = root;
     for (let i = 0; i < segments.length; i++) {
       const segment = segments[i]!;
       const isLast = i === segments.length - 1;
       const fullPath = segments.slice(0, i + 1).join("/");
+      const nodeSortKey = sortSegments.slice(0, i + 1).join("/") || undefined;
       if (isLast && segment === "index") {
         parent.entry = entry;
         continue;
       }
       let node = byPath.get(fullPath);
       if (!node) {
-        node = emptyNode(segment, fullPath);
+        node = emptyNode(segment, fullPath, nodeSortKey);
         byPath.set(fullPath, node);
         parent.children.push(node);
+      } else if (!node.sortKey && nodeSortKey) {
+        node.sortKey = nodeSortKey;
       }
       if (isLast) node.entry = entry;
       parent = node;
@@ -74,20 +84,40 @@ function buildTreeFromEntries(entries: VaultTreeEntry[]): {
   }
 
   const sortRecursively = (node: FolderNode) => {
-    const folders = node.children.filter((c) => c.children.length > 0);
-    const leaves = node.children.filter((c) => c.children.length === 0);
-    folders.sort((a, b) => a.name.localeCompare(b.name));
-    leaves.sort((a, b) => {
-      const ta = a.entry?.title ?? a.name;
-      const tb = b.entry?.title ?? b.name;
-      return ta.localeCompare(tb);
-    });
-    node.children = [...folders, ...leaves];
+    if (node.children.some((child) => child.sortKey)) {
+      node.children.sort(compareOrderedNodes);
+    } else {
+      const folders = node.children.filter((c) => c.children.length > 0);
+      const leaves = node.children.filter((c) => c.children.length === 0);
+      folders.sort((a, b) => a.name.localeCompare(b.name));
+      leaves.sort((a, b) => {
+        const ta = a.entry?.title ?? a.name;
+        const tb = b.entry?.title ?? b.name;
+        return ta.localeCompare(tb);
+      });
+      node.children = [...folders, ...leaves];
+    }
     for (const child of node.children) sortRecursively(child);
   };
   sortRecursively(root);
 
   return { nodes: root.children, homeEntry };
+}
+
+function compareOrderedNodes(a: FolderNode, b: FolderNode): number {
+  return (
+    (a.sortKey ?? fallbackNodeSortKey(a)).localeCompare(
+      b.sortKey ?? fallbackNodeSortKey(b),
+    ) || fallbackNodeLabel(a).localeCompare(fallbackNodeLabel(b))
+  );
+}
+
+function fallbackNodeSortKey(node: FolderNode): string {
+  return `~~~~~~~~~~:${fallbackNodeLabel(node)}`;
+}
+
+function fallbackNodeLabel(node: FolderNode): string {
+  return node.entry?.title ?? node.name;
 }
 
 function ancestorIdsOf(slug: string | undefined): string[] {

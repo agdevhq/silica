@@ -57,7 +57,11 @@ export async function scanContent(
       markdown.push({
         absolutePath,
         relativePath: relativePath.replace(/\\/g, "/"),
-        slug: slugifyFilePath(asFilePath(relativePath)),
+        slug: slugifyFilePath(
+          asFilePath(relativePath),
+          config.contentDir,
+          config.ordering,
+        ),
         raw,
         body: parsed.content,
         frontmatter: parsed.data,

@@ -17,6 +17,26 @@ The sidebar shows a collapsible tree built from your content folder structure. E
 
 Folders sort alphabetically, with subfolders before leaf pages. Expansion state persists in `localStorage`.
 
+### Numeric ordering prefixes
+
+By default, Silica treats a leading numeric prefix as an ordering hint and strips it from user-facing slugs and labels:
+
+| File                             | URL / label                 |
+| -------------------------------- | --------------------------- |
+| `content/01_Home.md`             | `/home` / `Home`            |
+| `content/02_Guides/01_Setup.md`  | `/guides/setup` / `Setup`   |
+| `content/02_Guides/02_Deploy.md` | `/guides/deploy` / `Deploy` |
+
+Disable this behavior in `silica.config.ts` if you want prefixes to remain part of the generated slugs:
+
+```ts
+export default defineConfig({
+  ordering: {
+    numericPrefixes: false,
+  },
+});
+```
+
 ### Organizing docs
 
 Use nested folders to create sections — this documentation site follows the same pattern:

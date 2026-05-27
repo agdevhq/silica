@@ -62,13 +62,6 @@ export default defineConfig({
 - [[markdown/code-blocks|Code blocks]]
 - [[markdown/math-and-gfm|Math and GFM]]
 
-### Configuration and deployment
-
-- [[configuration|Configuration]]
-- [[auth|Authentication]]
-- [[deployment|Deployment]]
-- [[architecture|Architecture]]
-
 ### Site features
 
 - [[features/navigation|Navigation]]
@@ -76,3 +69,10 @@ export default defineConfig({
 - [[features/backlinks|Backlinks]]
 - [[features/table-of-contents|Table of contents]]
 - [[features/page-properties|Page properties]]
+
+### Configuration and deployment
+
+- [[configuration|Configuration]]
+- [[auth|Authentication]]
+- [[deployment|Deployment]]
+- [[architecture|Architecture]]

@@ -56,6 +56,7 @@ describe("generated templates", () => {
         },
         wikilinks: { strategy: "shortest", strict: false },
         tags: { inline: true },
+        ordering: { numericPrefixes: true },
         filters: { removeDrafts: true, explicitPublish: false },
       }),
     ).toContain('"authEnabled": true');

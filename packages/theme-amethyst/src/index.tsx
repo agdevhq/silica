@@ -4,6 +4,7 @@ import type { ThemeLayoutProps, ThemePageProps } from "@silicajs/core/theme";
 import {
   Backlinks,
   Breadcrumbs,
+  PageProperties,
   SilicaLink,
   TableOfContents,
 } from "@silicajs/components";
@@ -91,6 +92,7 @@ export function PageRenderer({ page, graph, manifest }: ThemePageProps) {
               {page.description}
             </p>
           ) : null}
+          <PageProperties frontmatter={page.frontmatter} />
           {page.entry.tags.length > 0 ? (
             <div className="flex flex-wrap gap-2 pt-1">
               {page.entry.tags.map((tag) => (

@@ -30,6 +30,17 @@ test("search API returns matching private server index results", async ({
   expect(payload.results[0]?.excerpt.toLowerCase()).toContain("oauth");
 });
 
+test("custom frontmatter renders as page properties", async ({ request }) => {
+  const response = await request.get("/writing/frontmatter");
+  expect(response.ok()).toBe(true);
+
+  const html = await response.text();
+  expect(html).toContain('data-slot="page-properties"');
+  expect(html).toContain(">Page Properties<");
+  expect(html).toContain(">featured<");
+  expect(html).toContain(">true<");
+});
+
 test("draft content is excluded from direct routes", async ({ request }) => {
   const response = await request.get("/drafts/hidden");
   expect(response.status()).toBe(404);

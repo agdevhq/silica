@@ -46,7 +46,9 @@ export {
   type PrecomputeOptions,
 } from "./precompute.js";
 export type {
+  MarkdownComponents,
   SilicaTheme,
+  SilicaCalloutProps,
   ThemeLayoutConfig,
   ThemeLayoutProps,
   ThemeNavigationEntry,

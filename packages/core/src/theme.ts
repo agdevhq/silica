@@ -3,9 +3,12 @@ import type {
   Graph,
   Manifest,
   ManifestEntry,
+  MarkdownComponents,
   ResolvedSilicaConfig,
   TocItem,
 } from "./types.js";
+
+export type { MarkdownComponents, SilicaCalloutProps } from "./types.js";
 
 export type ThemeNavigationEntry = {
   slug: string;
@@ -52,4 +55,5 @@ export type ThemePageProps = {
 export type SilicaTheme = {
   Layout: (props: ThemeLayoutProps) => React.ReactNode;
   PageRenderer: (props: ThemePageProps) => React.ReactNode;
+  components?: MarkdownComponents;
 };

@@ -22,7 +22,7 @@ describe("renderMarkdown", () => {
     expect(html).toContain('<line x1="8" x2="16" y1="12" y2="12"></line>');
   }, 15_000);
 
-  it("renders OFM highlights and callout title markup", async () => {
+  it("renders OFM highlights and callout elements", async () => {
     const result = await renderMarkdown(
       "> [!note] Remember\n> Use ==Silica== carefully.",
       {
@@ -33,8 +33,55 @@ describe("renderMarkdown", () => {
 
     const html = renderToStaticMarkup(<>{result.content}</>);
 
-    expect(html).toContain('class="silica-callout-title"');
+    expect(html).toContain("<silica-callout");
+    expect(html).toContain('data-callout="note"');
+    expect(html).toContain('data-callout-title="Remember"');
     expect(html).toContain("<mark>Silica</mark>");
+  }, 15_000);
+
+  it("supports foldable callouts and hyphenated custom callout types", async () => {
+    const result = await renderMarkdown(
+      "> [!custom-tip]- Folded title\n> Hidden body.",
+      {
+        slug: "index",
+        allSlugs: ["index"],
+      },
+    );
+
+    const html = renderToStaticMarkup(<>{result.content}</>);
+
+    expect(html).toContain("<silica-callout");
+    expect(html).toContain('data-callout="custom-tip"');
+    expect(html).toContain('data-callout-title="Folded title"');
+    expect(html).toContain('data-callout-foldable="true"');
+    expect(html).toContain('data-callout-open="false"');
+    expect(html).toContain("<p>Hidden body.</p>");
+  }, 15_000);
+
+  it("supports custom callout render components", async () => {
+    const result = await renderMarkdown("> [!tip] Hint\n> Body.", {
+      slug: "index",
+      allSlugs: ["index"],
+      components: {
+        "silica-callout": ({
+          children,
+          "data-callout": kind,
+          "data-callout-title": title,
+        }) => (
+          <aside data-rendered-callout={kind} data-title={title}>
+            {children}
+          </aside>
+        ),
+      },
+    });
+
+    const html = renderToStaticMarkup(<>{result.content}</>);
+
+    expect(html).toContain(
+      '<aside data-rendered-callout="tip" data-title="Hint">',
+    );
+    expect(html).toContain("<p>Body.</p>");
+    expect(html).toContain("</aside>");
   }, 15_000);
 
   it("sanitizes raw HTML and escapes OFM-injected labels", async () => {

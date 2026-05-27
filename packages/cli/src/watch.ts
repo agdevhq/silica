@@ -7,7 +7,11 @@ export type WatchOptions = {
   onConfigChange?: () => void | Promise<void>;
 };
 
-export function watchContent({ projectRoot, port = 3000, onConfigChange }: WatchOptions) {
+export function watchContent({
+  projectRoot,
+  port = 3000,
+  onConfigChange,
+}: WatchOptions) {
   const watcher = watch(["content/**/*", "themes/**/*", "silica.config.ts"], {
     cwd: projectRoot,
     ignoreInitial: true,
@@ -22,7 +26,13 @@ export function watchContent({ projectRoot, port = 3000, onConfigChange }: Watch
           return;
         }
         await precompute({ projectRoot });
-        await fetch(`http://localhost:${port}/__silica/revalidate?tag=build`, { method: "POST" }).catch(() => undefined);
+        await fetch(`http://localhost:${port}/__silica/revalidate?tag=build`, {
+          method: "POST",
+          headers: {
+            "x-silica-revalidate-secret":
+              process.env.SILICA_REVALIDATE_SECRET ?? "",
+          },
+        }).catch(() => undefined);
         console.log(`[silica] rebuilt content after ${filePath}`);
       })
       .finally(() => {

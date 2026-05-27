@@ -28,11 +28,16 @@ export type ContentScan = {
   assets: ContentAssetFile[];
 };
 
-export async function scanContent(projectRoot: string, config: ResolvedSilicaConfig): Promise<ContentScan> {
+export async function scanContent(
+  projectRoot: string,
+  config: ResolvedSilicaConfig,
+): Promise<ContentScan> {
   const contentRoot = path.join(projectRoot, config.contentDir);
+  const realContentRoot = await fs.realpath(contentRoot);
   const entries = await fg("**/*", {
     cwd: contentRoot,
     dot: false,
+    followSymbolicLinks: false,
     onlyFiles: true,
     unique: true,
   });
@@ -42,10 +47,13 @@ export async function scanContent(projectRoot: string, config: ResolvedSilicaCon
 
   for (const relativePath of entries.sort()) {
     const absolutePath = path.join(contentRoot, relativePath);
+    const stats = await fs.lstat(absolutePath);
+    if (!stats.isFile()) continue;
+    if (!(await isWithinRoot(absolutePath, realContentRoot))) continue;
+
     if (isMarkdownFile(relativePath)) {
       const raw = await fs.readFile(absolutePath, "utf8");
       const parsed = matter(raw);
-      const stats = await fs.stat(absolutePath);
       markdown.push({
         absolutePath,
         relativePath: relativePath.replace(/\\/g, "/"),
@@ -67,6 +75,18 @@ export async function scanContent(projectRoot: string, config: ResolvedSilicaCon
   }
 
   return { markdown, assets };
+}
+
+async function isWithinRoot(
+  absolutePath: string,
+  realRoot: string,
+): Promise<boolean> {
+  const realPath = await fs.realpath(absolutePath);
+  const relative = path.relative(realRoot, realPath);
+  return (
+    relative === "" ||
+    (!relative.startsWith("..") && !path.isAbsolute(relative))
+  );
 }
 
 export function isMarkdownFile(filePath: string): boolean {

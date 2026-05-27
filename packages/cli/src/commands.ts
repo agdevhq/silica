@@ -1,3 +1,4 @@
+import crypto from "node:crypto";
 import { precompute } from "@silicajs/core";
 import { reportBrokenWikilinks } from "./diagnostics.js";
 import { materializeNextApp } from "./materialize.js";
@@ -16,6 +17,7 @@ export async function devCommand(): Promise<void> {
 
   while (shouldRestart) {
     shouldRestart = false;
+    process.env.SILICA_REVALIDATE_SECRET ??= crypto.randomUUID();
     const nextRoot = await materializeNextApp({ projectRoot });
     await precompute({ projectRoot });
     const { subprocess } = await startNext("dev", nextRoot);

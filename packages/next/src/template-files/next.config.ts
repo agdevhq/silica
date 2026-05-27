@@ -15,7 +15,7 @@ const nextConfig: NextConfig = {
   serverExternalPackages: ["flexsearch"],
   outputFileTracingIncludes: {
     "/*": [
-      "../../content/**/*",
+      "../content/**/*",
       "../manifest.json",
       "../graph.json",
       "../search-index.json",
@@ -24,7 +24,7 @@ const nextConfig: NextConfig = {
   },
   experimental: {
     externalDir: true,
-    serverSourceMaps: true,
+    serverSourceMaps: process.env.NODE_ENV !== "production",
   },
 };
 

@@ -28,6 +28,11 @@ describe("generated templates", () => {
     expect(nextConfigTemplate()).toContain("externalDir: true");
   });
 
+  it("traces only precomputed runtime content", () => {
+    expect(nextConfigTemplate()).toContain('"../content/**/*"');
+    expect(nextConfigTemplate()).not.toContain('"../../content/**/*"');
+  });
+
   it("generates a static import for local themes", () => {
     expect(themeModuleTemplate("./themes/my-theme")).toContain(
       'from "../../themes/my-theme"',

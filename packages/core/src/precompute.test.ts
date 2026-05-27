@@ -13,8 +13,14 @@ describe("precompute", () => {
       "---\ntitle: Home\ntags: [start]\n---\n# Home\nSee [[Notes/Auth|Auth]] and ![[image.png]].",
     );
     await fs.ensureDir(path.join(root, "content/notes"));
-    await fs.writeFile(path.join(root, "content/notes/auth.md"), "# Auth\nOAuth notes.");
-    await fs.writeFile(path.join(root, "content/draft.md"), "---\ndraft: true\n---\n# Draft");
+    await fs.writeFile(
+      path.join(root, "content/notes/auth.md"),
+      "# Auth\nOAuth notes.",
+    );
+    await fs.writeFile(
+      path.join(root, "content/draft.md"),
+      "---\ndraft: true\n---\n# Draft",
+    );
     await fs.writeFile(path.join(root, "content/image.png"), "fake");
 
     const result = await precompute({
@@ -24,8 +30,47 @@ describe("precompute", () => {
 
     expect(result.manifest.allSlugs).toEqual(["index", "notes/auth"]);
     expect(result.graph.backlinks["notes/auth"]).toEqual(["index"]);
-    expect(await fs.pathExists(path.join(root, ".silica/search-index.json"))).toBe(true);
-    expect(await fs.pathExists(path.join(root, ".silica/next/public/silica/image.png"))).toBe(true);
+    expect(
+      await fs.pathExists(path.join(root, ".silica/search-index.json")),
+    ).toBe(true);
+    expect(
+      await fs.pathExists(
+        path.join(root, ".silica/next/public/silica/image.png"),
+      ),
+    ).toBe(true);
+    expect(
+      await fs.pathExists(path.join(root, ".silica/content/index.md")),
+    ).toBe(true);
+    expect(
+      await fs.pathExists(path.join(root, ".silica/content/draft.md")),
+    ).toBe(false);
+    expect(
+      result.manifest.entries.every((entry) => !path.isAbsolute(entry.file)),
+    ).toBe(true);
+
+    await fs.remove(root);
+  });
+
+  it("does not follow symlinks while scanning content", async () => {
+    const root = path.join(process.cwd(), ".tmp-precompute-symlink");
+    await fs.emptyDir(path.join(root, "content"));
+    await fs.writeFile(path.join(root, "content/index.md"), "# Home");
+    await fs.writeFile(path.join(root, "secret.md"), "# Secret");
+    await fs.writeFile(path.join(root, "secret.txt"), "secret");
+    await fs.symlink("../secret.md", path.join(root, "content/linked.md"));
+    await fs.symlink("../secret.txt", path.join(root, "content/linked.txt"));
+
+    const result = await precompute({
+      projectRoot: root,
+      config: resolveConfig({ title: "Test" }, root),
+    });
+
+    expect(result.manifest.allSlugs).toEqual(["index"]);
+    expect(
+      await fs.pathExists(
+        path.join(root, ".silica/next/public/silica/linked.txt"),
+      ),
+    ).toBe(false);
 
     await fs.remove(root);
   });
@@ -35,19 +80,35 @@ describe("precompute", () => {
     await fs.emptyDir(path.join(root, "content"));
     await fs.ensureDir(path.join(root, "public"));
     await fs.writeFile(path.join(root, "content/index.md"), "# Home");
-    await fs.writeFile(path.join(root, "public/robots.txt"), "User-agent: *\nDisallow: /private\n");
-    await fs.writeFile(path.join(root, "public/sitemap.xml"), "<xml>User sitemap</xml>");
+    await fs.writeFile(
+      path.join(root, "public/robots.txt"),
+      "User-agent: *\nDisallow: /private\n",
+    );
+    await fs.writeFile(
+      path.join(root, "public/sitemap.xml"),
+      "<xml>User sitemap</xml>",
+    );
     await fs.ensureDir(path.join(root, ".silica/next/public"));
-    await fs.copy(path.join(root, "public/robots.txt"), path.join(root, ".silica/next/public/robots.txt"));
-    await fs.copy(path.join(root, "public/sitemap.xml"), path.join(root, ".silica/next/public/sitemap.xml"));
+    await fs.copy(
+      path.join(root, "public/robots.txt"),
+      path.join(root, ".silica/next/public/robots.txt"),
+    );
+    await fs.copy(
+      path.join(root, "public/sitemap.xml"),
+      path.join(root, ".silica/next/public/sitemap.xml"),
+    );
 
     await precompute({
       projectRoot: root,
       config: resolveConfig({ title: "Test" }, root),
     });
 
-    await expect(fs.readFile(path.join(root, ".silica/next/public/robots.txt"), "utf8")).resolves.toContain("Disallow");
-    await expect(fs.readFile(path.join(root, ".silica/next/public/sitemap.xml"), "utf8")).resolves.toContain("User sitemap");
+    await expect(
+      fs.readFile(path.join(root, ".silica/next/public/robots.txt"), "utf8"),
+    ).resolves.toContain("Disallow");
+    await expect(
+      fs.readFile(path.join(root, ".silica/next/public/sitemap.xml"), "utf8"),
+    ).resolves.toContain("User sitemap");
 
     await fs.remove(root);
   });

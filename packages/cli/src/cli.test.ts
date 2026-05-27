@@ -24,6 +24,12 @@ describe("silica CLI helpers", () => {
       "find . -path '*/server.js'",
     );
     expect(
+      await fs.readFile(path.join(root, "Dockerfile"), "utf8"),
+    ).not.toContain("/app/content");
+    expect(
+      await fs.readFile(path.join(root, ".dockerignore"), "utf8"),
+    ).toContain(".env.*");
+    expect(
       await fs.readFile(
         path.join(root, ".github/workflows/deploy.yml"),
         "utf8",

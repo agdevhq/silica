@@ -82,7 +82,11 @@ export function PageRenderer({ page, graph, manifest }: ThemePageProps) {
       <article className="min-w-0">
         <header className="mb-10 flex flex-col gap-3">
           {hasBreadcrumb ? (
-            <Breadcrumbs slug={page.slug} className="text-xs" />
+            <Breadcrumbs
+              slug={page.slug}
+              allSlugs={manifest.allSlugs}
+              className="text-xs"
+            />
           ) : null}
           <h1 className="text-4xl font-bold tracking-tight text-foreground">
             {page.title}

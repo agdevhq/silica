@@ -29,4 +29,4 @@ export {
 export { TagsList, type TagsListProps } from "./tags-list.js";
 export { UserMenu, type UserMenuProps } from "./user-menu.js";
 export { VaultTree, type VaultTreeProps } from "./vault-tree.js";
-export { slugToHref, prettySegment } from "./slug.js";
+export { breadcrumbSegmentHref, prettySegment, slugToHref } from "./slug.js";

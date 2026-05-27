@@ -9,6 +9,7 @@ const baseConfig: ResolvedSilicaConfig = {
   contentDir: "content",
   theme: "default",
   wikilinks: { strategy: "shortest", strict: false },
+  tags: { inline: true },
   filters: { removeDrafts: true, explicitPublish: false },
 };
 

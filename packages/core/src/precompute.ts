@@ -59,6 +59,7 @@ export async function precompute(
       allSlugs,
       assetBaseUrl: "/silica",
       wikilinkStrategy: config.wikilinks.strategy,
+      tags: config.tags,
     });
 
     const title = analysis.title ?? titleFromSlug(file.slug);

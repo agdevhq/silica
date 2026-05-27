@@ -1,4 +1,9 @@
-import type { AnchorHTMLAttributes, ComponentType, ReactNode } from "react";
+import type {
+  AnchorHTMLAttributes,
+  ComponentType,
+  HTMLAttributes,
+  ReactNode,
+} from "react";
 import type { SearchRecord } from "@silicajs/search";
 import type { FullSlug } from "./path.js";
 
@@ -96,9 +101,19 @@ export type RenderContext = {
   allSlugs: string[];
   assetBaseUrl?: string;
   wikilinkStrategy?: "absolute" | "relative" | "shortest";
-  components?: {
-    a?: ComponentType<AnchorHTMLAttributes<HTMLAnchorElement>>;
-  };
+  components?: MarkdownComponents;
+};
+
+export type SilicaCalloutProps = HTMLAttributes<HTMLElement> & {
+  "data-callout"?: string;
+  "data-callout-title"?: string;
+  "data-callout-foldable"?: string;
+  "data-callout-open"?: string;
+};
+
+export type MarkdownComponents = {
+  a?: ComponentType<AnchorHTMLAttributes<HTMLAnchorElement>>;
+  "silica-callout"?: ComponentType<SilicaCalloutProps>;
 };
 
 export type RenderResult = {

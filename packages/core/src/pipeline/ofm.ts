@@ -43,10 +43,17 @@ export function transformObsidianMarkdown(
       return `[${label || target}](${slugToHref(resolved)})`;
     })
     .replace(
-      /^> \[!(\w+)]\s*(.*)$/gm,
-      (_match, kind: string, title: string) => {
+      /^((?:>\s*)+)\[!([\w-]+)]([+-]?)\s*(.*)$/gm,
+      (_match, quotePrefix: string, kind: string, fold: string, title: string) => {
         const display = title || kind[0]!.toUpperCase() + kind.slice(1);
-        return `> <strong class="silica-callout-title" data-callout="${kind.toLowerCase()}">${escapeHtml(display)}</strong>`;
+        const attrs = [
+          `class="silica-callout-title"`,
+          `data-callout="${kind.toLowerCase()}"`,
+          fold ? `data-callout-fold="${fold === "+" ? "open" : "closed"}"` : "",
+        ]
+          .filter(Boolean)
+          .join(" ");
+        return `${quotePrefix}<strong ${attrs}>${escapeHtml(display)}</strong>`;
       },
     );
 

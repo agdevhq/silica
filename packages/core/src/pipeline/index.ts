@@ -26,6 +26,7 @@ import {
   mergeBrokenLinks,
   rehypeCollectTocAndLinks,
   rehypeExternalLinks,
+  rehypeObsidianCallouts,
 } from "./plugins.js";
 
 type MdastNode = {
@@ -91,6 +92,8 @@ const sanitizeSchema = {
       ["className", "silica-callout-title"],
       ["dataCallout"],
       ["data-callout"],
+      ["dataCalloutFold"],
+      ["data-callout-fold"],
     ],
     mark: defaultSchema.attributes?.mark ?? [],
   },
@@ -106,6 +109,7 @@ export async function renderMarkdown(
   const processor = baseProcessor()
     .use(rehypeRaw)
     .use(rehypeSanitize, sanitizeSchema)
+    .use(rehypeObsidianCallouts)
     .use(rehypeKatex);
 
   if (hasCodeFence(transformed.markdown)) {

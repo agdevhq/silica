@@ -76,6 +76,9 @@ export function resolveConfig(
     tags: {
       inline: config.tags?.inline ?? true,
     },
+    ordering: {
+      numericPrefixes: config.ordering?.numericPrefixes ?? true,
+    },
     filters: {
       removeDrafts: config.filters?.removeDrafts ?? true,
       explicitPublish: config.filters?.explicitPublish ?? false,

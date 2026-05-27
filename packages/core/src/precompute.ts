@@ -6,7 +6,12 @@ import fs from "fs-extra";
 import { buildSearchIndex, type SearchRecord } from "@silicajs/search";
 import { loadConfig } from "./config.js";
 import { scanContent, type ContentMarkdownFile } from "./files.js";
-import { asFullSlug, slugToHref } from "./path.js";
+import {
+  asFullSlug,
+  hasNumericPrefixInPath,
+  numericPrefixSortKey,
+  slugToHref,
+} from "./path.js";
 import { getMenuLabel } from "./pipeline/frontmatter.js";
 import { analyzeMarkdown } from "./pipeline/index.js";
 import type {
@@ -61,10 +66,16 @@ export async function precompute(
       assetBaseUrl: "/silica",
       wikilinkStrategy: config.wikilinks.strategy,
       tags: config.tags,
+      ordering: config.ordering,
     });
 
     const title = analysis.title ?? titleFromSlug(file.slug);
     const menuLabel = getMenuLabel(file.frontmatter, title);
+    const sortKey =
+      config.ordering.numericPrefixes &&
+      hasNumericPrefixInPath(file.relativePath)
+        ? numericPrefixSortKey(file.relativePath)
+        : undefined;
     const entry: ManifestEntry = {
       slug: file.slug,
       title,
@@ -73,6 +84,7 @@ export async function precompute(
       tags: analysis.tags,
       file: normalizeGitPath(path.join(".silica/content", file.relativePath)),
       relativeFile: file.relativePath,
+      sortKey,
       created: stringifyDate(
         getDate(file.frontmatter.created) ??
           getDate(file.frontmatter.date) ??
@@ -232,7 +244,7 @@ function makeManifest(
   config: ResolvedSilicaConfig,
   entries: ManifestEntry[],
 ): Manifest {
-  const sorted = entries.sort((a, b) => a.slug.localeCompare(b.slug));
+  const sorted = [...entries].sort(compareManifestEntries);
   return {
     version: 1,
     generatedAt: new Date().toISOString(),
@@ -241,6 +253,25 @@ function makeManifest(
     entries: sorted,
     bySlug: Object.fromEntries(sorted.map((entry) => [entry.slug, entry])),
   };
+}
+
+function compareManifestEntries(a: ManifestEntry, b: ManifestEntry): number {
+  if (a.sortKey || b.sortKey) {
+    return (
+      (a.sortKey ?? fallbackSortKey(a.slug)).localeCompare(
+        b.sortKey ?? fallbackSortKey(b.slug),
+      ) || a.slug.localeCompare(b.slug)
+    );
+  }
+
+  return a.slug.localeCompare(b.slug);
+}
+
+function fallbackSortKey(slug: string): string {
+  return slug
+    .split("/")
+    .map((segment) => `~~~~~~~~~~:${segment}`)
+    .join("/");
 }
 
 function makeGraph(

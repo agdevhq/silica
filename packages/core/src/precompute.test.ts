@@ -26,6 +26,59 @@ describe("precompute", () => {
     await fs.remove(root);
   });
 
+  it("uses numeric prefixes for ordering while keeping slugs clean", async () => {
+    const root = path.join(process.cwd(), ".tmp-precompute-numeric-prefixes");
+    await fs.emptyDir(path.join(root, "content/02_Guides"));
+    await fs.writeFile(path.join(root, "content/01_Home.md"), "");
+    await fs.writeFile(path.join(root, "content/02_Guides/02_Advanced.md"), "");
+    await fs.writeFile(path.join(root, "content/02_Guides/01_Setup.md"), "");
+    await fs.writeFile(path.join(root, "content/03_Reference.md"), "");
+
+    const result = await precompute({
+      projectRoot: root,
+      config: resolveConfig({ title: "Test" }, root),
+    });
+
+    expect(result.manifest.allSlugs).toEqual([
+      "home",
+      "guides/setup",
+      "guides/advanced",
+      "reference",
+    ]);
+    expect(result.manifest.entries.map((entry) => entry.title)).toEqual([
+      "Home",
+      "Setup",
+      "Advanced",
+      "Reference",
+    ]);
+    expect(result.manifest.entries.map((entry) => entry.relativeFile)).toEqual([
+      "01_Home.md",
+      "02_Guides/01_Setup.md",
+      "02_Guides/02_Advanced.md",
+      "03_Reference.md",
+    ]);
+
+    await fs.remove(root);
+  });
+
+  it("can keep numeric prefixes in slugs when disabled", async () => {
+    const root = path.join(process.cwd(), ".tmp-precompute-prefixes-disabled");
+    await fs.emptyDir(path.join(root, "content"));
+    await fs.writeFile(path.join(root, "content/01_Home.md"), "Home body");
+
+    const result = await precompute({
+      projectRoot: root,
+      config: resolveConfig(
+        { title: "Test", ordering: { numericPrefixes: false } },
+        root,
+      ),
+    });
+
+    expect(result.manifest.allSlugs).toEqual(["01_home"]);
+
+    await fs.remove(root);
+  });
+
   it("emits manifest, graph, search, and copies assets", async () => {
     const root = path.join(process.cwd(), ".tmp-precompute");
     await fs.emptyDir(path.join(root, "content"));

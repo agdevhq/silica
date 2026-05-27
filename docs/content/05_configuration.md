@@ -23,6 +23,9 @@ export default defineConfig({
   tags: {
     /* ... */
   },
+  ordering: {
+    /* ... */
+  },
   filters: {
     /* ... */
   },
@@ -66,6 +69,14 @@ See [[writing/wikilinks|Wikilinks]].
 Set `tags.inline: false` if you only want tags from frontmatter.
 
 See [[writing/tags|Tags]].
+
+### Ordering
+
+| Option                     | Default | Description                                             |
+| -------------------------- | ------- | ------------------------------------------------------- |
+| `ordering.numericPrefixes` | `true`  | Use leading numeric filename prefixes for ordering only |
+
+When enabled, files like `01_Home.md` and folders like `02_Guides/` sort by their prefix, while generated slugs, URLs, breadcrumbs, and fallback labels omit it.
 
 ### Content filters
 

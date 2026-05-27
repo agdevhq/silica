@@ -32,6 +32,7 @@ export async function getLayoutProps() {
       entries: manifest.entries.map((entry) => ({
         slug: entry.slug,
         title: entry.menuLabel ?? entry.title,
+        sortKey: entry.sortKey,
       })),
     },
     config: {

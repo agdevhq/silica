@@ -36,6 +36,9 @@ export type SilicaConfig = {
   tags?: {
     inline?: boolean;
   };
+  ordering?: {
+    numericPrefixes?: boolean;
+  };
   filters?: {
     removeDrafts?: boolean;
     explicitPublish?: boolean;
@@ -57,6 +60,9 @@ export type ResolvedSilicaConfig = {
   tags: {
     inline: boolean;
   };
+  ordering: {
+    numericPrefixes: boolean;
+  };
   filters: {
     removeDrafts: boolean;
     explicitPublish: boolean;
@@ -77,6 +83,7 @@ export type ManifestEntry = {
   tags: string[];
   file: string;
   relativeFile: string;
+  sortKey?: string;
   created?: string;
   modified?: string;
   frontmatter: Record<string, unknown>;
@@ -110,6 +117,9 @@ export type RenderContext = {
   wikilinkStrategy?: "absolute" | "relative" | "shortest";
   tags?: {
     inline?: boolean;
+  };
+  ordering?: {
+    numericPrefixes?: boolean;
   };
   components?: MarkdownComponents;
 };

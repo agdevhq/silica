@@ -17,6 +17,7 @@ export type {
 export type ThemeNavigationEntry = {
   slug: string;
   title: string;
+  sortKey?: string;
 };
 
 export type ThemeLayoutConfig = {

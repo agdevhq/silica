@@ -8,7 +8,11 @@ import type {
   TocItem,
 } from "./types.js";
 
-export type { MarkdownComponents, SilicaCalloutProps } from "./types.js";
+export type {
+  MarkdownComponents,
+  SilicaCalloutProps,
+  SilicaCodeBlockProps,
+} from "./types.js";
 
 export type ThemeNavigationEntry = {
   slug: string;

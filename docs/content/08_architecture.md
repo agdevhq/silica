@@ -41,7 +41,7 @@ flowchart LR
 
 1. **CLI materializes** `.silica/next/` from templates in `@silicajs/next`
 2. **Core precomputes** — scans `content/`, filters drafts, builds manifest, graph, search index, copies assets
-3. **Next.js renders** pages from `app/[\[...slug\]]/page.tsx` — markdown is read from disk and cached
+3. **Next.js renders** pages from `app/[[...slug]]/page.tsx` — markdown is read from disk and cached
 4. **Theme** owns layout chrome; **components** provide vault UI on top of **ui** primitives
 5. **Auth proxy** (when enabled) gates requests before cached content is served
 

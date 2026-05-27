@@ -104,6 +104,25 @@ describe("renderMarkdown", () => {
     expect(html).toContain("<pre");
   }, 15_000);
 
+  it("does not transform OFM syntax inside fenced code blocks", async () => {
+    const result = await renderMarkdown(
+      "```markdown\n[[other-page]]\n#tag\n==highlight==\n```\n",
+      {
+        slug: "index",
+        allSlugs: ["index", "other-page"],
+      },
+    );
+
+    const html = renderToStaticMarkup(<>{result.content}</>);
+
+    expect(html).toContain("other-page");
+    expect(html).toContain("#tag");
+    expect(html).toContain("==highlight==");
+    expect(html).not.toContain('href="/other-page"');
+    expect(html).not.toContain("silica-broken-link");
+    expect(result.links).toEqual([]);
+  }, 15_000);
+
   it("supports custom code block render components", async () => {
     const result = await renderMarkdown("```ts\nconst x: number = 1;\n```", {
       slug: "index",

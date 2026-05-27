@@ -8,9 +8,9 @@ Wikilinks are the primary way to connect pages in a Silica vault.
 ## Basic syntax
 
 ```markdown
-\[\[other-page\]\]
-\[\[folder/other-page\]\]
-\[\[other-page|Custom label\]\]
+[[other-page]]
+[[folder/other-page]]
+[[other-page|Custom label]]
 ```
 
 Silica converts wikilinks to internal routes during rendering. The link graph powers [[features/backlinks|backlinks]] at the bottom of each page.
@@ -43,8 +43,8 @@ Unresolved wikilinks render as `<span class="silica-broken-link">` and are recor
 Asset wikilinks embed files directly:
 
 ```markdown
-!\[\[images/diagram.svg\]\]
-!\[\[images/photo.png|Alt text\]\]
+![[images/diagram.svg]]
+![[images/photo.png|Alt text]]
 ```
 
 Supported extensions: `png`, `jpg`, `jpeg`, `gif`, `webp`, `svg`, `pdf`, `mp4`, `mov`, `mp3`, `wav`, `ogg`.

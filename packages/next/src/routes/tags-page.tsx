@@ -1,7 +1,7 @@
 import { cacheLife, cacheTag } from "next/cache";
 import { notFound } from "next/navigation";
 import { TagsList } from "@silicajs/components";
-import { getTagHierarchy, tagMatches } from "@silicajs/core/runtime";
+import { getTagHierarchy, tagMatches } from "@silicajs/remark-obsidian";
 import { loadBuildId, loadManifest } from "../server-data.js";
 
 export type TagsPageProps = {

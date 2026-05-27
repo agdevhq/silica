@@ -8,6 +8,7 @@ export default defineConfig({
   clean: true,
   external: [
     "@silicajs/search",
+    "@silicajs/remark-obsidian",
     "@shikijs/rehype",
     "fast-glob",
     "fs-extra",

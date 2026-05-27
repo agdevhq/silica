@@ -23,6 +23,7 @@
   "dependencies": {
     "@silicajs/components": "0.1.0",
     "@silicajs/core": "0.1.0",
+    "@silicajs/remark-obsidian": "0.1.0",
     "@silicajs/ui": "0.1.0",
     "@tailwindcss/typography": "^0.5.18",
     "class-variance-authority": "^0.7.1",

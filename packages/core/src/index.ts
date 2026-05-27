@@ -37,17 +37,9 @@ export {
 export {
   analyzeMarkdown,
   getDescription,
-  getTags,
   getTitle,
   renderMarkdown,
 } from "./pipeline/index.js";
-export {
-  extractInlineTags,
-  getTagHierarchy,
-  normalizeTag,
-  tagMatches,
-  tagToHref,
-} from "./pipeline/tags.js";
 export {
   getGitDates,
   precompute,

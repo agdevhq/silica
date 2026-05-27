@@ -29,6 +29,7 @@
   },
   "dependencies": {
     "@shikijs/rehype": "^4.1.0",
+    "@silicajs/remark-obsidian": "0.1.0",
     "@silicajs/search": "0.1.0",
     "fast-glob": "^3.3.3",
     "fs-extra": "^11.3.5",

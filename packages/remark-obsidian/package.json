@@ -1,0 +1,30 @@
+{
+  "name": "@silicajs/remark-obsidian",
+  "version": "0.1.0",
+  "description": "Remark plugin for Silica's Obsidian-flavored Markdown extensions.",
+  "type": "module",
+  "license": "MIT",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "lint": "tsc --noEmit"
+  },
+  "dependencies": {
+    "unist-util-visit": "^5.1.0"
+  },
+  "devDependencies": {
+    "unified": "^11.0.5",
+    "remark-parse": "^11.0.0",
+    "remark-rehype": "^11.1.2"
+  }
+}

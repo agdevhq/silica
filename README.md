@@ -1,6 +1,6 @@
 # Silica
 
-Silica is a Next.js framework for publishing Obsidian-flavored markdown vaults as polished, authenticated, server-rendered knowledge sites.
+Silica is a framework for publishing Obsidian-flavored markdown vaults as polished, authenticated, server-rendered knowledge sites.
 
 The user's project stays small:
 
@@ -11,7 +11,7 @@ silica.config.ts
 package.json
 ```
 
-`silica dev` and `silica build` materialize the full Next.js app under `.silica/next/`, run the content precompute step, and leave the generated scaffold as a disposable build artifact.
+`silica dev` and `silica build` run precompute, materialize the Next.js scaffold under `.silica/next/`, and treat that output as a disposable build artifact.
 
 ## Quickstart
 
@@ -37,7 +37,7 @@ npm run dev
 | `@silicajs/core`           | Config loading, Quartz-inspired slug/path helpers, markdown rendering, and precompute artifacts.                                 |
 | `@silicajs/ui`             | Generic shadcn-style component library (Base UI + Tailwind v4). Authored via the shadcn CLI.                                     |
 | `@silicajs/components`     | Silica-aware, framework-agnostic React composables (vault tree, breadcrumbs, ToC, backlinks, search, …) built on `@silicajs/ui`. |
-| `@silicajs/next`           | Generated Next.js routes, server data loaders, proxy, and templates.                                                             |
+| `@silicajs/next`           | Next.js runtime adapter — generated routes, server loaders, proxy, and templates.                                                |
 | `@silicajs/cli`            | `silica create/dev/build/start` and `.silica/next` materialization.                                                              |
 | `@silicajs/auth`           | Better Auth wrapper and allowlist helpers.                                                                                       |
 | `@silicajs/search`         | FlexSearch index build/load/query helpers.                                                                                       |
@@ -49,7 +49,7 @@ npm run dev
 
 1. `@silicajs/cli` materializes `.silica/next/` from templates in `@silicajs/next`.
 2. `@silicajs/core` scans `content/`, filters drafts, builds `manifest.json`, `graph.json`, `search-index.json`, and copies assets to `.silica/next/public/silica/`.
-3. Next.js 16 renders vault pages from `.silica/next/app/[[...slug]]/page.tsx`. The cached `VaultContent` server component reads markdown from disk and returns a React tree.
+3. Next.js (via `@silicajs/next`) renders vault pages from `.silica/next/app/[[...slug]]/page.tsx`. The cached `VaultContent` server component reads markdown from disk and returns a React tree.
 4. The theme owns persistent layout chrome while `@silicajs/components` provides the vault tree, breadcrumbs, ToC, backlinks, dark mode, and search UI on top of `@silicajs/ui` primitives.
 5. Auth settings are baked into generated `proxy.ts`, which enforces access before cached pages, search, or vault assets are served.
 
@@ -99,4 +99,4 @@ npm run start
 
 ### Railway / Fly.io
 
-Use the scaffolded Dockerfile as the deployment target. Configure the same environment variables as `.env.example` (`BETTER_AUTH_SECRET`, `BETTER_AUTH_URL`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`) in the platform dashboard. Auth requires a strong `BETTER_AUTH_SECRET` in production and at least one `allowedDomains` or `allowedEmails` entry in `silica.config.ts`. For Fly.io, expose internal port `3000`; for Railway, the container listens on `$PORT`/`3000` through the Next server.
+Use the scaffolded Dockerfile as the deployment target. Configure the same environment variables as `.env.example` (`BETTER_AUTH_SECRET`, `BETTER_AUTH_URL`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`) in the platform dashboard. Auth requires a strong `BETTER_AUTH_SECRET` in production and at least one `allowedDomains` or `allowedEmails` entry in `silica.config.ts`. For Fly.io, expose internal port `3000`; for Railway, the container listens on `$PORT`/`3000`.

@@ -7,7 +7,12 @@ export type SilicaProxyOptions = {
   allowedEmails?: readonly string[];
 };
 
-const PUBLIC_PREFIXES = ["/_next", "/api/auth", "/__silica/revalidate"];
+const PUBLIC_PREFIXES = [
+  "/_next",
+  "/api/auth",
+  "/api/silica/revalidate",
+  "/api/silica/dev-events",
+];
 const PUBLIC_PATHS = ["/sign-in", "/not-allowed", "/favicon.ico"];
 
 export async function silicaProxy(

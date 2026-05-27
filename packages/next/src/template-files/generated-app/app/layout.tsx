@@ -1,6 +1,7 @@
 import "katex/dist/katex.min.css";
 import "@silicajs/theme-amethyst/styles.css";
 import type { ReactNode } from "react";
+import { SilicaDevReload } from "@silicajs/next/dev-reload-client";
 import theme from "../silica-theme";
 import { getLayoutProps } from "@silicajs/next/routes/layout";
 import { SilicaNextRoutingProvider } from "@silicajs/next/routing-provider";
@@ -14,6 +15,7 @@ export default async function RootLayout({
   const props = await getLayoutProps();
   return (
     <theme.Layout {...props} Provider={SilicaNextRoutingProvider}>
+      <SilicaDevReload />
       {children}
     </theme.Layout>
   );

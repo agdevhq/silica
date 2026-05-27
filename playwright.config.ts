@@ -11,14 +11,14 @@ export default defineConfig({
   webServer: [
     {
       command:
-        "PORT=3010 SILICA_PROJECT_ROOT=/workspace/examples/minimal-vault SILICA_AUTH_ENABLED=false npx next start /workspace/examples/minimal-vault/.silica/next",
+        "PORT=3010 SILICA_PROJECT_ROOT=/workspace/docs SILICA_AUTH_ENABLED=false npx next start /workspace/docs/.silica/next",
       url: "http://localhost:3010",
       reuseExistingServer: true,
       timeout: 30_000,
     },
     {
       command:
-        "PORT=3011 SILICA_PROJECT_ROOT=/workspace/examples/minimal-vault SILICA_AUTH_ENABLED=true npx next start /workspace/examples/minimal-vault/.silica/next",
+        "PORT=3011 SILICA_PROJECT_ROOT=/workspace/docs SILICA_AUTH_ENABLED=true npx next start /workspace/docs/.silica/next",
       url: "http://localhost:3011/sign-in",
       reuseExistingServer: true,
       timeout: 30_000,

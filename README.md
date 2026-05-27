@@ -18,7 +18,7 @@ package.json
 ```bash
 npm install
 npm run build
-npm run --workspace examples/minimal-vault build
+npm run --workspace docs build
 ```
 
 To create a new vault after packages are published:
@@ -62,7 +62,7 @@ npm test
 npm run typecheck
 ```
 
-The dogfood fixture lives in `examples/minimal-vault`.
+The docs site and dogfood fixture lives in `docs/`.
 
 ## Self-hosting
 

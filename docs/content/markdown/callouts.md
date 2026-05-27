@@ -1,13 +1,30 @@
 ---
-title: Callout examples
+title: Callouts
 description: Obsidian callout types and aliases rendered by Silica.
-tags: [examples, callouts, obsidian]
-status: published
 ---
 
-# Callout examples
+Obsidian callouts use blockquote syntax with a type marker:
 
-This page shows the default Obsidian callout types and common aliases.
+```markdown
+> [!note] Title
+> Body content here.
+```
+
+Silica transforms them into `<silica-callout>` elements. The default theme maps each type to styled components.
+
+## Foldable callouts
+
+```markdown
+> [!faq]- Collapsed by default
+> Use `-` after the type for foldable, collapsed callouts.
+
+> [!tip]+ Open by default
+> Use `+` for foldable callouts that start expanded.
+```
+
+## Supported types
+
+### Note and info
 
 > [!note] Note
 > Use notes for neutral information.
@@ -27,6 +44,8 @@ This page shows the default Obsidian callout types and common aliases.
 > [!todo] Todo
 > Use todos for tasks or pending work.
 
+### Tips and success
+
 > [!tip] Tip
 > Use tips for recommendations.
 
@@ -45,6 +64,8 @@ This page shows the default Obsidian callout types and common aliases.
 > [!done] Done alias
 > `done` maps to the success callout.
 
+### Questions and warnings
+
 > [!question] Question
 > Use questions for prompts or open issues.
 
@@ -62,6 +83,8 @@ This page shows the default Obsidian callout types and common aliases.
 
 > [!attention] Attention alias
 > `attention` maps to the warning callout.
+
+### Errors and examples
 
 > [!failure] Failure
 > Use failures for errors, missing work, or failed checks.
@@ -90,8 +113,18 @@ This page shows the default Obsidian callout types and common aliases.
 > [!cite] Cite alias
 > `cite` maps to the quote callout.
 
-> [!faq]- Foldable callout
-> A minus marker makes the callout foldable and collapsed by default.
+## Custom types
 
 > [!custom-type] Custom type
 > Unknown callout types keep their original `data-callout` value and use the default note styling.
+
+## Other Obsidian syntax
+
+| Syntax          | Result                                     |
+| --------------- | ------------------------------------------ |
+| `==highlight==` | Highlighted text                           |
+| `%% comment %%` | Comments stripped from output              |
+| `# Heading`     | Headings with anchor links and ToC entries |
+
+See also [[markdown/math-and-gfm|Math and GFM]] for equations and tables.
+

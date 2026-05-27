@@ -91,6 +91,7 @@ function resolveLinkedSlug(
     target,
     context.allSlugs,
     context.wikilinkStrategy ?? "shortest",
+    context.ordering,
   );
 
   if (!resolved) {

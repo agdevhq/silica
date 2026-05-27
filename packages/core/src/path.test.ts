@@ -16,6 +16,14 @@ describe("path helpers", () => {
     expect(slugToHref("index")).toBe("/");
   });
 
+  it("can strip numeric ordering prefixes from slugs", () => {
+    expect(
+      slugifyFilePath("01_Getting Started/02_Install.md", "content", {
+        numericPrefixes: true,
+      }),
+    ).toBe("getting-started/install");
+  });
+
   it("resolves shortest wikilinks by basename", () => {
     const resolved = resolveWikiLink(
       "index",

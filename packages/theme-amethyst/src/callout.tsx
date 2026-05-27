@@ -19,7 +19,7 @@ import {
 } from "lucide-react";
 
 const calloutVariants = cva(
-  "silica-callout my-5 rounded-lg border px-4 py-3 text-foreground shadow-xs",
+  "silica-callout my-5 rounded-lg border px-4 py-3 text-foreground",
   {
     variants: {
       intent: {

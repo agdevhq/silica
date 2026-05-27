@@ -14,7 +14,9 @@ test("public vault renders homepage and nested pages", async ({ request }) => {
   expect(authHtml).toContain("Google OAuth");
 });
 
-test("search API returns matching private server index results", async ({ request }) => {
+test("search API returns matching private server index results", async ({
+  request,
+}) => {
   const response = await request.get("/api/search?q=oauth");
   expect(response.ok()).toBe(true);
 
@@ -33,7 +35,9 @@ test("draft content is excluded from direct routes", async ({ request }) => {
   expect(response.status()).toBe(404);
 });
 
-test("auth-enabled cached pages redirect before content is served", async ({ request }) => {
+test("auth-enabled cached pages redirect before content is served", async ({
+  request,
+}) => {
   const response = await request.get("http://localhost:3011/", {
     maxRedirects: 0,
   });

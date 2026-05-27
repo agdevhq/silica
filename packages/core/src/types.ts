@@ -33,6 +33,9 @@ export type SilicaConfig = {
     strategy?: "absolute" | "relative" | "shortest";
     strict?: boolean;
   };
+  tags?: {
+    inline?: boolean;
+  };
   filters?: {
     removeDrafts?: boolean;
     explicitPublish?: boolean;
@@ -50,6 +53,9 @@ export type ResolvedSilicaConfig = {
   wikilinks: {
     strategy: "absolute" | "relative" | "shortest";
     strict: boolean;
+  };
+  tags: {
+    inline: boolean;
   };
   filters: {
     removeDrafts: boolean;
@@ -101,6 +107,9 @@ export type RenderContext = {
   allSlugs: string[];
   assetBaseUrl?: string;
   wikilinkStrategy?: "absolute" | "relative" | "shortest";
+  tags?: {
+    inline?: boolean;
+  };
   components?: MarkdownComponents;
 };
 

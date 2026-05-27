@@ -75,6 +75,24 @@ describe("precompute", () => {
     await fs.remove(root);
   });
 
+  it("can disable inline body tags", async () => {
+    const root = path.join(process.cwd(), ".tmp-precompute-inline-tags");
+    await fs.emptyDir(path.join(root, "content"));
+    await fs.writeFile(
+      path.join(root, "content/index.md"),
+      "---\ntags: [frontmatter]\n---\n# Home\nDiscuss #body-tag.",
+    );
+
+    const result = await precompute({
+      projectRoot: root,
+      config: resolveConfig({ title: "Test", tags: { inline: false } }, root),
+    });
+
+    expect(result.manifest.entries[0]?.tags).toEqual(["frontmatter"]);
+
+    await fs.remove(root);
+  });
+
   it("does not overwrite user-owned robots or sitemap files", async () => {
     const root = path.join(process.cwd(), ".tmp-precompute-public-overrides");
     await fs.emptyDir(path.join(root, "content"));

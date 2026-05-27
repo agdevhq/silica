@@ -50,6 +50,7 @@ export default defineConfig({
 ### Writing content
 
 - [[writing/frontmatter|Frontmatter]]
+- [[writing/tags|Tags]]
 - [[writing/wikilinks|Wikilinks]]
 - [[writing/assets|Assets]]
 - [[writing/drafts-and-publishing|Drafts and publishing]]

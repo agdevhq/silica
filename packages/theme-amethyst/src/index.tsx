@@ -13,6 +13,7 @@ import {
 } from "@silicajs/ui/components/sidebar";
 
 import { Callout } from "./callout.js";
+import { CodeBlock } from "./code-block.js";
 import { Sidebar } from "./sidebar.js";
 
 function DefaultProvider({ children }: { children: ReactNode }) {
@@ -118,6 +119,7 @@ export function PageRenderer({ page, graph, manifest }: ThemePageProps) {
 
 export const components = {
   "silica-callout": Callout,
+  "silica-code-block": CodeBlock,
 };
 
 export default { Layout, PageRenderer, components };

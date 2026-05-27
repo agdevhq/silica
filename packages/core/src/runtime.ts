@@ -21,6 +21,7 @@ export type {
   MarkdownComponents,
   SilicaTheme,
   SilicaCalloutProps,
+  SilicaCodeBlockProps,
   ThemeLayoutConfig,
   ThemeLayoutProps,
   ThemeNavigationEntry,

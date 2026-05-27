@@ -21,6 +21,7 @@ import type {
   TocItem,
 } from "../types.js";
 import { transformObsidianMarkdown } from "./ofm.js";
+import { rehypeShikiCodeBlockWrapper } from "./code-block.js";
 import {
   getDataArray,
   mergeBrokenLinks,
@@ -119,6 +120,11 @@ export async function renderMarkdown(
         dark: "github-dark",
       },
       defaultColor: "light-dark()",
+      // Ensure unlabeled fences still flow through Shiki so they pick up the
+      // wrapper transformer below (just without a language header).
+      defaultLanguage: "text",
+      rootStyle: false,
+      transformers: [rehypeShikiCodeBlockWrapper()],
     });
   }
 

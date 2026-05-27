@@ -80,6 +80,7 @@ export async function VaultContent({
     assetBaseUrl: "/silica",
     wikilinkStrategy: config.wikilinks.strategy,
     components: {
+      ...theme.components,
       a: MarkdownLink,
     },
   });

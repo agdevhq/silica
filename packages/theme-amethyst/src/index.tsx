@@ -12,6 +12,7 @@ import {
   SidebarTrigger,
 } from "@silicajs/ui/components/sidebar";
 
+import { Callout } from "./callout.js";
 import { Sidebar } from "./sidebar.js";
 
 function DefaultProvider({ children }: { children: ReactNode }) {
@@ -115,4 +116,8 @@ export function PageRenderer({ page, graph, manifest }: ThemePageProps) {
   );
 }
 
-export default { Layout, PageRenderer };
+export const components = {
+  "silica-callout": Callout,
+};
+
+export default { Layout, PageRenderer, components };

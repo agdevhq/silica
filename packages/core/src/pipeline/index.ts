@@ -29,6 +29,8 @@ import {
   rehypeExternalLinks,
   rehypeObsidianCallouts,
 } from "./plugins.js";
+import { getTags } from "./tags.js";
+export { getTags } from "./tags.js";
 
 type MdastNode = {
   type: string;
@@ -107,6 +109,7 @@ export async function renderMarkdown(
 ): Promise<RenderResult> {
   const parsed = matter(raw);
   const transformed = transformObsidianMarkdown(parsed.content, context);
+  const inlineTags = context.tags?.inline ?? true;
   const processor = baseProcessor()
     .use(rehypeRaw)
     .use(rehypeSanitize, sanitizeSchema)
@@ -162,7 +165,7 @@ export async function renderMarkdown(
     plainText,
     title: getTitle(frontmatter, plainText),
     description: getDescription(frontmatter, plainText),
-    tags: getTags(frontmatter),
+    tags: getTags(frontmatter, parsed.content, { inline: inlineTags }),
   };
 }
 
@@ -172,6 +175,7 @@ export async function analyzeMarkdown(
 ): Promise<AnalyzeResult> {
   const parsed = matter(raw);
   const transformed = transformObsidianMarkdown(parsed.content, context);
+  const inlineTags = context.tags?.inline ?? true;
   const plainText = extractPlainText(transformed.markdown);
   const frontmatter = parsed.data;
 
@@ -183,7 +187,7 @@ export async function analyzeMarkdown(
     plainText,
     title: getTitle(frontmatter, plainText),
     description: getDescription(frontmatter, plainText),
-    tags: getTags(frontmatter),
+    tags: getTags(frontmatter, parsed.content, { inline: inlineTags }),
   };
 }
 
@@ -212,18 +216,6 @@ export function getDescription(
   }
   const sentence = extractPlainText(plainText).slice(0, 180).trim();
   return sentence || undefined;
-}
-
-export function getTags(frontmatter: Record<string, unknown>): string[] {
-  const value = frontmatter.tags ?? frontmatter.tag;
-  if (Array.isArray(value))
-    return value.map(String).map(normalizeTag).filter(Boolean);
-  if (typeof value === "string")
-    return value
-      .split(/[,\s]+/)
-      .map(normalizeTag)
-      .filter(Boolean);
-  return [];
 }
 
 function baseProcessor() {
@@ -260,10 +252,6 @@ function extractPlainText(markdown: string): string {
 
 function hasCodeFence(markdown: string): boolean {
   return /(^|\n)(```|~~~)/.test(markdown);
-}
-
-function normalizeTag(tag: string): string {
-  return tag.trim().replace(/^#/, "").toLowerCase();
 }
 
 function unique(values: string[]): string[] {

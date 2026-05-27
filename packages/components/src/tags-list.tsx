@@ -1,5 +1,5 @@
 import * as React from "react";
-import type { Manifest } from "@silicajs/core/runtime";
+import { tagMatches, tagToHref, type Manifest } from "@silicajs/core/runtime";
 
 import { TagBadge } from "@silicajs/ui/components/tag-badge";
 
@@ -16,7 +16,9 @@ export function TagsList({ manifest, tag, className }: TagsListProps) {
   const entries = React.useMemo(
     () =>
       manifest.entries
-        .filter((entry) => entry.tags.includes(tag))
+        .filter((entry) =>
+          entry.tags.some((entryTag) => tagMatches(entryTag, tag)),
+        )
         .sort((a, b) => a.title.localeCompare(b.title)),
     [manifest.entries, tag],
   );
@@ -24,7 +26,7 @@ export function TagsList({ manifest, tag, className }: TagsListProps) {
     const counts = new Map<string, number>();
     for (const entry of entries) {
       for (const t of entry.tags) {
-        if (t === tag) continue;
+        if (tagMatches(t, tag) && tagMatches(tag, t)) continue;
         counts.set(t, (counts.get(t) ?? 0) + 1);
       }
     }
@@ -51,10 +53,10 @@ export function TagsList({ manifest, tag, className }: TagsListProps) {
             <TagBadge
               key={t}
               tag={t}
-              href={`/tags/${t}`}
+              href={tagToHref(t)}
               render={
                 <SilicaLink
-                  href={`/tags/${t}`}
+                  href={tagToHref(t)}
                   className="cursor-pointer text-foreground/80 no-underline transition-colors hover:text-foreground"
                 />
               }

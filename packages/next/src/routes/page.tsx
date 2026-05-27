@@ -81,6 +81,7 @@ export async function VaultContent({
     allSlugs: manifest.allSlugs,
     assetBaseUrl: "/silica",
     wikilinkStrategy: config.wikilinks.strategy,
+    tags: config.tags,
     components: {
       ...theme.components,
       a: MarkdownLink,

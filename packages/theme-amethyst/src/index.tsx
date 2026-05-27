@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { tagToHref } from "@silicajs/core/runtime";
 import type { ThemeLayoutProps, ThemePageProps } from "@silicajs/core/theme";
 import {
   Backlinks,
@@ -95,7 +96,7 @@ export function PageRenderer({ page, graph, manifest }: ThemePageProps) {
               {page.entry.tags.map((tag) => (
                 <SilicaLink
                   key={tag}
-                  href={`/tags/${tag}`}
+                  href={tagToHref(tag)}
                   className="inline-flex h-6 items-center rounded-full border border-border px-2 text-xs text-muted-foreground transition-colors hover:border-primary/40 hover:text-foreground"
                 >
                   <span className="text-muted-foreground/70">#</span>

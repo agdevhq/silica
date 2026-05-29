@@ -1,6 +1,6 @@
 {
   "name": "@silicajs/create",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Scaffold a new Silica vault.",
   "type": "module",
   "license": "MIT",
@@ -26,6 +26,6 @@
     "lint": "tsc --noEmit"
   },
   "dependencies": {
-    "@silicajs/cli": "^0.1.0"
+    "@silicajs/cli": "^0.1.1"
   }
 }

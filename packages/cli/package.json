@@ -1,6 +1,6 @@
 {
   "name": "@silicajs/cli",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Silica command-line interface.",
   "type": "module",
   "license": "MIT",

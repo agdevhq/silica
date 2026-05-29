@@ -72,8 +72,7 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          pr_number="${{ steps.changesets.outputs.pullRequestNumber }}"
-          head_sha="$(gh pr view "$pr_number" --repo "${{ github.repository }}" --json headRefOid --jq .headRefOid)"
+          head_sha="$(gh api "repos/${{ github.repository }}/git/ref/heads/changeset-release/main" --jq .object.sha)"
 
           for check_name in "Build, Lint & Test" "Require Changeset"; do
             gh api --method POST "repos/${{ github.repository }}/statuses/${head_sha}" \

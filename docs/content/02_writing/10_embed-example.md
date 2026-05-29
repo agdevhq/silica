@@ -1,6 +1,6 @@
 ---
 title: Embed example
-description: A short note used by the assets page to demonstrate note embeds.
+description: A short note used by the Embeds and assets page to demonstrate note embeds.
 listed: false
 ---
 

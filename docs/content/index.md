@@ -4,31 +4,31 @@ menu_label: Home
 description: Publish Obsidian-flavored markdown vaults as polished websites.
 ---
 
-Silica turns a collection of Markdown files into a server-rendered knowledge site. You write content in Obsidian-style syntax; Silica handles routing, search, backlinks, and the Next.js runtime.
+Silica turns a folder of Markdown files into a fast, searchable website. You keep writing in Obsidian-style syntax; Silica handles the navigation, search, links between pages, and hosting.
 
 > [!tip] New here?
-> Start with [[getting-started/installation|Installation]], then read [[writing/frontmatter|Frontmatter]] and [[configuration|Configuration]].
+> Start with [[getting-started/installation|Installation]], write your first page with [[writing/frontmatter|Frontmatter]], then tune the site in [[publishing/configuration|Configuration]].
 
 ## What you get
 
-- **Obsidian syntax** — wikilinks, callouts, highlights, comments, block IDs, and embedded assets
-- **Next.js 16** — server-rendered pages with caching
-- **Built-in UI** — sidebar navigation, search, table of contents, backlinks, and dark mode
-- **Optional auth** — Google OAuth enforced before content is served
-- **Self-hosting** — standalone Docker output for Railway, Fly.io, or plain Node
+- **Obsidian syntax** — wikilinks, callouts, embeds, highlights, comments, block links, and tags
+- **A polished reading experience** — sidebar navigation, full-text search, table of contents, and backlinks
+- **Dark mode** out of the box
+- **Optional access control** — gate your site behind Google sign-in
+- **Self-hosting** — deploy anywhere that runs a Node container
 
 ## Quick example
 
-Your project stays small:
+Your project stays small — you only ever edit Markdown and one config file:
 
 ```txt
-content/
-public/
-silica.config.ts
+content/          # your Markdown vault
+public/           # static files (favicon, etc.)
+silica.config.ts  # site settings
 package.json
 ```
 
-Run `silica dev` and edit markdown. Silica materializes the full Next.js app, precomputes the manifest and search index, and hot-reloads on content changes.
+Run `silica dev`, edit Markdown, and the site updates as you type:
 
 ```ts
 import { defineConfig } from "@silicajs/core";
@@ -40,6 +40,8 @@ export default defineConfig({
 });
 ```
 
+This very site is a Silica vault — it is the Markdown in `docs/content/`, published with Silica.
+
 ## Documentation map
 
 ### Getting started
@@ -50,20 +52,15 @@ export default defineConfig({
 
 ### Writing content
 
-- [[writing/frontmatter|Frontmatter]]
+- [[writing/markdown-basics|Markdown basics]]
+- [[writing/frontmatter|Frontmatter and page properties]]
+- [[writing/links|Links]]
+- [[writing/embeds-and-assets|Embeds and assets]]
+- [[writing/callouts|Callouts]]
+- [[writing/code-and-diagrams|Code and diagrams]]
+- [[writing/tables|Tables]]
+- [[writing/math|Math]]
 - [[writing/tags|Tags]]
-- [[writing/wikilinks|Wikilinks]]
-- [[writing/assets|Assets]]
-- [[writing/drafts-and-publishing|Drafts and publishing]]
-
-### Markdown
-
-- [[markdown/callouts|Callouts]]
-- [[markdown/code-blocks|Code blocks]]
-- [[markdown/math-and-gfm|Math and GFM]]
-- [[markdown/block-links|Block links]]
-- [[markdown/mermaid|Mermaid]]
-- [[markdown/obsidian-flavored-markdown|Other Obsidian syntax]]
 
 ### Site features
 
@@ -71,11 +68,14 @@ export default defineConfig({
 - [[features/search|Search]]
 - [[features/backlinks|Backlinks]]
 - [[features/table-of-contents|Table of contents]]
-- [[features/page-properties|Page properties]]
 
-### Configuration and deployment
+### Publishing
 
-- [[configuration|Configuration]]
-- [[auth|Authentication]]
-- [[deployment|Deployment]]
-- [[architecture|Architecture]]
+- [[publishing/drafts-and-publishing|Drafts and publishing]]
+- [[publishing/configuration|Configuration]]
+- [[publishing/authentication|Authentication]]
+- [[publishing/deployment|Deployment]]
+
+### Under the hood
+
+- [[how-it-works|How Silica works]]

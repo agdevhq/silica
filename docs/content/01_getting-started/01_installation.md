@@ -1,21 +1,16 @@
 ---
 title: Installation
-description: Create a new Silica vault with create-silica or add Silica to an existing project.
+description: Create a new Silica vault and run it locally.
 ---
 
-Silica keeps your repository focused on content. The framework materializes a full Next.js application at build time and treats it as a disposable artifact.
+Silica keeps your repository focused on content. You write Markdown; Silica builds and serves the website.
 
-1. Scaffold a project (or clone this docs vault from the monorepo).
-2. Add markdown files under `content/`.
+1. Scaffold a project.
+2. Add Markdown files under `content/`.
 3. Run `npm run dev` and open `http://localhost:3000`.
-4. Edit content — Silica watches `content/` and rebuilds artifacts automatically.
-
-> [!note] Monorepo development
-> This docs site lives in `docs/` and runs the CLI from the workspace packages directly. Published projects use the `silica` binary from `@silicajs/cli`.
+4. Edit content — the site rebuilds automatically as you save.
 
 ## Create a new vault
-
-After packages are published to npm:
 
 ```bash
 npx create-silica my-vault
@@ -24,38 +19,19 @@ npm install
 npm run dev
 ```
 
-`create-silica` scaffolds:
+This gives you a ready-to-edit vault:
 
-- `content/index.md` — home page
-- `content/notes/getting-started.md` — starter note
-- `silica.config.ts` — site configuration
+- `content/index.md` — your home page
+- `content/notes/getting-started.md` — a starter note
+- `silica.config.ts` — site settings
 - `package.json` with `dev`, `build`, and `start` scripts
-- `.env.example`, `Dockerfile`, and a GitHub Actions workflow
+- `.env.example`, a `Dockerfile`, and a GitHub Actions workflow for deployment
 
-## Monorepo / local development
+From there, the only folders you touch are `content/` (your pages) and `public/` (static files like a favicon).
 
-From the Silica repository root:
+## Add Silica to an existing folder of notes
 
-```bash
-npm install
-npm run build
-npm run --workspace docs dev
-```
+If you already have a vault, point Silica at it by creating a `silica.config.ts` next to your `content/` folder and adding the `silica` commands to `package.json`. See [[getting-started/project-structure|Project structure]] for the expected layout.
 
-## Dependencies
-
-A typical Silica project depends on:
-
-| Package                      | Role                                  |
-| ---------------------------- | ------------------------------------- |
-| `@silicajs/cli`              | `silica dev/build/start` commands     |
-| `@silicajs/core`             | Config, markdown pipeline, precompute |
-| `@silicajs/next`             | Generated Next.js templates           |
-| `@silicajs/theme-amethyst`   | Default theme (`theme: "default"`)    |
-| `next`, `react`, `react-dom` | Runtime                               |
-
-Add `@silicajs/auth` and `@silicajs/search` when you enable authentication — the generated app imports them automatically.
-
-## TypeScript config
-
-Scaffolded projects include a minimal `tsconfig.json` for `silica.config.ts`. You do not need a full Next.js TypeScript setup in your vault; the generated app under `.silica/next/` has its own config.
+> [!note] Editing in Obsidian
+> Because Silica reads standard Obsidian-flavored Markdown, you can keep editing your vault in Obsidian and let Silica publish it.

@@ -97,6 +97,50 @@ describe("renderMarkdown", () => {
     expect(result.brokenLinks).toEqual([]);
   }, 15_000);
 
+  it("resolves a wikilink with an escaped pipe inside a GFM table cell", async () => {
+    const result = await renderMarkdown(
+      [
+        "| Key | What it does |",
+        "| --- | --- |",
+        "| tags | Page tags (see [[docs/intro\\|Intro]]) |",
+      ].join("\n"),
+      {
+        slug: "index",
+        allSlugs: ["index", "docs/intro"],
+      },
+    );
+
+    const html = renderToStaticMarkup(<>{result.content}</>);
+
+    expect(html).toContain("<table>");
+    expect(html).toContain('<a href="/docs/intro">Intro</a>');
+    expect(html).not.toContain("silica-broken-link");
+    expect(result.links).toEqual(["docs/intro"]);
+    expect(result.brokenLinks).toEqual([]);
+  }, 15_000);
+
+  it("renders a sized embed with an escaped pipe inside a GFM table cell", async () => {
+    const result = await renderMarkdown(
+      [
+        "| Item | Example |",
+        "| --- | --- |",
+        "| Sized embed | ![[images/photo.png\\|120]] |",
+      ].join("\n"),
+      {
+        slug: "index",
+        allSlugs: ["index"],
+        assetBaseUrl: "/assets",
+      },
+    );
+
+    const html = renderToStaticMarkup(<>{result.content}</>);
+
+    expect(html).toContain("<table>");
+    expect(html).toContain('<img src="/assets/images/photo.png"');
+    expect(html).toContain('width="120"');
+    expect(html).not.toContain("silica-broken-link");
+  }, 15_000);
+
   it("renders unresolved wikilinks as Silica broken-link spans", async () => {
     const result = await renderMarkdown("[[missing|Missing page]]", {
       slug: "index",

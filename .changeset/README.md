@@ -2,8 +2,10 @@
 
 This folder stores pending release notes created with `npm run changeset`.
 
-Use an empty changeset for changes that intentionally do not release packages:
+Every PR must include a changeset. For changes that intentionally do not release packages (CI, docs, tests, tooling), create an explicit empty changeset:
 
 ```sh
-npm run changeset -- --empty
+npx changeset --empty
 ```
+
+Do not hand-write empty changeset files. CI runs `changeset status --since=main`, which only recognizes CLI-created changesets.

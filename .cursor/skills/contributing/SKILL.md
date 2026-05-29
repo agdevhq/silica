@@ -94,6 +94,8 @@ Dependabot PRs get a changeset automatically in the **Require Changeset** workfl
 
 Publishable packages are those with `publishConfig.access: public` and not `private: true`.
 
+The changeset commit is pushed with a repo deploy key (`DEPENDABOT_CHANGESET_DEPLOY_KEY`), not `GITHUB_TOKEN`, so CI re-runs on the new commit. A loop cannot occur: the script skips when a changeset already exists on the branch.
+
 ## PR Conventions
 
 ### Pre-merge checklist

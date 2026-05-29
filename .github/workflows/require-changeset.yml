@@ -29,18 +29,7 @@ jobs:
         run: npm ci
 
       - name: Check for changeset
-        run: |
-          if npx changeset status --since=main; then
-            exit 0
-          fi
-
-          if git diff --name-only main...HEAD -- '.changeset/*.md' | grep -qE '^\.changeset/.+\.md$'; then
-            echo "Changeset status failed, but an explicit changeset file is present."
-            echo "This allows intentional empty/bootstrap changesets."
-            exit 0
-          fi
-
-          exit 1
+        run: npx changeset status --since=main
 
   require-changeset-version-packages:
     name: Require Changeset

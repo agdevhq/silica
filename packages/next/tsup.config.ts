@@ -20,6 +20,7 @@ export default defineConfig({
     "@silicajs/core",
     "@silicajs/core/runtime",
     "@silicajs/core/theme",
+    "@silicajs/remark-obsidian",
     "@silicajs/search",
     "@silicajs/theme-amethyst",
     "@silicajs/ui",

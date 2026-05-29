@@ -13,7 +13,7 @@ The graph also tracks broken links in `graph.json` for debugging unresolved wiki
 
 Both of these contribute to the graph:
 
-- Wikilinks: `\[\[other-page\]\]`
+- Wikilinks: `[[other-page]]`
 - Standard internal links: `[text](/other-page)`
 
 External links open in a new tab with `rel="noreferrer noopener"`.

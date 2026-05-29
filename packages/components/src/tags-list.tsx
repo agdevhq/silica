@@ -1,5 +1,6 @@
 import * as React from "react";
-import { tagMatches, tagToHref, type Manifest } from "@silicajs/core/runtime";
+import { tagMatches } from "@silicajs/remark-obsidian";
+import { tagToHref, type Manifest } from "@silicajs/core/runtime";
 
 import { TagBadge } from "@silicajs/ui/components/tag-badge";
 

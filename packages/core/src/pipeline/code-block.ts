@@ -90,12 +90,14 @@ export function rehypeShikiCodeBlockWrapper(): ShikiTransformer {
       const rawLang =
         typeof this.options.lang === "string" ? this.options.lang : undefined;
       const label = formatLanguage(rawLang);
+      const isMermaid = rawLang?.toLowerCase() === "mermaid";
 
       const wrapper: Element = {
         type: "element",
-        tagName: "silica-code-block",
+        tagName: isMermaid ? "silica-mermaid" : "silica-code-block",
         properties: {
           ...(rawLang ? { "data-language": rawLang } : {}),
+          ...(isMermaid ? { "data-source": toText(pre) } : {}),
           ...(label ? { "data-language-label": label } : {}),
         },
         children: [pre],
@@ -105,4 +107,14 @@ export function rehypeShikiCodeBlockWrapper(): ShikiTransformer {
       return hast;
     },
   };
+}
+
+function toText(node: Element): string {
+  return node.children
+    .map((child) => {
+      if (child.type === "text") return child.value;
+      if (child.type === "element") return toText(child);
+      return "";
+    })
+    .join("");
 }

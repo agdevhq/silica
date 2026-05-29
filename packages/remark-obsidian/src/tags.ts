@@ -1,15 +1,6 @@
-export type InlineTagMatch = {
-  tag: string;
-  raw: string;
-  start: number;
-  end: number;
-};
+import type { InlineTagMatch } from "./types.js";
 
-export type TagOptions = {
-  inline?: boolean;
-};
-
-const TAG_PREFIX_BOUNDARY = /(^|[\s([{>])#/g;
+const TAG_PREFIX_BOUNDARY = /[\s([{>]/;
 const TRAILING_TAG_PUNCTUATION = /[.,;:!?)}\]"']+$/;
 const INLINE_TAG_STOP_CHARS = new Set([
   "<",
@@ -30,7 +21,7 @@ const INLINE_TAG_STOP_CHARS = new Set([
 export function getTags(
   frontmatter: Record<string, unknown>,
   markdown = "",
-  options: TagOptions = {},
+  options: { inline?: boolean } = {},
 ): string[] {
   return unique([
     ...getFrontmatterTags(frontmatter),
@@ -62,14 +53,15 @@ export function collectInlineTagMatches(markdown: string): InlineTagMatch[] {
   const ignoredRanges = getIgnoredRanges(markdown);
   const matches: InlineTagMatch[] = [];
 
-  for (const match of markdown.matchAll(TAG_PREFIX_BOUNDARY)) {
-    const hashIndex = match.index + (match[1] ?? "").length;
-    if (isIgnoredIndex(hashIndex, ignoredRanges)) continue;
+  for (let index = 0; index < markdown.length; index += 1) {
+    if (markdown[index] !== "#") continue;
+    if (!hasTagBoundary(markdown, index)) continue;
+    if (isIgnoredIndex(index, ignoredRanges)) continue;
 
-    const inlineTag = readInlineTag(markdown, hashIndex);
+    const inlineTag = readInlineTag(markdown, index);
     if (!inlineTag) continue;
-
     matches.push(inlineTag);
+    index = inlineTag.end - 1;
   }
 
   return matches;
@@ -96,17 +88,7 @@ export function getTagHierarchy(tag: string): string[] {
   return segments.map((_, index) => segments.slice(0, index + 1).join("/"));
 }
 
-export function tagToHref(tag: string): string {
-  const normalized = normalizeTag(tag);
-  if (!normalized) return "/tags";
-  const encoded = normalized
-    .split("/")
-    .map((segment) => encodeURIComponent(segment))
-    .join("/");
-  return `/tags/${encoded}`;
-}
-
-function readInlineTag(
+export function readInlineTag(
   markdown: string,
   hashIndex: number,
 ): InlineTagMatch | undefined {
@@ -127,6 +109,12 @@ function readInlineTag(
     start: hashIndex,
     end: hashIndex + raw.length,
   };
+}
+
+export function hasTagBoundary(markdown: string, hashIndex: number): boolean {
+  return (
+    hashIndex === 0 || TAG_PREFIX_BOUNDARY.test(markdown[hashIndex - 1] ?? "")
+  );
 }
 
 function isInlineTagChar(char: string): boolean {

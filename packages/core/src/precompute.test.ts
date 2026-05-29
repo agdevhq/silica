@@ -92,6 +92,10 @@ describe("precompute", () => {
       "# Auth\nOAuth notes.",
     );
     await fs.writeFile(
+      path.join(root, "content/notes/embed-helper.md"),
+      "---\nlisted: false\n---\n# Embed Helper\nOnly for embeds.",
+    );
+    await fs.writeFile(
       path.join(root, "content/draft.md"),
       "---\ndraft: true\n---\n# Draft",
     );
@@ -102,8 +106,16 @@ describe("precompute", () => {
       config: resolveConfig({ title: "Test" }, root),
     });
 
-    expect(result.manifest.allSlugs).toEqual(["index", "notes/auth"]);
+    expect(result.manifest.allSlugs).toEqual([
+      "index",
+      "notes/auth",
+      "notes/embed-helper",
+    ]);
     expect(result.graph.backlinks["notes/auth"]).toEqual(["index"]);
+    expect(result.searchRecords.map((record) => record.slug)).toEqual([
+      "index",
+      "notes/auth",
+    ]);
     expect(
       await fs.pathExists(path.join(root, ".silica/search-index.json")),
     ).toBe(true);
@@ -121,6 +133,12 @@ describe("precompute", () => {
     expect(
       result.manifest.entries.every((entry) => !path.isAbsolute(entry.file)),
     ).toBe(true);
+    expect(
+      await fs.readFile(
+        path.join(root, ".silica/next/public/sitemap.xml"),
+        "utf8",
+      ),
+    ).not.toContain("notes/embed-helper");
 
     await fs.remove(root);
   });

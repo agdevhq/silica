@@ -33,12 +33,25 @@ filters: {
 
 With `explicitPublish: true`, only pages with `publish: true` are included. Everything else is excluded regardless of draft status.
 
+## Unlisted pages
+
+Set `listed: false` when a page should remain routable and usable in embeds, but should not appear in navigation, search, or the generated sitemap:
+
+```yaml
+---
+title: Embed helper
+listed: false
+---
+```
+
+Use this for helper pages like short note embed examples. Use `draft: true` instead when the page should be excluded from the built vault entirely.
+
 ## When to use which
 
-| Mode                          | Best for                                                        |
-| ----------------------------- | --------------------------------------------------------------- |
-| Default (`removeDrafts` only) | Obsidian-style drafts — most teams                              |
-| `explicitPublish`             | Staging content that should never leak without an explicit flag |
+| Mode                          | Best for                                                              |
+| ----------------------------- | --------------------------------------------------------------------- |
+| Default (`removeDrafts` only) | Obsidian-style drafts — most teams                                    |
+| `explicitPublish`             | Staging content that should never leak without an explicit flag       |
+| `listed: false`               | Published helper pages that should be embeddable but not discoverable |
 
 Configure filters in [[configuration|Configuration]].
-

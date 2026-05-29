@@ -1,6 +1,6 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
-import { renderMarkdown } from "./pipeline/index.js";
+import { renderMarkdown, renderMarkdownHtml } from "./pipeline/index.js";
 
 describe("renderMarkdown", () => {
   it("renders heading title and icon permalinks", async () => {
@@ -84,6 +84,150 @@ describe("renderMarkdown", () => {
     expect(html).toContain("</aside>");
   }, 15_000);
 
+  it("resolves wikilinks and records graph links", async () => {
+    const result = await renderMarkdown("See [[docs/intro|Intro]].", {
+      slug: "index",
+      allSlugs: ["index", "docs/intro"],
+    });
+
+    const html = renderToStaticMarkup(<>{result.content}</>);
+
+    expect(html).toContain('<a href="/docs/intro">Intro</a>');
+    expect(result.links).toEqual(["docs/intro"]);
+    expect(result.brokenLinks).toEqual([]);
+  }, 15_000);
+
+  it("renders unresolved wikilinks as Silica broken-link spans", async () => {
+    const result = await renderMarkdown("[[missing|Missing page]]", {
+      slug: "index",
+      allSlugs: ["index"],
+    });
+
+    const html = renderToStaticMarkup(<>{result.content}</>);
+
+    expect(html).toContain(
+      '<span class="silica-broken-link">Missing page</span>',
+    );
+    expect(result.links).toEqual([]);
+    expect(result.brokenLinks).toEqual([
+      { source: "index", target: "missing" },
+    ]);
+  }, 15_000);
+
+  it("renders wiki asset embeds with the configured asset base URL", async () => {
+    const result = await renderMarkdown("![[images/photo.png|Photo]]", {
+      slug: "index",
+      allSlugs: ["index"],
+      assetBaseUrl: "/assets",
+    });
+
+    const html = renderToStaticMarkup(<>{result.content}</>);
+
+    expect(html).toContain('<img src="/assets/images/photo.png" alt="Photo"/>');
+    expect(result.links).toEqual([]);
+    expect(result.brokenLinks).toEqual([]);
+  }, 15_000);
+
+  it("preserves heading and block fragments in wikilink hrefs", async () => {
+    const result = await renderMarkdown(
+      "[[docs/intro#Install Guide|Install]] and [[index#^block-id|Block]]",
+      {
+        slug: "index",
+        allSlugs: ["index", "docs/intro"],
+      },
+    );
+
+    const html = renderToStaticMarkup(<>{result.content}</>);
+
+    expect(html).toContain('<a href="/docs/intro#install-guide">Install</a>');
+    expect(html).toContain('<a href="/#^block-id">Block</a>');
+    expect(result.links).toEqual(["docs/intro", "index"]);
+  }, 15_000);
+
+  it("removes comments and renders block IDs and inline footnotes", async () => {
+    const result = await renderMarkdown(
+      "Visible %%hidden%% text ^block-id ^[Inline **note** and [docs](https://example.com)]",
+      {
+        slug: "index",
+        allSlugs: ["index"],
+      },
+    );
+
+    const html = renderToStaticMarkup(<>{result.content}</>);
+
+    expect(html).toContain("Visible");
+    expect(html).not.toContain("%%hidden%%");
+    expect(html).toContain('id="^block-id"');
+    expect(html).toContain('id="footnote-label"');
+    expect(html).toContain('data-footnote-ref=""');
+    expect(html).toContain('<section data-footnotes="" class="footnotes">');
+    expect(html).toContain("<p>Inline <strong>note</strong> and ");
+    expect(html).toContain(
+      '<a href="https://example.com" rel="noreferrer noopener" target="_blank">docs</a>',
+    );
+    expect(html).not.toContain("<sup>Inline note</sup>");
+    expect(result.toc).not.toContainEqual(
+      expect.objectContaining({ id: "footnote-label" }),
+    );
+    expect(result.plainText).not.toContain("hidden");
+  }, 15_000);
+
+  it("renders media embeds and image dimensions", async () => {
+    const result = await renderMarkdown(
+      [
+        "![[images/photo.png|100x145]]",
+        "![[audio/theme.mp3]]",
+        "![[video/demo.mp4]]",
+        "![[docs/file.pdf#height=400]]",
+        "![External|120](https://example.com/image.png)",
+      ].join("\n\n"),
+      {
+        slug: "index",
+        allSlugs: ["index"],
+        assetBaseUrl: "/assets",
+      },
+    );
+
+    const html = renderToStaticMarkup(<>{result.content}</>);
+
+    expect(html).toContain(
+      '<img src="/assets/images/photo.png" alt="photo.png" width="100" height="145"/>',
+    );
+    expect(html).toContain('<audio src="/assets/audio/theme.mp3" controls="">');
+    expect(html).toContain('<video src="/assets/video/demo.mp4" controls="">');
+    expect(html).toContain("<silica-embed");
+    expect(html).toContain('height="400"');
+    expect(html).toContain(
+      '<img src="https://example.com/image.png" alt="External" width="120"/>',
+    );
+  }, 15_000);
+
+  it("renders resolver-backed note embeds", async () => {
+    const result = await renderMarkdown("![[notes/embed-me]]", {
+      slug: "index",
+      allSlugs: ["index", "notes/embed-me"],
+      resolveEmbed: (target) =>
+        target.path === "notes/embed-me" ? "<p>Embedded note</p>" : undefined,
+    });
+
+    const html = renderToStaticMarkup(<>{result.content}</>);
+
+    expect(html).toContain('<figure class="silica-embed silica-note-embed"');
+    expect(html).not.toContain("<p><figure");
+    expect(html).toContain("<p>Embedded note</p>");
+    expect(result.links).toEqual(["notes/embed-me"]);
+  }, 15_000);
+
+  it("renders embedded markdown fragments without pre-wrapping headings", async () => {
+    const html = await renderMarkdownHtml("## Embedded Heading", {
+      slug: "notes/embed-me",
+      allSlugs: ["index", "notes/embed-me"],
+    });
+
+    expect(html).toContain("<h2>Embedded Heading</h2>");
+    expect(html).not.toContain("silica-heading-link");
+  }, 15_000);
+
   it("wraps fenced code blocks with language metadata", async () => {
     const result = await renderMarkdown(
       "```ts\nconst x: number = 1;\n```\n\n```\nplain text only\n```\n",
@@ -102,6 +246,38 @@ describe("renderMarkdown", () => {
       (html.match(/<silica-code-block/g) ?? []).length,
     ).toBeGreaterThanOrEqual(2);
     expect(html).toContain("<pre");
+  }, 15_000);
+
+  it("does not transform OFM syntax inside fenced code blocks", async () => {
+    const result = await renderMarkdown(
+      "```markdown\n[[other-page]]\n#tag\n==highlight==\n```\n",
+      {
+        slug: "index",
+        allSlugs: ["index", "other-page"],
+      },
+    );
+
+    const html = renderToStaticMarkup(<>{result.content}</>);
+
+    expect(html).toContain("other-page");
+    expect(html).toContain("#tag");
+    expect(html).toContain("==highlight==");
+    expect(html).not.toContain('href="/other-page"');
+    expect(html).not.toContain("silica-broken-link");
+    expect(result.links).toEqual([]);
+  }, 15_000);
+
+  it("renders Mermaid fences as silica-mermaid elements", async () => {
+    const result = await renderMarkdown("```mermaid\ngraph TD\nA --> B\n```", {
+      slug: "index",
+      allSlugs: ["index"],
+    });
+
+    const html = renderToStaticMarkup(<>{result.content}</>);
+
+    expect(html).toContain("<silica-mermaid");
+    expect(html).toContain('data-language="mermaid"');
+    expect(html).toContain("graph TD");
   }, 15_000);
 
   it("supports custom code block render components", async () => {
@@ -131,7 +307,7 @@ describe("renderMarkdown", () => {
 
   it("sanitizes raw HTML and escapes OFM-injected labels", async () => {
     const result = await renderMarkdown(
-      "[[<img src=x onerror=alert(1)>]]\n\n<script>alert(1)</script>\n\n<img src=x onerror=alert(1)>",
+      '[[<img src=x onerror=alert(1)>]]\n\n<script>alert(1)</script>\n\n<img src=x onerror=alert(1)>\n\n<h2 id="raw-id">Raw heading</h2>\n\n<h2 id="footnote-label">User heading</h2>',
       {
         slug: "index",
         allSlugs: ["index"],
@@ -143,5 +319,8 @@ describe("renderMarkdown", () => {
     expect(html).not.toContain("<script");
     expect(html).not.toContain('<img src="x" onerror=');
     expect(html).toContain("&lt;img src=x");
+    expect(html).toContain('id="user-content-raw-id"');
+    expect(html).toContain('id="user-content-footnote-label"');
+    expect(html).not.toContain('id="footnote-label"');
   }, 15_000);
 });

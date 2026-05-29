@@ -43,7 +43,10 @@ Shiki supports a wide range of grammars. Common aliases include:
 
 Code blocks use `github-light` and `github-dark` Shiki themes, switching automatically with the site dark mode toggle.
 
+## Mermaid diagrams
+
+Mermaid fences are detected separately from regular code blocks and rendered through a `<silica-mermaid>` component. See [[markdown/mermaid|Mermaid]] for the dedicated page and live example.
+
 ## Custom themes
 
-Themes can override the `silica-code-block` component to change code block chrome while keeping Shiki highlighting. See the amethyst theme's `code-block.tsx` for an example.
-
+Themes can override the `silica-code-block` component to change code block chrome while keeping Shiki highlighting. They can also override `silica-mermaid` for diagram rendering. See the amethyst theme for examples.

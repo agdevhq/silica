@@ -37,27 +37,23 @@ export {
 export {
   analyzeMarkdown,
   getDescription,
-  getTags,
   getTitle,
   renderMarkdown,
+  renderMarkdownHtml,
 } from "./pipeline/index.js";
-export {
-  extractInlineTags,
-  getTagHierarchy,
-  normalizeTag,
-  tagMatches,
-  tagToHref,
-} from "./pipeline/tags.js";
 export {
   getGitDates,
   precompute,
   type PrecomputeOptions,
 } from "./precompute.js";
+export { tagToHref } from "./tags.js";
 export type {
   MarkdownComponents,
   SilicaTheme,
   SilicaCalloutProps,
   SilicaCodeBlockProps,
+  SilicaEmbedProps,
+  SilicaMermaidProps,
   ThemeLayoutConfig,
   ThemeLayoutProps,
   ThemeNavigationEntry,

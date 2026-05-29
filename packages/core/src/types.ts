@@ -5,6 +5,7 @@ import type {
   ReactNode,
 } from "react";
 import type { SearchRecord } from "@silicajs/search";
+import type { ObsidianLinkTarget } from "@silicajs/remark-obsidian";
 import type { FullSlug } from "./path.js";
 
 export type ThemeConfig =
@@ -114,6 +115,11 @@ export type RenderContext = {
   slug: FullSlug | string;
   allSlugs: string[];
   assetBaseUrl?: string;
+  resolveEmbed?: (
+    target: ObsidianLinkTarget,
+  ) => Promise<string | undefined> | string | undefined;
+  embedDepth?: number;
+  maxEmbedDepth?: number;
   wikilinkStrategy?: "absolute" | "relative" | "shortest";
   tags?: {
     inline?: boolean;
@@ -136,10 +142,22 @@ export type SilicaCodeBlockProps = HTMLAttributes<HTMLElement> & {
   "data-language-label"?: string;
 };
 
+export type SilicaEmbedProps = HTMLAttributes<HTMLElement> & {
+  "data-embed-kind"?: string;
+  "data-embed-target"?: string;
+  src?: string;
+};
+
+export type SilicaMermaidProps = HTMLAttributes<HTMLElement> & {
+  "data-source"?: string;
+};
+
 export type MarkdownComponents = {
   a?: ComponentType<AnchorHTMLAttributes<HTMLAnchorElement>>;
   "silica-callout"?: ComponentType<SilicaCalloutProps>;
   "silica-code-block"?: ComponentType<SilicaCodeBlockProps>;
+  "silica-embed"?: ComponentType<SilicaEmbedProps>;
+  "silica-mermaid"?: ComponentType<SilicaMermaidProps>;
 };
 
 export type RenderResult = {

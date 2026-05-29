@@ -35,6 +35,7 @@ describe("getPageProperties", () => {
         description: "Intro",
         tags: ["home"],
         draft: true,
+        listed: false,
         menu_label: "Home",
         author: "Silica team",
         status: "published",

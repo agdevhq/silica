@@ -12,6 +12,8 @@ import rehypeSlug from "rehype-slug";
 import rehypeAutolinkHeadings from "rehype-autolink-headings";
 import rehypeShiki from "@shikijs/rehype";
 import rehypeReact from "rehype-react";
+import rehypeStringify from "rehype-stringify";
+import { getTags, remarkObsidian } from "@silicajs/remark-obsidian";
 import { Fragment, jsx, jsxs } from "react/jsx-runtime";
 import { visit } from "unist-util-visit";
 import type {
@@ -20,17 +22,20 @@ import type {
   RenderResult,
   TocItem,
 } from "../types.js";
-import { transformObsidianMarkdown } from "./ofm.js";
 import { rehypeShikiCodeBlockWrapper } from "./code-block.js";
+import {
+  createSilicaObsidianHandlers,
+  remarkSilicaObsidian,
+} from "./obsidian.js";
 import {
   getDataArray,
   mergeBrokenLinks,
+  rehypeCleanFootnoteHeadings,
   rehypeCollectTocAndLinks,
   rehypeExternalLinks,
-  rehypeObsidianCallouts,
+  rehypeRestoreObsidianBlockIds,
+  rehypeUnwrapSilicaEmbeds,
 } from "./plugins.js";
-import { getTags } from "./tags.js";
-export { getTags } from "./tags.js";
 
 type MdastNode = {
   type: string;
@@ -89,6 +94,27 @@ const sanitizeSchema = {
     span: [
       ...(defaultSchema.attributes?.span ?? []),
       ["className", "silica-broken-link"],
+      ["className", "silica-block-id"],
+      ["dataSilicaBlockId"],
+      ["data-silica-block-id"],
+      ["ariaHidden"],
+      ["aria-hidden"],
+    ],
+    sup: [
+      ...(defaultSchema.attributes?.sup ?? []),
+      ["className", "silica-inline-footnote"],
+    ],
+    img: [...(defaultSchema.attributes?.img ?? []), ["width"], ["height"]],
+    audio: [["src"], ["controls"], ["width"], ["height"]],
+    video: [["src"], ["controls"], ["width"], ["height"]],
+    source: [["src"], ["type"]],
+    figure: [
+      ...(defaultSchema.attributes?.figure ?? []),
+      ["className", "silica-embed", "silica-note-embed"],
+      ["dataEmbedKind"],
+      ["data-embed-kind"],
+      ["dataEmbedTarget"],
+      ["data-embed-target"],
     ],
     strong: [
       ...(defaultSchema.attributes?.strong ?? []),
@@ -98,9 +124,47 @@ const sanitizeSchema = {
       ["dataCalloutFold"],
       ["data-callout-fold"],
     ],
+    "silica-callout": [
+      ["className", "silica-callout"],
+      ["dataCallout"],
+      ["data-callout"],
+      ["dataCalloutTitle"],
+      ["data-callout-title"],
+      ["dataCalloutFoldable"],
+      ["data-callout-foldable"],
+      ["dataCalloutOpen"],
+      ["data-callout-open"],
+    ],
+    "silica-embed": [
+      ["src"],
+      ["width"],
+      ["height"],
+      ["dataEmbedKind"],
+      ["data-embed-kind"],
+      ["dataEmbedTarget"],
+      ["data-embed-target"],
+    ],
+    "silica-mermaid": [
+      ["dataSource"],
+      ["data-source"],
+      ["dataLanguage"],
+      ["data-language"],
+      ["dataLanguageLabel"],
+      ["data-language-label"],
+    ],
     mark: defaultSchema.attributes?.mark ?? [],
   },
-  tagNames: [...(defaultSchema.tagNames ?? []), "mark"],
+  tagNames: [
+    ...(defaultSchema.tagNames ?? []),
+    "mark",
+    "audio",
+    "video",
+    "source",
+    "figure",
+    "silica-callout",
+    "silica-embed",
+    "silica-mermaid",
+  ],
 };
 
 export async function renderMarkdown(
@@ -108,15 +172,16 @@ export async function renderMarkdown(
   context: RenderContext,
 ): Promise<RenderResult> {
   const parsed = matter(raw);
-  const transformed = transformObsidianMarkdown(parsed.content, context);
   const inlineTags = context.tags?.inline ?? true;
-  const processor = baseProcessor()
+  const processor = baseProcessor(context)
+    .use(rehypeUnwrapSilicaEmbeds)
     .use(rehypeRaw)
     .use(rehypeSanitize, sanitizeSchema)
-    .use(rehypeObsidianCallouts)
+    .use(rehypeRestoreObsidianBlockIds)
+    .use(rehypeUnwrapSilicaEmbeds)
     .use(rehypeKatex);
 
-  if (hasCodeFence(transformed.markdown)) {
+  if (hasCodeFence(parsed.content)) {
     processor.use(rehypeShiki, {
       themes: {
         light: "github-light",
@@ -138,6 +203,7 @@ export async function renderMarkdown(
       content: headingLinkIcon,
       properties: { className: ["silica-heading-link"] },
     })
+    .use(rehypeCleanFootnoteHeadings)
     .use(rehypeCollectTocAndLinks)
     .use(rehypeExternalLinks)
     .use(rehypeReact, {
@@ -147,10 +213,14 @@ export async function renderMarkdown(
       components: context.components,
     });
 
-  const file = await processor.process(transformed.markdown);
+  const file = await processor.process(parsed.content);
   const frontmatter = parsed.data;
+  const obsidianBrokenLinks = getDataArray<{ target: string }>(
+    file.data,
+    "silicaObsidianBrokenLinks",
+  ).map((link) => ({ source: String(context.slug), target: link.target }));
   const links = unique([
-    ...transformed.links,
+    ...getDataArray<string>(file.data, "silicaObsidianLinks"),
     ...getDataArray<string>(file.data, "links"),
   ]);
   const toc = getDataArray<TocItem>(file.data, "toc");
@@ -161,7 +231,7 @@ export async function renderMarkdown(
     frontmatter,
     toc,
     links,
-    brokenLinks: mergeBrokenLinks(transformed.brokenLinks, []),
+    brokenLinks: mergeBrokenLinks(obsidianBrokenLinks, []),
     plainText,
     title: getTitle(frontmatter, plainText),
     description: getDescription(frontmatter, plainText),
@@ -169,21 +239,57 @@ export async function renderMarkdown(
   };
 }
 
+export async function renderMarkdownHtml(
+  raw: string,
+  context: RenderContext,
+): Promise<string> {
+  const parsed = matter(raw);
+  const processor = baseProcessor(context)
+    .use(rehypeUnwrapSilicaEmbeds)
+    .use(rehypeRaw)
+    .use(rehypeSanitize, sanitizeSchema)
+    .use(rehypeRestoreObsidianBlockIds)
+    .use(rehypeUnwrapSilicaEmbeds)
+    .use(rehypeKatex);
+
+  if (hasCodeFence(parsed.content)) {
+    processor.use(rehypeShiki, {
+      themes: {
+        light: "github-light",
+        dark: "github-dark",
+      },
+      defaultColor: "light-dark()",
+      defaultLanguage: "text",
+      rootStyle: false,
+      transformers: [rehypeShikiCodeBlockWrapper()],
+    });
+  }
+
+  processor.use(rehypeExternalLinks).use(rehypeStringify);
+
+  const file = await processor.process(parsed.content);
+  return String(file);
+}
+
 export async function analyzeMarkdown(
   raw: string,
   context: RenderContext,
 ): Promise<AnalyzeResult> {
   const parsed = matter(raw);
-  const transformed = transformObsidianMarkdown(parsed.content, context);
   const inlineTags = context.tags?.inline ?? true;
-  const plainText = extractPlainText(transformed.markdown);
+  const file = await runRemarkObsidian(parsed.content, context);
+  const plainText = extractPlainText(parsed.content);
   const frontmatter = parsed.data;
+  const brokenLinks = getDataArray<{ target: string }>(
+    file.data,
+    "silicaObsidianBrokenLinks",
+  ).map((link) => ({ source: String(context.slug), target: link.target }));
 
   return {
     frontmatter,
     toc: [],
-    links: transformed.links,
-    brokenLinks: transformed.brokenLinks,
+    links: getDataArray<string>(file.data, "silicaObsidianLinks"),
+    brokenLinks,
     plainText,
     title: getTitle(frontmatter, plainText),
     description: getDescription(frontmatter, plainText),
@@ -218,15 +324,32 @@ export function getDescription(
   return sentence || undefined;
 }
 
-function baseProcessor() {
+function baseProcessor(context: RenderContext) {
   return unified()
     .use(remarkParse)
     .use(remarkFrontmatter, ["yaml"])
     .use(remarkGfm)
     .use(remarkMath)
+    .use(remarkObsidian, { inlineTags: context.tags?.inline ?? true })
+    .use(remarkSilicaObsidian, context)
     .use(remarkRehype, {
       allowDangerousHtml: true,
+      handlers: createSilicaObsidianHandlers(context),
     });
+}
+
+async function runRemarkObsidian(markdown: string, context: RenderContext) {
+  const processor = unified()
+    .use(remarkParse)
+    .use(remarkFrontmatter, ["yaml"])
+    .use(remarkGfm)
+    .use(remarkMath)
+    .use(remarkObsidian, { inlineTags: context.tags?.inline ?? true })
+    .use(remarkSilicaObsidian, context);
+  const tree = processor.parse(markdown);
+  const file = { data: {} };
+  await processor.run(tree, file);
+  return file;
 }
 
 function remarkCollectPlainText() {
@@ -242,6 +365,9 @@ function remarkCollectPlainText() {
 function extractPlainText(markdown: string): string {
   return markdown
     .replace(/```[\s\S]*?```/g, "")
+    .replace(/%%[\s\S]*?%%/g, "")
+    .replace(/\^\[[^\]]+]/g, "")
+    .replace(/(?:^|\s)\^[A-Za-z0-9-]+/g, " ")
     .replace(/`([^`]+)`/g, "$1")
     .replace(/!\[[^\]]*]\([^)]+\)/g, "")
     .replace(/\[([^\]]+)]\([^)]+\)/g, "$1")

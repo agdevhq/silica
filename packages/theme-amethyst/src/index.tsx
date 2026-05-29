@@ -16,6 +16,8 @@ import {
 
 import { Callout } from "./callout.js";
 import { CodeBlock } from "./code-block.js";
+import { Embed } from "./embed.js";
+import { Mermaid } from "./mermaid.js";
 import { Sidebar } from "./sidebar.js";
 
 function DefaultProvider({ children }: { children: ReactNode }) {
@@ -127,6 +129,8 @@ export function PageRenderer({ page, graph, manifest }: ThemePageProps) {
 export const components = {
   "silica-callout": Callout,
   "silica-code-block": CodeBlock,
+  "silica-embed": Embed,
+  "silica-mermaid": Mermaid,
 };
 
 export default { Layout, PageRenderer, components };

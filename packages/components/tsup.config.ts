@@ -15,6 +15,7 @@ export default defineConfig({
   external: [
     "@silicajs/core",
     "@silicajs/core/runtime",
+    "@silicajs/remark-obsidian",
     "@silicajs/ui",
     "react",
     "react-dom",

@@ -41,7 +41,7 @@ flowchart LR
 
 1. **CLI materializes** `.silica/next/` from templates in `@silicajs/next`
 2. **Core precomputes** — scans `content/`, filters drafts, builds manifest, graph, search index, copies assets
-3. **Next.js renders** pages from `app/[\[...slug\]]/page.tsx` — markdown is read from disk and cached
+3. **Next.js renders** pages from `app/[[...slug]]/page.tsx` — markdown is read from disk and cached
 4. **Theme** owns layout chrome; **components** provide vault UI on top of **ui** primitives
 5. **Auth proxy** (when enabled) gates requests before cached content is served
 
@@ -50,13 +50,14 @@ flowchart LR
 Raw markdown flows through:
 
 1. `gray-matter` — frontmatter parsing
-2. Obsidian transforms — wikilinks, highlights, callout markers, asset rewriting
-3. `remark-gfm` + `remark-math` — GFM and math
-4. `rehype-shiki` — syntax highlighting
-5. Custom rehype plugins — callouts, ToC collection, external link attrs
-6. `rehype-react` — React tree with theme component overrides
+2. `@silicajs/remark-obsidian` — wikilinks, embeds, highlights, callouts, comments, block IDs, inline footnotes, and tags
+3. Silica remark plugins — resolve routes, collect graph data, render Obsidian nodes, and rewrite vault assets
+4. `remark-gfm` + `remark-math` — GFM and math
+5. `rehype-shiki` — syntax highlighting and Mermaid fence detection
+6. Custom rehype plugins — ToC collection and external link attrs
+7. `rehype-react` — React tree with theme component overrides
 
-Themes register components for `silica-callout` and `silica-code-block`.
+Themes register components for `silica-callout`, `silica-code-block`, `silica-embed`, and `silica-mermaid`.
 
 ## Runtime content
 

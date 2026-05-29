@@ -11,7 +11,7 @@ Silica turns a collection of Markdown files into a server-rendered knowledge sit
 
 ## What you get
 
-- **Obsidian syntax** — wikilinks, callouts, highlights, and embedded assets
+- **Obsidian syntax** — wikilinks, callouts, highlights, comments, block IDs, and embedded assets
 - **Next.js 16** — server-rendered pages with caching
 - **Built-in UI** — sidebar navigation, search, table of contents, backlinks, and dark mode
 - **Optional auth** — Google OAuth enforced before content is served
@@ -61,6 +61,9 @@ export default defineConfig({
 - [[markdown/callouts|Callouts]]
 - [[markdown/code-blocks|Code blocks]]
 - [[markdown/math-and-gfm|Math and GFM]]
+- [[markdown/block-links|Block links]]
+- [[markdown/mermaid|Mermaid]]
+- [[markdown/obsidian-flavored-markdown|Other Obsidian syntax]]
 
 ### Site features
 

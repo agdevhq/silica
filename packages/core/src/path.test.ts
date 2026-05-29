@@ -33,4 +33,23 @@ describe("path helpers", () => {
     );
     expect(resolved).toBe("notes/auth");
   });
+
+  it("resolves wikilinks while ignoring heading and block fragments", () => {
+    expect(
+      resolveWikiLink(
+        "index",
+        "Notes/Auth#Install Guide",
+        ["index", "notes/auth"],
+        "shortest",
+      ),
+    ).toBe("notes/auth");
+    expect(
+      resolveWikiLink(
+        "index",
+        "Notes/Auth#^intro",
+        ["index", "notes/auth"],
+        "shortest",
+      ),
+    ).toBe("notes/auth");
+  });
 });

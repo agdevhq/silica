@@ -35,18 +35,19 @@ npm run dev
 
 ## Packages
 
-| Package                    | Purpose                                                                                                                          |
-| -------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
-| `@silicajs/core`           | Config loading, Quartz-inspired slug/path helpers, markdown rendering, and precompute artifacts.                                 |
-| `@silicajs/ui`             | Generic shadcn-style component library (Base UI + Tailwind v4). Authored via the shadcn CLI.                                     |
-| `@silicajs/components`     | Silica-aware, framework-agnostic React composables (vault tree, breadcrumbs, ToC, backlinks, search, …) built on `@silicajs/ui`. |
-| `@silicajs/next`           | Next.js runtime adapter — generated routes, server loaders, proxy, and templates.                                                |
-| `@silicajs/cli`            | `silica create/dev/build/start` and `.silica/next` materialization.                                                              |
-| `@silicajs/auth`           | Better Auth wrapper and allowlist helpers.                                                                                       |
-| `@silicajs/search`         | FlexSearch index build/load/query helpers.                                                                                       |
-| `@silicajs/theme-amethyst` | Default amethyst/violet theme — pure composition over `@silicajs/ui` + `@silicajs/components`.                                   |
-| `@silicajs/create`         | Internal scaffolder wrapper around `silica create`.                                                                              |
-| `create-silica`            | User-facing `npx create-silica` package.                                                                                         |
+| Package                     | Purpose                                                                                                                          |
+| --------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| `@silicajs/core`            | Config loading, Quartz-inspired slug/path helpers, markdown rendering, and precompute artifacts.                                 |
+| `@silicajs/remark-obsidian` | Neutral remark plugin for Obsidian-flavored Markdown: wikilinks, embeds, callouts, highlights, comments, block IDs, and tags.    |
+| `@silicajs/ui`              | Generic shadcn-style component library (Base UI + Tailwind v4). Authored via the shadcn CLI.                                     |
+| `@silicajs/components`      | Silica-aware, framework-agnostic React composables (vault tree, breadcrumbs, ToC, backlinks, search, …) built on `@silicajs/ui`. |
+| `@silicajs/next`            | Next.js runtime adapter — generated routes, server loaders, proxy, and templates.                                                |
+| `@silicajs/cli`             | `silica create/dev/build/start` and `.silica/next` materialization.                                                              |
+| `@silicajs/auth`            | Better Auth wrapper and allowlist helpers.                                                                                       |
+| `@silicajs/search`          | FlexSearch index build/load/query helpers.                                                                                       |
+| `@silicajs/theme-amethyst`  | Default amethyst/violet theme — pure composition over `@silicajs/ui` + `@silicajs/components`.                                   |
+| `@silicajs/create`          | Internal scaffolder wrapper around `silica create`.                                                                              |
+| `create-silica`             | User-facing `npx create-silica` package.                                                                                         |
 
 ## Architecture
 

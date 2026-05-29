@@ -101,14 +101,16 @@ export async function precompute(
     entries.push(entry);
     graphLinks[file.slug] = analysis.links;
     brokenLinks.push(...analysis.brokenLinks);
-    searchRecords.push({
-      id: file.slug,
-      slug: file.slug,
-      title,
-      content: analysis.plainText,
-      description: analysis.description,
-      tags: analysis.tags,
-    });
+    if (isListedEntry(entry)) {
+      searchRecords.push({
+        id: file.slug,
+        slug: file.slug,
+        title,
+        content: analysis.plainText,
+        description: analysis.description,
+        tags: analysis.tags,
+      });
+    }
   }
 
   await copyAssets(projectRoot, config, scan.assets);
@@ -332,6 +334,7 @@ async function writeSitemapAndRobots(
     "",
   );
   const urls = manifest.entries
+    .filter(isListedEntry)
     .map(
       (entry) => `  <url><loc>${baseUrl}${slugToHref(entry.slug)}</loc></url>`,
     )
@@ -362,6 +365,10 @@ function getDate(value: unknown): Date | undefined {
     if (!Number.isNaN(parsed.valueOf())) return parsed;
   }
   return undefined;
+}
+
+export function isListedEntry(entry: ManifestEntry): boolean {
+  return entry.frontmatter.listed !== false;
 }
 
 function stringifyDate(value?: Date): string | undefined {

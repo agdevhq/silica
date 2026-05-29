@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "description": "Silica-aware, framework-agnostic React composables built on @silicajs/ui.",
   "type": "module",
+  "types": "./dist/index.d.ts",
   "license": "MIT",
   "publishConfig": {
     "access": "public"

@@ -1,12 +1,24 @@
 import { Command } from "commander";
-import { fileURLToPath } from "node:url";
-import { buildCommand, createCommand, devCommand, startCommand } from "./commands.js";
+import {
+  buildCommand,
+  createCommand,
+  devCommand,
+  startCommand,
+} from "./commands.js";
 
-export { buildCommand, createCommand, devCommand, startCommand } from "./commands.js";
+export {
+  buildCommand,
+  createCommand,
+  devCommand,
+  startCommand,
+} from "./commands.js";
 
 export async function main(argv = process.argv): Promise<void> {
   const program = new Command();
-  program.name("silica").description("Publish an Obsidian-flavored markdown vault with Next.js.").version("0.1.0");
+  program
+    .name("silica")
+    .description("Publish an Obsidian-flavored markdown vault with Next.js.")
+    .version("0.1.0");
 
   program
     .command("create")
@@ -38,11 +50,4 @@ export async function main(argv = process.argv): Promise<void> {
     });
 
   await program.parseAsync(argv);
-}
-
-if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
-  main().catch((error: unknown) => {
-    console.error(error instanceof Error ? error.message : error);
-    process.exitCode = 1;
-  });
 }

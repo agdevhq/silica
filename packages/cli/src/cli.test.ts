@@ -3,6 +3,7 @@ import fs from "fs-extra";
 import { afterEach, describe, expect, it } from "vitest";
 import { materializeNextApp } from "./materialize.js";
 import { scaffoldProject } from "./scaffold.js";
+import { scaffoldDependencyRanges } from "./scaffold-versions.js";
 
 const tempRoots: string[] = [];
 
@@ -40,11 +41,17 @@ describe("silica CLI helpers", () => {
     const scaffoldPackageJson = JSON.parse(
       await fs.readFile(path.join(root, "package.json"), "utf8"),
     ) as { dependencies: Record<string, string> };
-    expect(scaffoldPackageJson.dependencies["@silicajs/cli"]).toBe("^0.1.0");
-    expect(scaffoldPackageJson.dependencies["@silicajs/core"]).toBe("^0.1.0");
-    expect(scaffoldPackageJson.dependencies["@silicajs/next"]).toBe("^0.1.0");
+    expect(scaffoldPackageJson.dependencies["@silicajs/cli"]).toBe(
+      scaffoldDependencyRanges["@silicajs/cli"],
+    );
+    expect(scaffoldPackageJson.dependencies["@silicajs/core"]).toBe(
+      scaffoldDependencyRanges["@silicajs/core"],
+    );
+    expect(scaffoldPackageJson.dependencies["@silicajs/next"]).toBe(
+      scaffoldDependencyRanges["@silicajs/next"],
+    );
     expect(scaffoldPackageJson.dependencies["@silicajs/theme-amethyst"]).toBe(
-      "^0.1.0",
+      scaffoldDependencyRanges["@silicajs/theme-amethyst"],
     );
   });
 

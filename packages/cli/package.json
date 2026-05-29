@@ -8,7 +8,7 @@
     "access": "public"
   },
   "bin": {
-    "silica": "./dist/index.js"
+    "silica": "./dist/bin.js"
   },
   "exports": {
     ".": {

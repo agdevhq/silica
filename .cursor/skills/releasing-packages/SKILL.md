@@ -11,9 +11,8 @@ Releases happen from `main`, not from feature branches. Multiple changesets accu
 
 On every successful CI run on `main`, the Release workflow (`.github/workflows/release.yml`) runs:
 
-1. Builds packages (needed before `changeset publish`)
-2. If pending changesets exist → opens or updates the **Version Packages** PR (`changeset-release/main`)
-3. If no pending changesets remain (Version Packages PR was merged) → runs `npm run release:publish`
+1. If pending changesets exist → opens or updates the **Version Packages** PR (`changeset-release/main`)
+2. If no pending changesets remain (Version Packages PR was merged) → builds packages (reusing Turbo cache from CI) and runs `npm run release:publish`
 
 Release does not re-run lint, test, or typecheck — CI on `main` is the gate. Use **Actions → Release → Run workflow** to re-trigger manually.
 

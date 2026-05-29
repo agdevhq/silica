@@ -4,6 +4,9 @@
   "description": "Silica command-line interface.",
   "type": "module",
   "license": "MIT",
+  "publishConfig": {
+    "access": "public"
+  },
   "bin": {
     "silica": "./dist/index.js"
   },
@@ -23,8 +26,8 @@
     "lint": "tsc --noEmit"
   },
   "dependencies": {
-    "@silicajs/core": "0.1.0",
-    "@silicajs/next": "0.1.0",
+    "@silicajs/core": "^0.1.0",
+    "@silicajs/next": "^0.1.0",
     "chokidar": "^5.0.0",
     "commander": "^14.0.3",
     "execa": "^9.6.1",

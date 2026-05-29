@@ -4,6 +4,9 @@
   "description": "Generic shadcn-style component library for Silica themes. Base UI primitives + Tailwind v4.",
   "type": "module",
   "license": "MIT",
+  "publishConfig": {
+    "access": "public"
+  },
   "exports": {
     "./globals.css": "./src/styles/globals.css",
     "./postcss.config": "./postcss.config.mjs",

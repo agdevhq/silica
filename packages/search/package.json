@@ -4,6 +4,9 @@
   "description": "Server-side FlexSearch index builder and query helpers for Silica.",
   "type": "module",
   "license": "MIT",
+  "publishConfig": {
+    "access": "public"
+  },
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",

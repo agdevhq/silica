@@ -4,6 +4,9 @@
   "description": "Silica-aware, framework-agnostic React composables built on @silicajs/ui.",
   "type": "module",
   "license": "MIT",
+  "publishConfig": {
+    "access": "public"
+  },
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
@@ -24,9 +27,9 @@
     "test": "vitest run --passWithNoTests"
   },
   "dependencies": {
-    "@silicajs/core": "0.1.0",
-    "@silicajs/remark-obsidian": "0.1.0",
-    "@silicajs/ui": "0.1.0",
+    "@silicajs/core": "^0.1.0",
+    "@silicajs/remark-obsidian": "^0.1.0",
+    "@silicajs/ui": "^0.1.0",
     "lucide-react": "^1.16.0"
   },
   "peerDependencies": {

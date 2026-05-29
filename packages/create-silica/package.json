@@ -23,6 +23,6 @@
     "lint": "tsc --noEmit"
   },
   "dependencies": {
-    "@silicajs/create": "0.1.0"
+    "@silicajs/create": "^0.1.0"
   }
 }

@@ -2,24 +2,27 @@ import { visit } from "unist-util-visit";
 import type {
   ObsidianCallout,
   ObsidianHighlight,
-  ObsidianNode,
   ObsidianTag,
   ObsidianWikiEmbed,
   ObsidianWikilink,
 } from "@silicajs/remark-obsidian";
+import type { Nodes, Root } from "mdast";
 import { tagToHref } from "../tags.js";
 import { resolveWikiLink, slugToHref } from "../path.js";
 import type { RenderContext } from "../types.js";
+
+declare module "mdast" {
+  interface Data {
+    silicaBroken?: boolean;
+    silicaResolvedSlug?: string;
+  }
+}
 
 type VFileLike = {
   data: Record<string, unknown>;
 };
 
-type SilicaObsidianNode = ObsidianNode & {
-  value?: string;
-  url?: string;
-  data?: Record<string, unknown>;
-};
+type SilicaMdastNode = Nodes;
 
 type HastNode = {
   type: "element" | "text";
@@ -30,16 +33,16 @@ type HastNode = {
 };
 
 type HandlerState = {
-  all: (node: SilicaObsidianNode) => HastNode[];
+  all: (node: Nodes) => HastNode[];
 };
 
 export function remarkSilicaObsidian(context: RenderContext) {
-  return (tree: SilicaObsidianNode, file: VFileLike) => {
+  return (tree: Root, file: VFileLike) => {
     const links = new Set<string>();
     const brokenLinks: Array<{ target: string }> = [];
     const assetBaseUrl = context.assetBaseUrl ?? "/silica";
 
-    visit(tree, (node: SilicaObsidianNode) => {
+    visit(tree, (node: SilicaMdastNode) => {
       if (node.type === "image" && typeof node.url === "string") {
         node.url = rewriteAssetUrl(node.url, assetBaseUrl);
         return;
@@ -143,7 +146,7 @@ function wikilinkToHast(
   },
 ): HastNode {
   const label = node.alias || node.target || "";
-  const resolved = getStringData(node, "silicaResolvedSlug");
+  const resolved = getResolvedSlug(node);
   if (!resolved) {
     return {
       type: "element",
@@ -161,7 +164,7 @@ function wikilinkToHast(
   };
 }
 
-function isWikiNode(node: SilicaObsidianNode): node is (
+function isWikiNode(node: SilicaMdastNode): node is (
   | ObsidianWikilink
   | ObsidianWikiEmbed
 ) & {
@@ -173,11 +176,8 @@ function isWikiNode(node: SilicaObsidianNode): node is (
   );
 }
 
-function getStringData(
-  node: SilicaObsidianNode,
-  key: string,
-): string | undefined {
-  const value = node.data?.[key];
+function getResolvedSlug(node: SilicaMdastNode): string | undefined {
+  const value = node.data?.silicaResolvedSlug;
   return typeof value === "string" ? value : undefined;
 }
 

@@ -84,6 +84,50 @@ describe("renderMarkdown", () => {
     expect(html).toContain("</aside>");
   }, 15_000);
 
+  it("resolves wikilinks and records graph links", async () => {
+    const result = await renderMarkdown("See [[docs/intro|Intro]].", {
+      slug: "index",
+      allSlugs: ["index", "docs/intro"],
+    });
+
+    const html = renderToStaticMarkup(<>{result.content}</>);
+
+    expect(html).toContain('<a href="/docs/intro">Intro</a>');
+    expect(result.links).toEqual(["docs/intro"]);
+    expect(result.brokenLinks).toEqual([]);
+  }, 15_000);
+
+  it("renders unresolved wikilinks as Silica broken-link spans", async () => {
+    const result = await renderMarkdown("[[missing|Missing page]]", {
+      slug: "index",
+      allSlugs: ["index"],
+    });
+
+    const html = renderToStaticMarkup(<>{result.content}</>);
+
+    expect(html).toContain(
+      '<span class="silica-broken-link">Missing page</span>',
+    );
+    expect(result.links).toEqual([]);
+    expect(result.brokenLinks).toEqual([
+      { source: "index", target: "missing" },
+    ]);
+  }, 15_000);
+
+  it("renders wiki asset embeds with the configured asset base URL", async () => {
+    const result = await renderMarkdown("![[images/photo.png|Photo]]", {
+      slug: "index",
+      allSlugs: ["index"],
+      assetBaseUrl: "/assets",
+    });
+
+    const html = renderToStaticMarkup(<>{result.content}</>);
+
+    expect(html).toContain('<img src="/assets/images/photo.png" alt="Photo"/>');
+    expect(result.links).toEqual([]);
+    expect(result.brokenLinks).toEqual([]);
+  }, 15_000);
+
   it("wraps fenced code blocks with language metadata", async () => {
     const result = await renderMarkdown(
       "```ts\nconst x: number = 1;\n```\n\n```\nplain text only\n```\n",

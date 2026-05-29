@@ -7,7 +7,7 @@ test("public vault renders homepage and nested pages", async ({ request }) => {
   expect(homeHtml).toContain("Silica");
   expect(homeHtml).toContain("Authentication");
 
-  const auth = await request.get("/auth");
+  const auth = await request.get("/publishing/authentication");
   expect(auth.ok()).toBe(true);
   const authHtml = await auth.text();
   expect(authHtml).toContain("Authentication");
@@ -24,7 +24,7 @@ test("search API returns matching private server index results", async ({
     results: Array<{ slug: string; title: string; excerpt: string }>;
   };
   expect(payload.results[0]).toMatchObject({
-    slug: "auth",
+    slug: "publishing/authentication",
     title: "Authentication",
   });
   expect(payload.results[0]?.excerpt.toLowerCase()).toContain("oauth");

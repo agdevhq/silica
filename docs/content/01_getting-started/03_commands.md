@@ -1,60 +1,50 @@
 ---
 title: Commands
-description: silica dev, build, and start — the CLI workflow.
+description: The silica dev, build, and start commands.
 ---
 
-The `silica` CLI (from `@silicajs/cli`) is the only tool you need day to day.
+The `silica` command is the only tool you need day to day. Your `package.json` wires it to the usual npm scripts.
 
 ## `silica dev`
 
-Materializes `.silica/next/`, runs precompute, and starts `next dev`.
+Starts a local development server with live reload.
 
 ```bash
 npm run dev
-# equivalent to: silica dev
+# runs: silica dev
 ```
 
-During development, Silica watches:
+While it is running, Silica watches your project and updates the site as you save:
 
-- `content/**/*` — markdown changes trigger precompute and Next.js revalidation
-- `silica.config.ts` — config changes require a full restart
-- `themes/**/*` — custom theme changes require a restart
+- changes to anything in `content/` reload instantly
+- changes to `silica.config.ts` restart the dev server
+
+Open `http://localhost:3000` to view your site.
 
 ## `silica build`
 
-Materializes, precomputes, and runs `next build` for production.
+Builds the production site, ready to deploy.
 
 ```bash
 npm run build
-# equivalent to: silica build
+# runs: silica build
 ```
 
-Output lands in `.silica/next/.next/`. Standalone mode is enabled so you can deploy a minimal Node image.
+See [[publishing/deployment|Deployment]] for what to do with the output.
 
 ## `silica start`
 
-Serves the production build.
+Serves the production build locally so you can check it before shipping.
 
 ```bash
 npm run start
-# equivalent to: silica start
+# runs: silica start
 ```
-
-Uses the standalone `server.js` when present, falling back to `next start` otherwise.
 
 ## `silica create`
 
-Scaffolds a new vault directory (also available as `npx create-silica`).
+Scaffolds a brand-new vault. This is what `npx create-silica` runs.
 
 ```bash
 silica create my-vault
 ```
-
-## What happens on each command
-
-1. **Materialize** — copy Next.js templates from `@silicajs/next` into `.silica/next/`
-2. **Precompute** — scan `content/`, build manifest, graph, search index, copy assets
-3. **Next.js** — dev server or production build
-
-See [[architecture|Architecture]] for the full pipeline.
-

@@ -328,7 +328,7 @@ function parseWikiInner(
   embedSize?: ObsidianEmbedSize;
   label: string;
 } {
-  const [rawTargetPart, aliasPart] = splitUnescapedPipe(inner);
+  const [rawTargetPart, aliasPart] = splitWikiPipe(inner);
   const rawTarget = rawTargetPart.trim();
   const parsedAlias = parseAliasOrSize(aliasPart?.trim() ?? "");
   const alias = options.embed ? parsedAlias.alias : aliasPart?.trim();
@@ -380,7 +380,7 @@ function parseAliasOrSize(value: string): {
   const size = parseEmbedSize(value);
   if (size) return { embedSize: size };
 
-  const [alias, maybeSize] = splitUnescapedPipe(value);
+  const [alias, maybeSize] = splitWikiPipe(value);
   const nestedSize = parseEmbedSize(maybeSize?.trim() ?? "");
   return {
     alias: alias?.trim() || undefined,
@@ -397,16 +397,32 @@ function parseEmbedSize(value: string): ObsidianEmbedSize | undefined {
   };
 }
 
-function splitUnescapedPipe(value: string): [string, string?] {
+// Inside a wikilink, a pipe always separates the target from its alias/size.
+// Targets cannot contain a literal pipe, so we split on the first pipe whether
+// it is escaped (`\|`) or not. Escaping is required when a wikilink lives inside
+// a GFM table cell — otherwise the table parser would treat the pipe as a column
+// divider before the wikilink is ever recognized.
+function splitWikiPipe(value: string): [string, string?] {
   for (let index = 0; index < value.length; index += 1) {
-    if (value[index] === "|" && value[index - 1] !== "\\") {
+    const char = value[index];
+    if (char === "\\" && value[index + 1] === "|") {
       return [
-        value.slice(0, index).replace(/\\\|/g, "|"),
-        value.slice(index + 1).replace(/\\\|/g, "|"),
+        unescapePipes(value.slice(0, index)),
+        unescapePipes(value.slice(index + 2)),
+      ];
+    }
+    if (char === "|") {
+      return [
+        unescapePipes(value.slice(0, index)),
+        unescapePipes(value.slice(index + 1)),
       ];
     }
   }
-  return [value.replace(/\\\|/g, "|")];
+  return [unescapePipes(value)];
+}
+
+function unescapePipes(value: string): string {
+  return value.replace(/\\\|/g, "|");
 }
 
 function formatEmbedSize(size: ObsidianEmbedSize): string {

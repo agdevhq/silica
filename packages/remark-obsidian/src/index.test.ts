@@ -126,6 +126,27 @@ describe("remarkObsidian", () => {
     expect(data).toEqual({});
   });
 
+  it("treats an escaped pipe as the alias separator (for tables)", async () => {
+    const { tree } = await run("See [[known\\|Known page]].");
+    const paragraph = tree.children?.[0];
+    const wikilink = paragraph?.children?.[1];
+
+    expect(wikilink?.type).toBe("obsidianWikilink");
+    expect(wikilink?.target).toBe("known");
+    expect(wikilink?.alias).toBe("Known page");
+    expect(wikilink?.children?.[0]?.value).toBe("Known page");
+  });
+
+  it("treats an escaped pipe as the embed size separator", async () => {
+    const { tree } = await run("![[images/photo.png\\|120]]");
+    const paragraph = tree.children?.[0];
+    const embed = paragraph?.children?.[0];
+
+    expect(embed?.type).toBe("obsidianWikiEmbed");
+    expect(embed?.target).toBe("images/photo.png");
+    expect(embed?.embedSize).toEqual({ width: 120 });
+  });
+
   it("preserves wikilink heading and block fragments", async () => {
     const { tree } = await run(
       "[[Guide#Install|Install]] and [[Guide#^intro|Intro block]]",

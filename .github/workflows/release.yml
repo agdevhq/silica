@@ -36,7 +36,26 @@ jobs:
       - name: Install Dependencies
         run: npm ci
 
+      - name: Detect pending changesets
+        id: changesets_state
+        run: |
+          if find .changeset -maxdepth 1 -name '*.md' ! -name 'README.md' | grep -q .; then
+            echo "publish=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "publish=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Cache Turbo
+        if: steps.changesets_state.outputs.publish == 'true'
+        uses: actions/cache@v4
+        with:
+          path: .turbo/cache
+          key: turbo-${{ runner.os }}-${{ github.event.workflow_run.head_sha || github.sha }}
+          restore-keys: |
+            turbo-${{ runner.os }}-
+
       - name: Build Packages
+        if: steps.changesets_state.outputs.publish == 'true'
         run: npm run build
 
       - name: Create Release Pull Request or Publish to npm

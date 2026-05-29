@@ -7,8 +7,13 @@ import type { RemarkObsidianOptions } from "./types.js";
 
 export type {
   InlineTagMatch,
+  ObsidianBlockId,
   ObsidianCallout,
+  ObsidianComment,
+  ObsidianEmbedSize,
   ObsidianHighlight,
+  ObsidianInlineFootnote,
+  ObsidianLinkTarget,
   ObsidianNode,
   ObsidianPhrasingContent,
   ObsidianTag,

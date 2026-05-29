@@ -12,6 +12,8 @@ export type {
   MarkdownComponents,
   SilicaCalloutProps,
   SilicaCodeBlockProps,
+  SilicaEmbedProps,
+  SilicaMermaidProps,
 } from "./types.js";
 
 export type ThemeNavigationEntry = {

@@ -10,6 +10,7 @@ export {
   getDescription,
   getTitle,
   renderMarkdown,
+  renderMarkdownHtml,
 } from "./pipeline/index.js";
 export {
   hrefToSlug,
@@ -23,6 +24,8 @@ export type {
   SilicaTheme,
   SilicaCalloutProps,
   SilicaCodeBlockProps,
+  SilicaEmbedProps,
+  SilicaMermaidProps,
   ThemeLayoutConfig,
   ThemeLayoutProps,
   ThemeNavigationEntry,

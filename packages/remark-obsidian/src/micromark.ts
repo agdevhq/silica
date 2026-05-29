@@ -15,11 +15,16 @@ import type { RemarkObsidianOptions } from "./types.js";
 
 declare module "micromark-util-types" {
   interface TokenTypeMap {
+    obsidianBlockId: "obsidianBlockId";
     obsidianCallout: "obsidianCallout";
     obsidianCalloutMarker: "obsidianCalloutMarker";
+    obsidianComment: "obsidianComment";
     obsidianWikilink: "obsidianWikilink";
     obsidianWikiEmbed: "obsidianWikiEmbed";
     obsidianHighlight: "obsidianHighlight";
+    obsidianHighlightMarker: "obsidianHighlightMarker";
+    obsidianInlineFootnote: "obsidianInlineFootnote";
+    obsidianInlineFootnoteMarker: "obsidianInlineFootnoteMarker";
     obsidianTag: "obsidianTag";
   }
 }
@@ -27,7 +32,9 @@ declare module "micromark-util-types" {
 export function obsidian(options: RemarkObsidianOptions = {}): Extension {
   const text = {
     33: tokenizeWikiEmbed,
+    37: tokenizeComment,
     61: tokenizeHighlight,
+    94: [tokenizeInlineFootnote, tokenizeBlockId],
     91: tokenizeWikilink,
     ...((options.inlineTags ?? true) ? { 35: tokenizeTag } : {}),
   };
@@ -64,6 +71,7 @@ const tokenizeHighlight: Construct = {
     function start(code: Code): State | undefined {
       if (code !== 61) return nok(code);
       effects.enter("obsidianHighlight");
+      effects.enter("obsidianHighlightMarker");
       effects.consume(code);
       return openSecond;
     }
@@ -71,30 +79,157 @@ const tokenizeHighlight: Construct = {
     function openSecond(code: Code): State | undefined {
       if (code !== 61) return nok(code);
       effects.consume(code);
+      effects.exit("obsidianHighlightMarker");
+      effects.enter("chunkText", { contentType: "text" });
       return content;
     }
 
     function content(code: Code): State | undefined {
       if (code === null || code < 0) return nok(code);
       if (code === 61) {
-        effects.consume(code);
-        return closeSecond;
+        return effects.check(highlightClose, close, data)(code);
       }
       seenContent = true;
       effects.consume(code);
       return content;
     }
 
+    function close(code: Code): State | undefined {
+      if (!seenContent) return data(code);
+      effects.exit("chunkText");
+      effects.enter("obsidianHighlightMarker");
+      effects.consume(code);
+      return closeSecond;
+    }
+
     function closeSecond(code: Code): State | undefined {
-      if (code === 61 && seenContent) {
-        effects.consume(code);
-        effects.exit("obsidianHighlight");
-        return ok;
-      }
-      if (code === null || code < 0) return nok(code);
+      effects.consume(code);
+      effects.exit("obsidianHighlightMarker");
+      effects.exit("obsidianHighlight");
+      return ok;
+    }
+
+    function data(code: Code): State | undefined {
       seenContent = true;
       effects.consume(code);
       return content;
+    }
+  },
+};
+
+const highlightClose: Construct = {
+  partial: true,
+  tokenize(effects, ok, nok) {
+    return start;
+
+    function start(code: Code): State | undefined {
+      if (code !== 61) return nok(code);
+      effects.consume(code);
+      return second;
+    }
+
+    function second(code: Code): State | undefined {
+      if (code !== 61) return nok(code);
+      effects.consume(code);
+      return ok;
+    }
+  },
+};
+
+const tokenizeComment: Construct = {
+  name: "obsidianComment",
+  tokenize(effects, ok, nok) {
+    return tokenizeDelimited(effects, ok, nok, "obsidianComment", "%%", "%%");
+  },
+};
+
+const tokenizeInlineFootnote: Construct = {
+  name: "obsidianInlineFootnote",
+  tokenize(effects, ok, nok) {
+    let seenContent = false;
+    let bracketDepth = 0;
+    let escaped = false;
+
+    return start;
+
+    function start(code: Code): State | undefined {
+      if (code !== 94) return nok(code);
+      effects.enter("obsidianInlineFootnote");
+      effects.consume(code);
+      return afterCaret;
+    }
+
+    function afterCaret(code: Code): State | undefined {
+      if (code !== 91) return nok(code);
+      effects.consume(code);
+      effects.enter("chunkText", { contentType: "text" });
+      return content;
+    }
+
+    function content(code: Code): State | undefined {
+      if (code === null || code < 0) return nok(code);
+      if (escaped) {
+        escaped = false;
+        seenContent = true;
+        effects.consume(code);
+        return content;
+      }
+      if (code === 92) {
+        escaped = true;
+        seenContent = true;
+        effects.consume(code);
+        return content;
+      }
+      if (code === 91) {
+        bracketDepth += 1;
+        seenContent = true;
+        effects.consume(code);
+        return content;
+      }
+      if (code === 93 && bracketDepth > 0) {
+        bracketDepth -= 1;
+        seenContent = true;
+        effects.consume(code);
+        return content;
+      }
+      if (code === 93 && seenContent) {
+        effects.exit("chunkText");
+        effects.enter("obsidianInlineFootnoteMarker");
+        effects.consume(code);
+        effects.exit("obsidianInlineFootnoteMarker");
+        effects.exit("obsidianInlineFootnote");
+        return ok;
+      }
+      seenContent = true;
+      effects.consume(code);
+      return content;
+    }
+  },
+};
+
+const tokenizeBlockId: Construct = {
+  name: "obsidianBlockId",
+  tokenize(effects, ok, nok) {
+    let value = "";
+
+    return start;
+
+    function start(code: Code): State | undefined {
+      if (code !== 94) return nok(code);
+      effects.enter("obsidianBlockId");
+      effects.consume(code);
+      return blockId;
+    }
+
+    function blockId(code: Code): State | undefined {
+      if (isBlockIdCode(code)) {
+        value += codeToString(code);
+        effects.consume(code);
+        return blockId;
+      }
+      if (!value) return nok(code);
+      effects.exit("obsidianBlockId");
+      return ok(code);
     }
   },
 };
@@ -350,6 +485,16 @@ function isInlineTagChar(char: string): boolean {
   return !/[\s<>"'`\\#[\](){}.,;:!?]/u.test(char);
 }
 
+function isBlockIdCode(code: Code): boolean {
+  return (
+    code !== null &&
+    ((code >= 48 && code <= 57) ||
+      (code >= 65 && code <= 90) ||
+      (code >= 97 && code <= 122) ||
+      code === 45)
+  );
+}
+
 function tokenizeBracketed(
   effects: Effects,
   ok: State,
@@ -402,4 +547,59 @@ function tokenizeBracketed(
     effects.consume(code);
     return content;
   }
+}
+
+function tokenizeDelimited(
+  effects: Effects,
+  ok: State,
+  nok: State,
+  tokenType: "obsidianComment",
+  opener: string,
+  closer: string,
+): State {
+  let openerIndex = 0;
+  let closerIndex = 0;
+  let seenContent = false;
+
+  return start;
+
+  function start(code: Code): State | undefined {
+    if (code !== opener.charCodeAt(0)) return nok(code);
+    effects.enter(tokenType);
+    effects.consume(code);
+    openerIndex = 1;
+    return open;
+  }
+
+  function open(code: Code): State | undefined {
+    if (openerIndex < opener.length) {
+      if (code !== opener.charCodeAt(openerIndex)) return nok(code);
+      effects.consume(code);
+      openerIndex += 1;
+      return open;
+    }
+    return content(code);
+  }
+
+  function content(code: Code): State | undefined {
+    if (code === null) return nok(code);
+    if (code === closer.charCodeAt(closerIndex)) {
+      effects.consume(code);
+      closerIndex += 1;
+      if (closerIndex === closer.length && seenContent) {
+        effects.exit(tokenType);
+        return ok;
+      }
+      return content;
+    }
+
+    seenContent = true;
+    closerIndex = 0;
+    effects.consume(code);
+    return content;
+  }
+}
+
+function codeToString(code: Code): string {
+  return code === null || code < 0 ? "" : String.fromCharCode(code);
 }

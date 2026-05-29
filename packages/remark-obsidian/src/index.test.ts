@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { unified } from "unified";
+import type { Position } from "unist";
 import remarkParse from "remark-parse";
 import remarkStringify from "remark-stringify";
 import {
@@ -16,13 +17,26 @@ type TestNode = {
   url?: string;
   alt?: string;
   target?: string;
+  rawTarget?: string;
+  linkTarget?: {
+    path: string;
+    heading?: string;
+    blockId?: string;
+    params?: Record<string, string>;
+  };
   alias?: string;
+  embedSize?: {
+    width: number;
+    height?: number;
+  };
   tag?: string;
   raw?: string;
+  id?: string;
   kind?: string;
   title?: string;
   fold?: "open" | "closed";
-  position?: unknown;
+  data?: Record<string, unknown>;
+  position?: Position;
   children?: TestNode[];
 };
 
@@ -112,6 +126,20 @@ describe("remarkObsidian", () => {
     expect(data).toEqual({});
   });
 
+  it("preserves wikilink heading and block fragments", async () => {
+    const { tree } = await run(
+      "[[Guide#Install|Install]] and [[Guide#^intro|Intro block]]",
+    );
+    const paragraph = tree.children?.[0];
+    const headingLink = paragraph?.children?.[0];
+    const blockLink = paragraph?.children?.[2];
+
+    expect(headingLink?.linkTarget?.path).toBe("Guide");
+    expect(headingLink?.linkTarget?.heading).toBe("Install");
+    expect(blockLink?.linkTarget?.path).toBe("Guide");
+    expect(blockLink?.linkTarget?.blockId).toBe("intro");
+  });
+
   it("turns wiki embeds into neutral Obsidian embed nodes", async () => {
     const { tree } = await run("![[images/photo.png|Photo]]");
     const paragraph = tree.children?.[0];
@@ -123,13 +151,46 @@ describe("remarkObsidian", () => {
     expect(embed?.children?.[0]?.value).toBe("Photo");
   });
 
+  it("parses embed sizes and PDF fragment params", async () => {
+    const { tree } = await run(
+      "![[images/photo.png|100x145]] ![[Doc.pdf#page=3]]",
+    );
+    const paragraph = tree.children?.[0];
+    const imageEmbed = paragraph?.children?.[0];
+    const pdfEmbed = paragraph?.children?.[2];
+
+    expect(imageEmbed?.embedSize).toEqual({ width: 100, height: 145 });
+    expect(pdfEmbed?.linkTarget?.path).toBe("Doc.pdf");
+    expect(pdfEmbed?.linkTarget?.params).toEqual({ page: "3" });
+  });
+
+  it("stores dimensions from standard Markdown image alt text", async () => {
+    const { tree } = await run(
+      "![Engelbart|100x145](https://example.com/e.jpg)",
+    );
+    const paragraph = tree.children?.[0];
+    const image = paragraph?.children?.[0];
+
+    expect(image?.type).toBe("image");
+    expect(image?.alt).toBe("Engelbart");
+    expect(image?.data?.obsidianEmbedSize).toEqual({
+      width: 100,
+      height: 145,
+    });
+  });
+
   it("turns highlights into neutral Obsidian highlight nodes with positions", async () => {
-    const { tree } = await run("Use ==marked text==.");
+    const { tree } = await run(
+      "Use ==**marked** [text](https://example.com)==.",
+    );
     const paragraph = tree.children?.[0];
     const highlight = paragraph?.children?.[1];
 
     expect(highlight?.type).toBe("obsidianHighlight");
-    expect(highlight?.children?.[0]?.value).toBe("marked text");
+    expect(highlight?.children?.[0]?.type).toBe("strong");
+    expect(highlight?.children?.[0]?.children?.[0]?.value).toBe("marked");
+    expect(highlight?.children?.[2]?.type).toBe("link");
+    expect(highlight?.children?.[2]?.url).toBe("https://example.com");
     expect(highlight?.position).toBeTruthy();
   });
 
@@ -153,6 +214,35 @@ describe("remarkObsidian", () => {
     expect(blockquote?.children?.[0]?.children?.[0]?.value).toBe(
       "Just quoted text.",
     );
+  });
+
+  it("turns comments, block IDs, and inline footnotes into neutral nodes", async () => {
+    const { tree } = await run("Text %%secret%% ^block-id ^[Inline note].");
+    const paragraph = tree.children?.[0];
+
+    expect(paragraph?.children?.[1]?.type).toBe("obsidianComment");
+    expect(paragraph?.children?.[1]?.value).toBe("secret");
+    expect(paragraph?.children?.[3]?.type).toBe("obsidianBlockId");
+    expect(paragraph?.children?.[3]?.id).toBe("block-id");
+    expect(paragraph?.children?.[5]?.type).toBe("obsidianInlineFootnote");
+    expect(paragraph?.children?.[5]?.value).toBe("Inline note");
+  });
+
+  it("keeps bracketed markdown inside inline footnotes", async () => {
+    const { tree } = await run(
+      "Text ^[See [docs](https://example.com) and escaped \\] bracket].",
+    );
+    const paragraph = tree.children?.[0];
+    const footnote = paragraph?.children?.[1];
+
+    expect(footnote?.type).toBe("obsidianInlineFootnote");
+    expect(footnote?.value).toBe(
+      "See [docs](https://example.com) and escaped \\] bracket",
+    );
+    expect(footnote?.children?.[0]?.value).toBe("See ");
+    expect(footnote?.children?.[1]?.type).toBe("link");
+    expect(footnote?.children?.[1]?.url).toBe("https://example.com");
+    expect(footnote?.children?.[1]?.children?.[0]?.value).toBe("docs");
   });
 
   it("leaves wikilinks inside code blocks alone", async () => {
@@ -192,16 +282,39 @@ describe("remarkObsidian", () => {
     expect(paragraph?.children?.[2]?.value).toBe(".");
   });
 
+  it("leaves malformed Obsidian syntax as text", async () => {
+    const cases = [
+      "^[unterminated",
+      "^[]",
+      "[[unterminated",
+      "![[unterminated",
+      "%%unterminated",
+      "==unterminated",
+    ];
+
+    for (const markdown of cases) {
+      const { tree } = await run(markdown);
+      const paragraph = tree.children?.[0];
+
+      expect(paragraph?.children?.[0]?.type).toBe("text");
+      expect(paragraph?.children?.[0]?.value).toBe(markdown);
+    }
+  });
+
   it("serializes custom nodes back to Obsidian syntax", async () => {
     const processor = unified()
       .use(remarkParse)
       .use(remarkObsidian)
       .use(remarkStringify);
     const result = String(
-      await processor.process("[[known|Known]] and ==marked== #tag"),
+      await processor.process(
+        "[[known|Known]] and ==marked== #tag %%comment%% ^block ^[note]",
+      ),
     );
 
-    expect(result.trim()).toBe("[[known|Known]] and ==marked== #tag");
+    expect(result.trim()).toBe(
+      "[[known|Known]] and ==marked== #tag %%comment%% ^block ^[note]",
+    );
   });
 
   it("does not resolve or render broken wikilinks", async () => {

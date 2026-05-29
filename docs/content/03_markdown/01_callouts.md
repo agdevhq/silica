@@ -124,7 +124,8 @@ Silica transforms them into `<silica-callout>` elements. The default theme maps 
 | --------------- | ------------------------------------------ |
 | `==highlight==` | Highlighted text                           |
 | `%% comment %%` | Comments stripped from output              |
+| `^block-id`     | Stable block anchor target                 |
+| `^[note]`       | Inline footnote                            |
 | `# Heading`     | Headings with anchor links and ToC entries |
 
-See also [[markdown/math-and-gfm|Math and GFM]] for equations and tables.
-
+See also [[markdown/obsidian-flavored-markdown|Other Obsidian syntax]] for highlights, comments, inline tags, and inline footnotes, and [[markdown/math-and-gfm|Math and GFM]] for equations and tables.

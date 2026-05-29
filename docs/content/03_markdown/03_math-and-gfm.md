@@ -68,3 +68,18 @@ Obsidian comments are stripped during rendering:
 %% This will not appear in the output %%
 ```
 
+Comments can be inline or block-level:
+
+```markdown
+Visible text %% hidden note %% visible text.
+```
+
+## Inline footnotes
+
+Reference footnotes use GFM syntax, while Obsidian inline footnotes use `^[...]`:
+
+```markdown
+This sentence has an inline note.^[The note stays beside the sentence in source.]
+```
+
+Silica renders inline footnotes as numbered footnote references and collects the note body in the same footnotes section used by GFM reference footnotes.

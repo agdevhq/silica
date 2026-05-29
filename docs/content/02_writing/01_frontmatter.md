@@ -17,20 +17,22 @@ created: 2026-05-20
 modified: 2026-05-25
 draft: true
 publish: true
+listed: false
 ---
 ```
 
 ## Reserved keys
 
-| Key                    | Purpose                                                 |
-| ---------------------- | ------------------------------------------------------- |
-| `title`                | Page title; falls back to the first heading or filename |
-| `menu_label`           | Sidebar label; falls back to `title` when omitted       |
-| `description`          | Meta description and subtitle under the page title      |
-| `date`                 | Publication date; used when `created` is missing        |
-| `created` / `modified` | Stored in the manifest; git history is a fallback       |
-| `draft: true`          | Excluded when `removeDrafts` is enabled (default)       |
-| `publish: true`        | Required when `explicitPublish` is enabled              |
+| Key                    | Purpose                                                   |
+| ---------------------- | --------------------------------------------------------- |
+| `title`                | Page title; falls back to the first heading or filename   |
+| `menu_label`           | Sidebar label; falls back to `title` when omitted         |
+| `description`          | Meta description and subtitle under the page title        |
+| `date`                 | Publication date; used when `created` is missing          |
+| `created` / `modified` | Stored in the manifest; git history is a fallback         |
+| `draft: true`          | Excluded when `removeDrafts` is enabled (default)         |
+| `publish: true`        | Required when `explicitPublish` is enabled                |
+| `listed: false`        | Routable but omitted from navigation, search, and sitemap |
 
 ## Page properties
 

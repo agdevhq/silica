@@ -29,11 +29,13 @@ export async function getLayoutProps() {
   const auth = resolveRuntimeAuthConfig(config);
   return {
     navigation: {
-      entries: manifest.entries.map((entry) => ({
-        slug: entry.slug,
-        title: entry.menuLabel ?? entry.title,
-        sortKey: entry.sortKey,
-      })),
+      entries: manifest.entries
+        .filter((entry) => entry.frontmatter.listed !== false)
+        .map((entry) => ({
+          slug: entry.slug,
+          title: entry.menuLabel ?? entry.title,
+          sortKey: entry.sortKey,
+        })),
     },
     config: {
       title: config.title,

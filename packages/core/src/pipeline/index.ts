@@ -12,6 +12,7 @@ import rehypeSlug from "rehype-slug";
 import rehypeAutolinkHeadings from "rehype-autolink-headings";
 import rehypeShiki from "@shikijs/rehype";
 import rehypeReact from "rehype-react";
+import rehypeStringify from "rehype-stringify";
 import { getTags, remarkObsidian } from "@silicajs/remark-obsidian";
 import { Fragment, jsx, jsxs } from "react/jsx-runtime";
 import { visit } from "unist-util-visit";
@@ -29,8 +30,11 @@ import {
 import {
   getDataArray,
   mergeBrokenLinks,
+  rehypeCleanFootnoteHeadings,
   rehypeCollectTocAndLinks,
   rehypeExternalLinks,
+  rehypeRestoreObsidianBlockIds,
+  rehypeUnwrapSilicaEmbeds,
 } from "./plugins.js";
 
 type MdastNode = {
@@ -90,6 +94,27 @@ const sanitizeSchema = {
     span: [
       ...(defaultSchema.attributes?.span ?? []),
       ["className", "silica-broken-link"],
+      ["className", "silica-block-id"],
+      ["dataSilicaBlockId"],
+      ["data-silica-block-id"],
+      ["ariaHidden"],
+      ["aria-hidden"],
+    ],
+    sup: [
+      ...(defaultSchema.attributes?.sup ?? []),
+      ["className", "silica-inline-footnote"],
+    ],
+    img: [...(defaultSchema.attributes?.img ?? []), ["width"], ["height"]],
+    audio: [["src"], ["controls"], ["width"], ["height"]],
+    video: [["src"], ["controls"], ["width"], ["height"]],
+    source: [["src"], ["type"]],
+    figure: [
+      ...(defaultSchema.attributes?.figure ?? []),
+      ["className", "silica-embed", "silica-note-embed"],
+      ["dataEmbedKind"],
+      ["data-embed-kind"],
+      ["dataEmbedTarget"],
+      ["data-embed-target"],
     ],
     strong: [
       ...(defaultSchema.attributes?.strong ?? []),
@@ -110,9 +135,36 @@ const sanitizeSchema = {
       ["dataCalloutOpen"],
       ["data-callout-open"],
     ],
+    "silica-embed": [
+      ["src"],
+      ["width"],
+      ["height"],
+      ["dataEmbedKind"],
+      ["data-embed-kind"],
+      ["dataEmbedTarget"],
+      ["data-embed-target"],
+    ],
+    "silica-mermaid": [
+      ["dataSource"],
+      ["data-source"],
+      ["dataLanguage"],
+      ["data-language"],
+      ["dataLanguageLabel"],
+      ["data-language-label"],
+    ],
     mark: defaultSchema.attributes?.mark ?? [],
   },
-  tagNames: [...(defaultSchema.tagNames ?? []), "mark", "silica-callout"],
+  tagNames: [
+    ...(defaultSchema.tagNames ?? []),
+    "mark",
+    "audio",
+    "video",
+    "source",
+    "figure",
+    "silica-callout",
+    "silica-embed",
+    "silica-mermaid",
+  ],
 };
 
 export async function renderMarkdown(
@@ -122,8 +174,11 @@ export async function renderMarkdown(
   const parsed = matter(raw);
   const inlineTags = context.tags?.inline ?? true;
   const processor = baseProcessor(context)
+    .use(rehypeUnwrapSilicaEmbeds)
     .use(rehypeRaw)
     .use(rehypeSanitize, sanitizeSchema)
+    .use(rehypeRestoreObsidianBlockIds)
+    .use(rehypeUnwrapSilicaEmbeds)
     .use(rehypeKatex);
 
   if (hasCodeFence(parsed.content)) {
@@ -148,6 +203,7 @@ export async function renderMarkdown(
       content: headingLinkIcon,
       properties: { className: ["silica-heading-link"] },
     })
+    .use(rehypeCleanFootnoteHeadings)
     .use(rehypeCollectTocAndLinks)
     .use(rehypeExternalLinks)
     .use(rehypeReact, {
@@ -181,6 +237,38 @@ export async function renderMarkdown(
     description: getDescription(frontmatter, plainText),
     tags: getTags(frontmatter, parsed.content, { inline: inlineTags }),
   };
+}
+
+export async function renderMarkdownHtml(
+  raw: string,
+  context: RenderContext,
+): Promise<string> {
+  const parsed = matter(raw);
+  const processor = baseProcessor(context)
+    .use(rehypeUnwrapSilicaEmbeds)
+    .use(rehypeRaw)
+    .use(rehypeSanitize, sanitizeSchema)
+    .use(rehypeRestoreObsidianBlockIds)
+    .use(rehypeUnwrapSilicaEmbeds)
+    .use(rehypeKatex);
+
+  if (hasCodeFence(parsed.content)) {
+    processor.use(rehypeShiki, {
+      themes: {
+        light: "github-light",
+        dark: "github-dark",
+      },
+      defaultColor: "light-dark()",
+      defaultLanguage: "text",
+      rootStyle: false,
+      transformers: [rehypeShikiCodeBlockWrapper()],
+    });
+  }
+
+  processor.use(rehypeExternalLinks).use(rehypeStringify);
+
+  const file = await processor.process(parsed.content);
+  return String(file);
 }
 
 export async function analyzeMarkdown(
@@ -277,6 +365,9 @@ function remarkCollectPlainText() {
 function extractPlainText(markdown: string): string {
   return markdown
     .replace(/```[\s\S]*?```/g, "")
+    .replace(/%%[\s\S]*?%%/g, "")
+    .replace(/\^\[[^\]]+]/g, "")
+    .replace(/(?:^|\s)\^[A-Za-z0-9-]+/g, " ")
     .replace(/`([^`]+)`/g, "$1")
     .replace(/!\[[^\]]*]\([^)]+\)/g, "")
     .replace(/\[([^\]]+)]\([^)]+\)/g, "$1")

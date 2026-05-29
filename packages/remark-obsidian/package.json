@@ -3,7 +3,30 @@
   "version": "0.1.0",
   "description": "Remark plugin for Obsidian-flavored Markdown extensions.",
   "type": "module",
+  "types": "./dist/index.d.ts",
   "license": "MIT",
+  "homepage": "https://github.com/agdevhq/silica/tree/main/packages/remark-obsidian#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/agdevhq/silica.git",
+    "directory": "packages/remark-obsidian"
+  },
+  "bugs": {
+    "url": "https://github.com/agdevhq/silica/issues"
+  },
+  "keywords": [
+    "remark",
+    "unified",
+    "micromark",
+    "markdown",
+    "obsidian",
+    "wikilink",
+    "callout"
+  ],
+  "sideEffects": false,
+  "publishConfig": {
+    "access": "public"
+  },
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
@@ -16,8 +39,8 @@
   "scripts": {
     "build": "tsup",
     "test": "vitest run",
-    "typecheck": "tsc --noEmit",
-    "lint": "tsc --noEmit"
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "lint": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
     "@types/mdast": "^4.0.4",

@@ -13,6 +13,7 @@ const RESERVED_FRONTMATTER_KEYS = new Set([
   "date",
   "description",
   "draft",
+  "listed",
   "menu_label",
   "modified",
   "permalink",

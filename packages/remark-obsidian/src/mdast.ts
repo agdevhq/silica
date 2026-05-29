@@ -1,8 +1,9 @@
-import type { PhrasingContent } from "mdast";
+import type { Image, PhrasingContent, Root } from "mdast";
 import type {
   CompileContext,
   Extension as FromMarkdownExtension,
   Handle as FromMarkdownHandle,
+  Transform as FromMarkdownTransform,
 } from "mdast-util-from-markdown";
 import type {
   Handle as ToMarkdownHandle,
@@ -10,8 +11,13 @@ import type {
 } from "mdast-util-to-markdown";
 import type { Token } from "micromark-util-types";
 import type {
+  ObsidianBlockId,
   ObsidianCallout,
+  ObsidianComment,
+  ObsidianEmbedSize,
   ObsidianHighlight,
+  ObsidianInlineFootnote,
+  ObsidianLinkTarget,
   ObsidianTag,
   ObsidianWikiEmbed,
   ObsidianWikilink,
@@ -25,6 +31,9 @@ export function obsidianFromMarkdown(): FromMarkdownExtension {
       obsidianWikiEmbed: enterWikiEmbed,
       obsidianHighlight: enterHighlight,
       obsidianCallout: enterCallout,
+      obsidianBlockId: enterBlockId,
+      obsidianComment: enterComment,
+      obsidianInlineFootnote: enterInlineFootnote,
       obsidianTag: enterTag,
     },
     exit: {
@@ -33,8 +42,12 @@ export function obsidianFromMarkdown(): FromMarkdownExtension {
       obsidianHighlight: exitHighlight,
       obsidianCallout: exitCallout,
       obsidianCalloutMarker: exitCalloutMarker,
+      obsidianBlockId: exitBlockId,
+      obsidianComment: exitComment,
+      obsidianInlineFootnote: exitInlineFootnote,
       obsidianTag: exitTag,
     },
+    transforms: [transformImageDimensions],
   };
 }
 
@@ -46,6 +59,9 @@ export function obsidianToMarkdown(): ToMarkdownExtension {
       obsidianHighlight: handleHighlight,
       obsidianCallout: handleCallout,
       obsidianTag: handleTag,
+      obsidianComment: handleComment,
+      obsidianBlockId: handleBlockId,
+      obsidianInlineFootnote: handleInlineFootnote,
     },
   };
 }
@@ -55,6 +71,8 @@ const enterWikilink: FromMarkdownHandle = function enterWikilink(token) {
     {
       type: "obsidianWikilink",
       target: "",
+      rawTarget: "",
+      linkTarget: parseLinkTarget(""),
       title: null,
       children: [],
     } as ObsidianWikilink,
@@ -67,6 +85,8 @@ const enterWikiEmbed: FromMarkdownHandle = function enterWikiEmbed(token) {
     {
       type: "obsidianWikiEmbed",
       target: "",
+      rawTarget: "",
+      linkTarget: parseLinkTarget(""),
       title: null,
       children: [],
     } as ObsidianWikiEmbed,
@@ -108,23 +128,66 @@ const enterCallout: FromMarkdownHandle = function enterCallout(token) {
   );
 };
 
+const enterComment: FromMarkdownHandle = function enterComment(token) {
+  this.enter(
+    {
+      type: "obsidianComment",
+      value: "",
+      children: [],
+    } as ObsidianComment,
+    token,
+  );
+};
+
+const enterBlockId: FromMarkdownHandle = function enterBlockId(token) {
+  this.enter(
+    {
+      type: "obsidianBlockId",
+      id: "",
+      raw: "",
+      children: [],
+    } as ObsidianBlockId,
+    token,
+  );
+};
+
+const enterInlineFootnote: FromMarkdownHandle = function enterInlineFootnote(
+  token,
+) {
+  this.enter(
+    {
+      type: "obsidianInlineFootnote",
+      value: "",
+      children: [],
+    } as ObsidianInlineFootnote,
+    token,
+  );
+};
+
 function exitWiki(this: CompileContext, token: Token) {
   const raw = this.sliceSerialize(token);
   const node = this.stack[this.stack.length - 1] as
     | ObsidianWikilink
     | ObsidianWikiEmbed;
   const markerLength = node.type === "obsidianWikiEmbed" ? 3 : 2;
-  const [target, alias] = splitWikiTarget(raw.slice(markerLength, -2));
-  node.target = target;
-  node.alias = alias;
-  node.children = [{ type: "text", value: alias || target }];
+  const parsed = parseWikiInner(raw.slice(markerLength, -2), {
+    embed: node.type === "obsidianWikiEmbed",
+  });
+  node.target = parsed.rawTarget;
+  node.rawTarget = parsed.rawTarget;
+  node.linkTarget = parsed.linkTarget;
+  node.alias = parsed.alias;
+  if (node.type === "obsidianWikiEmbed") {
+    node.embedSize = parsed.embedSize;
+  }
+  node.children = [
+    { type: "text", value: parsed.alias || parsed.rawTarget || parsed.label },
+  ];
   this.exit(token);
 }
 
 function exitHighlight(this: CompileContext, token: Token) {
-  const raw = this.sliceSerialize(token);
   const node = this.stack[this.stack.length - 1] as ObsidianHighlight;
-  node.children = [{ type: "text", value: raw.slice(2, -2) }];
   this.exit(token);
 }
 
@@ -145,6 +208,28 @@ function exitCalloutMarker(this: CompileContext, token: Token) {
   node.title = match[3]?.trim() || titleCase(node.kind);
 }
 
+function exitComment(this: CompileContext, token: Token) {
+  const raw = this.sliceSerialize(token);
+  const node = this.stack[this.stack.length - 1] as ObsidianComment;
+  node.value = raw.slice(2, -2);
+  this.exit(token);
+}
+
+function exitBlockId(this: CompileContext, token: Token) {
+  const raw = this.sliceSerialize(token);
+  const node = this.stack[this.stack.length - 1] as ObsidianBlockId;
+  node.raw = raw;
+  node.id = raw.replace(/^\^/, "");
+  this.exit(token);
+}
+
+function exitInlineFootnote(this: CompileContext, token: Token) {
+  const raw = this.sliceSerialize(token);
+  const node = this.stack[this.stack.length - 1] as ObsidianInlineFootnote;
+  node.value = raw.slice(2, -1);
+  this.exit(token);
+}
+
 function exitTag(this: CompileContext, token: Token) {
   const raw = this.sliceSerialize(token);
   const node = this.stack[this.stack.length - 1] as ObsidianTag;
@@ -156,12 +241,15 @@ function exitTag(this: CompileContext, token: Token) {
 
 const handleWikilink: ToMarkdownHandle = function handleWikilink(node) {
   const wikilink = node as ObsidianWikilink;
-  return `[[${formatWikiTarget(wikilink.target, wikilink.alias)}]]`;
+  return `[[${formatWikiTarget(wikilink.rawTarget, wikilink.alias)}]]`;
 };
 
 const handleWikiEmbed: ToMarkdownHandle = function handleWikiEmbed(node) {
   const embed = node as ObsidianWikiEmbed;
-  return `![[${formatWikiTarget(embed.target, embed.alias)}]]`;
+  const alias = embed.embedSize
+    ? formatEmbedSize(embed.embedSize)
+    : embed.alias;
+  return `![[${formatWikiTarget(embed.rawTarget, alias)}]]`;
 };
 
 const handleHighlight: ToMarkdownHandle = function handleHighlight(
@@ -179,6 +267,26 @@ const handleTag: ToMarkdownHandle = function handleTag(node) {
   return tag.raw || `#${tag.tag}`;
 };
 
+const handleComment: ToMarkdownHandle = function handleComment(node) {
+  const comment = node as ObsidianComment;
+  return `%%${comment.value}%%`;
+};
+
+const handleBlockId: ToMarkdownHandle = function handleBlockId(node) {
+  const blockId = node as ObsidianBlockId;
+  return blockId.raw || `^${blockId.id}`;
+};
+
+const handleInlineFootnote: ToMarkdownHandle = function handleInlineFootnote(
+  node,
+  _parent,
+  state,
+  info,
+) {
+  const footnote = node as ObsidianInlineFootnote;
+  return `^[${state.containerPhrasing(footnote, info)}]`;
+};
+
 const handleCallout: ToMarkdownHandle = function handleCallout(
   node,
   _parent,
@@ -193,13 +301,134 @@ const handleCallout: ToMarkdownHandle = function handleCallout(
   return [`> ${marker}`, ...quoteFlow(body)].join("\n");
 };
 
-function splitWikiTarget(inner: string): [string, string?] {
-  const [target, alias] = inner.split("|");
-  return [(target ?? "").trim(), alias?.trim()];
-}
-
 function formatWikiTarget(target: string, alias: string | undefined): string {
   return alias ? `${target}|${alias}` : target;
+}
+
+const transformImageDimensions: FromMarkdownTransform =
+  function transformImages(tree) {
+    visitImages(tree, (node) => {
+      const parsed = parseAliasOrSize(node.alt ?? "");
+      if (!parsed.embedSize) return;
+      node.alt = parsed.alias ?? "";
+      node.data = {
+        ...node.data,
+        obsidianEmbedSize: parsed.embedSize,
+      };
+    });
+  };
+
+function parseWikiInner(
+  inner: string,
+  options: { embed: boolean },
+): {
+  rawTarget: string;
+  linkTarget: ObsidianLinkTarget;
+  alias?: string;
+  embedSize?: ObsidianEmbedSize;
+  label: string;
+} {
+  const [rawTargetPart, aliasPart] = splitUnescapedPipe(inner);
+  const rawTarget = rawTargetPart.trim();
+  const parsedAlias = parseAliasOrSize(aliasPart?.trim() ?? "");
+  const alias = options.embed ? parsedAlias.alias : aliasPart?.trim();
+  return {
+    rawTarget,
+    linkTarget: parseLinkTarget(rawTarget),
+    alias: alias || undefined,
+    embedSize: options.embed ? parsedAlias.embedSize : undefined,
+    label: rawTarget.split("/").at(-1) || rawTarget,
+  };
+}
+
+function parseLinkTarget(raw: string): ObsidianLinkTarget {
+  const [pathAndFragment = "", query = ""] = raw.split("?");
+  const hashIndex = pathAndFragment.indexOf("#");
+  const path =
+    hashIndex === -1 ? pathAndFragment : pathAndFragment.slice(0, hashIndex);
+  const fragment =
+    hashIndex === -1 ? "" : pathAndFragment.slice(hashIndex + 1).trim();
+  const target: ObsidianLinkTarget = {
+    raw,
+    path: path.trim(),
+  };
+
+  if (fragment.startsWith("^")) {
+    target.blockId = fragment.slice(1);
+  } else if (fragment.includes("=")) {
+    target.params = Object.fromEntries(new URLSearchParams(fragment));
+  } else if (fragment) {
+    target.heading = fragment;
+  }
+
+  if (query) {
+    target.query = query;
+    target.params = {
+      ...target.params,
+      ...Object.fromEntries(new URLSearchParams(query)),
+    };
+  }
+
+  return target;
+}
+
+function parseAliasOrSize(value: string): {
+  alias?: string;
+  embedSize?: ObsidianEmbedSize;
+} {
+  if (!value) return {};
+  const size = parseEmbedSize(value);
+  if (size) return { embedSize: size };
+
+  const [alias, maybeSize] = splitUnescapedPipe(value);
+  const nestedSize = parseEmbedSize(maybeSize?.trim() ?? "");
+  return {
+    alias: alias?.trim() || undefined,
+    embedSize: nestedSize,
+  };
+}
+
+function parseEmbedSize(value: string): ObsidianEmbedSize | undefined {
+  const match = /^(\d+)(?:x(\d+))?$/.exec(value.trim());
+  if (!match) return;
+  return {
+    width: Number(match[1]),
+    ...(match[2] ? { height: Number(match[2]) } : {}),
+  };
+}
+
+function splitUnescapedPipe(value: string): [string, string?] {
+  for (let index = 0; index < value.length; index += 1) {
+    if (value[index] === "|" && value[index - 1] !== "\\") {
+      return [
+        value.slice(0, index).replace(/\\\|/g, "|"),
+        value.slice(index + 1).replace(/\\\|/g, "|"),
+      ];
+    }
+  }
+  return [value.replace(/\\\|/g, "|")];
+}
+
+function formatEmbedSize(size: ObsidianEmbedSize): string {
+  return size.height ? `${size.width}x${size.height}` : String(size.width);
+}
+
+function visitImages(
+  node: Root | { children?: unknown[] },
+  visitor: (node: Image) => void,
+): void {
+  const children = Array.isArray(node.children) ? node.children : [];
+  for (const child of children) {
+    if (!isNode(child)) continue;
+    if (child.type === "image") visitor(child as Image);
+    visitImages(child, visitor);
+  }
+}
+
+function isNode(
+  value: unknown,
+): value is { type: string; children?: unknown[] } {
+  return Boolean(value && typeof value === "object" && "type" in value);
 }
 
 function quoteFlow(value: string): string[] {

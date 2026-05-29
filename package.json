@@ -11,14 +11,21 @@
   ],
   "scripts": {
     "build": "turbo run build",
+    "changeset": "changeset",
     "dev": "turbo watch build --filter=docs^... & turbo run dev --filter=docs",
     "e2e": "npm run build && playwright test",
     "lint": "turbo run lint",
+    "release:check": "npm run scaffold-versions:check && npm run build && npm run lint && npm run typecheck && npm test",
+    "release:publish": "changeset publish",
+    "release:version": "changeset version && npm run scaffold-versions:update",
+    "scaffold-versions:check": "node scripts/sync-scaffold-versions.mjs --check",
+    "scaffold-versions:update": "node scripts/sync-scaffold-versions.mjs --write",
     "test": "turbo run test",
     "typecheck": "turbo run typecheck",
     "format": "prettier --check ."
   },
   "devDependencies": {
+    "@changesets/cli": "^2.31.0",
     "@playwright/test": "^1.60.0",
     "@types/fs-extra": "^11.0.4",
     "@types/node": "^25.9.1",

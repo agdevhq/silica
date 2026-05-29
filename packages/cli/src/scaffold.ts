@@ -1,5 +1,6 @@
 import path from "node:path";
 import fs from "fs-extra";
+import { scaffoldDependencyRanges } from "./scaffold-versions.js";
 
 export async function scaffoldProject(targetDir: string): Promise<void> {
   const root = path.resolve(targetDir);
@@ -71,10 +72,7 @@ function packageJson(name: string): string {
         start: "silica start",
       },
       dependencies: {
-        "@silicajs/cli": "^0.1.0",
-        "@silicajs/core": "^0.1.0",
-        "@silicajs/next": "^0.1.0",
-        "@silicajs/theme-amethyst": "^0.1.0",
+        ...scaffoldDependencyRanges,
         next: "^16.2.6",
         react: "^19.2.6",
         "react-dom": "^19.2.6",

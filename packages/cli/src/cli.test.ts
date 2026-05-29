@@ -37,6 +37,15 @@ describe("silica CLI helpers", () => {
     ).toContain("Optional SSH deploy");
     expect(await fs.pathExists(path.join(root, "app"))).toBe(false);
     expect(await fs.pathExists(path.join(root, "next.config.ts"))).toBe(false);
+    const scaffoldPackageJson = JSON.parse(
+      await fs.readFile(path.join(root, "package.json"), "utf8"),
+    ) as { dependencies: Record<string, string> };
+    expect(scaffoldPackageJson.dependencies["@silicajs/cli"]).toBe("^0.1.0");
+    expect(scaffoldPackageJson.dependencies["@silicajs/core"]).toBe("^0.1.0");
+    expect(scaffoldPackageJson.dependencies["@silicajs/next"]).toBe("^0.1.0");
+    expect(scaffoldPackageJson.dependencies["@silicajs/theme-amethyst"]).toBe(
+      "^0.1.0",
+    );
   });
 
   it("materializes the hidden Next.js app and preserves user public files", async () => {

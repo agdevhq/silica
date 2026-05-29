@@ -4,6 +4,9 @@
   "description": "Scaffold a new Silica vault.",
   "type": "module",
   "license": "MIT",
+  "publishConfig": {
+    "access": "public"
+  },
   "bin": {
     "silicajs-create": "./dist/index.js"
   },
@@ -23,6 +26,6 @@
     "lint": "tsc --noEmit"
   },
   "dependencies": {
-    "@silicajs/cli": "0.1.0"
+    "@silicajs/cli": "^0.1.0"
   }
 }

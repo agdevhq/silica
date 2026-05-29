@@ -4,6 +4,9 @@
   "description": "Markdown pipeline, slug system, and precompute artifacts for Silica.",
   "type": "module",
   "license": "MIT",
+  "publishConfig": {
+    "access": "public"
+  },
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
@@ -29,8 +32,8 @@
   },
   "dependencies": {
     "@shikijs/rehype": "^4.1.0",
-    "@silicajs/remark-obsidian": "0.1.0",
-    "@silicajs/search": "0.1.0",
+    "@silicajs/remark-obsidian": "^0.1.0",
+    "@silicajs/search": "^0.1.0",
     "fast-glob": "^3.3.3",
     "fs-extra": "^11.3.5",
     "github-slugger": "^2.0.0",

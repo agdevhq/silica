@@ -41,7 +41,7 @@ jobs:
       - name: Commit Dependabot changeset
         if: github.event.pull_request.user.login == 'dependabot[bot]'
         run: |
-          if git diff --quiet -- .changeset; then
+          if [ -z "$(git status --porcelain .changeset)" ]; then
             echo "No changeset changes to commit."
             exit 0
           fi

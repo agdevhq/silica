@@ -75,7 +75,3 @@ This very site is a Silica vault — it is the Markdown in `docs/content/`, publ
 - [[publishing/configuration|Configuration]]
 - [[publishing/authentication|Authentication]]
 - [[publishing/deployment|Deployment]]
-
-### Under the hood
-
-- [[how-it-works|How Silica works]]

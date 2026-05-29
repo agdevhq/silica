@@ -15,6 +15,7 @@ concurrency:
 jobs:
   ci:
     name: Build, Lint & Test
+    if: github.event_name != 'pull_request' || github.head_ref != 'changeset-release/main'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Repo
@@ -39,3 +40,11 @@ jobs:
 
       - name: Validate Release Readiness
         run: npm run release:check
+
+  ci-version-packages:
+    name: Build, Lint & Test
+    if: github.event_name == 'pull_request' && github.head_ref == 'changeset-release/main'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Skip CI for Version Packages PR
+        run: echo "Version Packages PR — code was validated on feature PRs; Release workflow runs release:check before publish."

@@ -8,6 +8,7 @@ on:
 jobs:
   require-changeset:
     name: Require Changeset
+    if: github.head_ref != 'changeset-release/main'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Repo
@@ -40,3 +41,11 @@ jobs:
           fi
 
           exit 1
+
+  require-changeset-version-packages:
+    name: Require Changeset
+    if: github.head_ref == 'changeset-release/main'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Skip changeset check for Version Packages PR
+        run: echo "Version Packages PR — changesets are consumed, not added."

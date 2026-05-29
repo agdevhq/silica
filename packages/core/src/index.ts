@@ -45,6 +45,7 @@ export {
   precompute,
   type PrecomputeOptions,
 } from "./precompute.js";
+export { tagToHref } from "./tags.js";
 export type {
   MarkdownComponents,
   SilicaTheme,

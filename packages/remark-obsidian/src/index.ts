@@ -1,12 +1,3 @@
-export type ObsidianLinkResolver = (target: string) => string | undefined;
-
-export type RemarkObsidianOptions = {
-  assetBaseUrl?: string;
-  inlineTags?: boolean;
-  resolveWikilink: ObsidianLinkResolver;
-  slugToHref: (slug: string) => string;
-};
-
 export type InlineTagMatch = {
   tag: string;
   raw: string;
@@ -14,21 +5,67 @@ export type InlineTagMatch = {
   end: number;
 };
 
-type VFileLike = {
-  data: Record<string, unknown>;
+export type RemarkObsidianOptions = {
+  inlineTags?: boolean;
 };
 
-type MdastNode = {
+export type ObsidianNode = {
   type: string;
   value?: string;
   url?: string;
   alt?: string;
   title?: string | null;
-  children?: MdastNode[];
-  data?: {
-    hName?: string;
-    hProperties?: Record<string, unknown>;
-  };
+  target?: string;
+  alias?: string;
+  tag?: string;
+  raw?: string;
+  kind?: string;
+  fold?: "open" | "closed";
+  children?: ObsidianNode[];
+};
+
+export type ObsidianText = ObsidianNode & {
+  type: "text";
+  value: string;
+};
+
+export type ObsidianParent = ObsidianNode & {
+  children?: ObsidianNode[];
+};
+
+export type ObsidianWikilink = ObsidianParent & {
+  type: "obsidianWikilink";
+  target: string;
+  alias?: string;
+  title: null;
+};
+
+export type ObsidianWikiEmbed = ObsidianParent & {
+  type: "obsidianWikiEmbed";
+  target: string;
+  alias?: string;
+  title: null;
+};
+
+export type ObsidianHighlight = ObsidianParent & {
+  type: "obsidianHighlight";
+};
+
+export type ObsidianCallout = ObsidianParent & {
+  type: "obsidianCallout";
+  kind: string;
+  title: string;
+  fold?: "open" | "closed";
+};
+
+export type ObsidianTag = ObsidianParent & {
+  type: "obsidianTag";
+  tag: string;
+  raw: string;
+};
+
+type VFileLike = {
+  data: Record<string, unknown>;
 };
 
 type CrossNodeWikiLink = {
@@ -41,11 +78,7 @@ type CrossNodeWikiLink = {
 };
 
 type TransformState = {
-  assetBaseUrl: string;
   inlineTags: boolean;
-  links: Set<string>;
-  brokenLinks: Array<{ source?: string; target: string }>;
-  options: RemarkObsidianOptions;
 };
 
 const WIKI_EMBED_PREFIX = "![[";
@@ -68,20 +101,13 @@ const INLINE_TAG_STOP_CHARS = new Set([
   "}",
 ]);
 
-export function remarkObsidian(options: RemarkObsidianOptions) {
-  return (tree: MdastNode, file: VFileLike) => {
+export function remarkObsidian(options: RemarkObsidianOptions = {}) {
+  return (tree: ObsidianNode, _file: VFileLike) => {
     const state: TransformState = {
-      assetBaseUrl: options.assetBaseUrl ?? "/silica",
-      inlineTags: options.inlineTags ?? true,
-      links: new Set(),
-      brokenLinks: [],
-      options,
+      inlineTags: options?.inlineTags ?? true,
     };
 
     transformTree(tree, state);
-
-    file.data.obsidianLinks = [...state.links];
-    file.data.obsidianBrokenLinks = state.brokenLinks;
   };
 }
 
@@ -155,23 +181,9 @@ export function getTagHierarchy(tag: string): string[] {
   return segments.map((_, index) => segments.slice(0, index + 1).join("/"));
 }
 
-export function tagToHref(tag: string): string {
-  const normalized = normalizeTag(tag);
-  if (!normalized) return "/tags";
-  const encoded = normalized
-    .split("/")
-    .map((segment) => encodeURIComponent(segment))
-    .join("/");
-  return `/tags/${encoded}`;
-}
-
-function transformTree(node: MdastNode, state: TransformState): void {
+function transformTree(node: ObsidianNode, state: TransformState): void {
   if (node.type === "blockquote") {
     transformCallout(node);
-  }
-
-  if (node.type === "image" && typeof node.url === "string") {
-    node.url = rewriteAssetUrl(node.url, state.assetBaseUrl);
   }
 
   if (!node.children || shouldSkipChildren(node)) return;
@@ -208,7 +220,7 @@ function transformTree(node: MdastNode, state: TransformState): void {
 }
 
 function findCrossNodeWikiLink(
-  siblings: MdastNode[],
+  siblings: ObsidianNode[],
   startIndex: number,
 ): CrossNodeWikiLink | undefined {
   const start = siblings[startIndex];
@@ -266,14 +278,14 @@ function findCrossNodeWikiLink(
   }
 }
 
-function canJoinWikiNode(node: MdastNode): boolean {
+function canJoinWikiNode(node: ObsidianNode): boolean {
   return (
     (node.type === "text" || node.type === "html") &&
     typeof node.value === "string"
   );
 }
 
-function shouldSkipChildren(node: MdastNode): boolean {
+function shouldSkipChildren(node: ObsidianNode): boolean {
   return (
     node.type === "link" ||
     node.type === "linkReference" ||
@@ -286,8 +298,8 @@ function shouldSkipChildren(node: MdastNode): boolean {
   );
 }
 
-function transformText(value: string, state: TransformState): MdastNode[] {
-  const nodes: MdastNode[] = [];
+function transformText(value: string, state: TransformState): ObsidianNode[] {
+  const nodes: ObsidianNode[] = [];
   let text = "";
 
   function flushText() {
@@ -358,9 +370,9 @@ function transformText(value: string, state: TransformState): MdastNode[] {
       if (inlineTag) {
         flushText();
         nodes.push({
-          type: "link",
-          url: tagToHref(inlineTag.tag),
-          title: null,
+          type: "obsidianTag",
+          tag: inlineTag.tag,
+          raw: inlineTag.raw,
           children: [{ type: "text", value: inlineTag.raw }],
         });
         index = inlineTag.end - 1;
@@ -379,53 +391,28 @@ function createWikiNode(
   inner: string,
   embed: boolean,
   state: TransformState,
-): MdastNode {
+): ObsidianWikilink | ObsidianWikiEmbed {
   const [target, label] = splitWikiTarget(inner);
-  const display = label || target;
-
-  if (embed && isAssetTarget(target)) {
-    const alt = label || target.split("/").at(-1) || target;
-    return {
-      type: "image",
-      url: `${state.assetBaseUrl}/${target.replace(/^\/+/, "")}`,
-      title: null,
-      alt,
-    };
-  }
-
-  const resolved = state.options.resolveWikilink(target);
-  if (!resolved) {
-    state.brokenLinks.push({ target });
-    return {
-      type: "silicaBrokenLink",
-      children: [{ type: "text", value: display }],
-      data: {
-        hName: "span",
-        hProperties: { className: ["silica-broken-link"] },
-      },
-    };
-  }
-
-  state.links.add(resolved);
   return {
-    type: "link",
-    url: state.options.slugToHref(resolved),
+    type: embed ? "obsidianWikiEmbed" : "obsidianWikilink",
+    target,
+    alias: label,
     title: null,
-    children: [{ type: "text", value: display }],
+    children: [{ type: "text", value: label || target }],
   };
 }
 
-function createMarkNode(value: string, state: TransformState): MdastNode {
+function createMarkNode(
+  value: string,
+  state: TransformState,
+): ObsidianHighlight {
   return {
-    type: "silicaMark",
+    type: "obsidianHighlight",
     children: transformText(value, { ...state, inlineTags: false }),
-    data: {
-      hName: "mark",
-    },
   };
 }
 
-function transformCallout(node: MdastNode): void {
+function transformCallout(node: ObsidianNode): void {
   const firstParagraph = node.children?.find(
     (child) => child.type === "paragraph",
   );
@@ -440,7 +427,8 @@ function transformCallout(node: MdastNode): void {
   if (!match) return;
 
   const kind = match[1]!.toLowerCase();
-  const fold = match[2];
+  const fold =
+    match[2] === "+" ? "open" : match[2] === "-" ? "closed" : undefined;
   const title = match[3]?.trim() || titleCase(kind);
   firstText.value = firstText.value.slice(match[0].length);
 
@@ -452,36 +440,15 @@ function transformCallout(node: MdastNode): void {
     node.children = node.children?.filter((child) => child !== firstParagraph);
   }
 
-  node.data = {
-    ...node.data,
-    hName: "silica-callout",
-    hProperties: {
-      className: ["silica-callout"],
-      "data-callout": kind,
-      "data-callout-title": title,
-      ...(fold
-        ? {
-            "data-callout-foldable": "true",
-            "data-callout-open": fold === "+" ? "true" : "false",
-          }
-        : {}),
-    },
-  };
+  node.type = "obsidianCallout";
+  node.kind = kind;
+  node.title = title;
+  node.fold = fold;
 }
 
 function splitWikiTarget(inner: string): [string, string?] {
   const [target, label] = inner.split("|");
   return [(target ?? "").trim(), label?.trim()];
-}
-
-function rewriteAssetUrl(url: string, assetBaseUrl: string): string {
-  if (!isAssetTarget(url)) return url;
-  if (/^(?:https?:|#|\/)/.test(url)) return url;
-  return `${assetBaseUrl}/${url.replace(/^\.?\//, "")}`;
-}
-
-function isAssetTarget(target: string): boolean {
-  return /\.(png|jpe?g|gif|webp|svg|pdf|mp4|mov|mp3|wav|ogg)$/i.test(target);
 }
 
 function readInlineTag(

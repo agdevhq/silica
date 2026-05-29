@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { tagToHref } from "@silicajs/remark-obsidian";
+import { tagToHref } from "@silicajs/core/runtime";
 import type { ThemeLayoutProps, ThemePageProps } from "@silicajs/core/theme";
 import {
   Backlinks,

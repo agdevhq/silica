@@ -17,6 +17,7 @@ export {
   simplifySlug,
   slugToHref,
 } from "./path.js";
+export { tagToHref } from "./tags.js";
 export type {
   MarkdownComponents,
   SilicaTheme,

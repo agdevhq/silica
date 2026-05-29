@@ -6,7 +6,6 @@ import {
   getTags,
   remarkObsidian,
   tagMatches,
-  tagToHref,
 } from "./index.js";
 
 type TestNode = {
@@ -14,25 +13,17 @@ type TestNode = {
   value?: string;
   url?: string;
   alt?: string;
+  target?: string;
+  alias?: string;
+  tag?: string;
+  raw?: string;
   children?: TestNode[];
-  data?: {
-    hName?: string;
-    hProperties?: Record<string, unknown>;
-  };
 };
 
 async function run(markdown: string) {
-  const processor = unified()
-    .use(remarkParse)
-    .use(remarkObsidian, {
-      inlineTags: true,
-      resolveWikilink(target) {
-        return target === "known" ? "known" : undefined;
-      },
-      slugToHref(slug) {
-        return `/${slug}`;
-      },
-    });
+  const processor = unified().use(remarkParse).use(remarkObsidian, {
+    inlineTags: true,
+  });
   const tree = processor.parse(markdown) as TestNode;
   const file = { data: {} };
   await processor.run(tree, file);
@@ -84,30 +75,28 @@ describe("remarkObsidian", () => {
     expect(tagMatches("projectile", "project")).toBe(false);
   });
 
-  it("builds nested tag URLs", () => {
-    expect(tagToHref("Project/Active")).toBe("/tags/project/active");
-  });
-
-  it("turns inline tags into markdown links", async () => {
+  it("turns inline tags into neutral Obsidian tag nodes", async () => {
     const { tree } = await run("See #Project/Active and `#code`.");
     const paragraph = tree.children?.[0];
-    const link = paragraph?.children?.[1];
+    const tag = paragraph?.children?.[1];
 
-    expect(link?.type).toBe("link");
-    expect(link?.url).toBe("/tags/project/active");
-    expect(link?.children?.[0]?.value).toBe("#Project/Active");
+    expect(tag?.type).toBe("obsidianTag");
+    expect(tag?.tag).toBe("project/active");
+    expect(tag?.raw).toBe("#Project/Active");
+    expect(tag?.children?.[0]?.value).toBe("#Project/Active");
     expect(paragraph?.children?.[3]?.type).toBe("inlineCode");
   });
 
-  it("turns wikilinks into markdown links and records resolved links", async () => {
+  it("turns wikilinks into neutral Obsidian wikilink nodes", async () => {
     const { tree, data } = await run("See [[known|Known page]].");
     const paragraph = tree.children?.[0];
-    const link = paragraph?.children?.[1];
+    const wikilink = paragraph?.children?.[1];
 
-    expect(link?.type).toBe("link");
-    expect(link?.url).toBe("/known");
-    expect(link?.children?.[0]?.value).toBe("Known page");
-    expect(data.obsidianLinks).toEqual(["known"]);
+    expect(wikilink?.type).toBe("obsidianWikilink");
+    expect(wikilink?.target).toBe("known");
+    expect(wikilink?.alias).toBe("Known page");
+    expect(wikilink?.children?.[0]?.value).toBe("Known page");
+    expect(data).toEqual({});
   });
 
   it("leaves wikilinks inside code blocks alone", async () => {
@@ -116,21 +105,18 @@ describe("remarkObsidian", () => {
 
     expect(code?.type).toBe("code");
     expect(code?.value).toBe("[[known]]");
-    expect(data.obsidianLinks).toEqual([]);
-    expect(data.obsidianBrokenLinks).toEqual([]);
+    expect(data).toEqual({});
   });
 
-  it("marks unresolved wikilinks without injecting raw html", async () => {
+  it("does not resolve or render broken wikilinks", async () => {
     const { tree, data } = await run("[[missing|Missing page]]");
     const paragraph = tree.children?.[0];
-    const brokenLink = paragraph?.children?.[0];
+    const wikilink = paragraph?.children?.[0];
 
-    expect(brokenLink?.type).toBe("silicaBrokenLink");
-    expect(brokenLink?.data?.hName).toBe("span");
-    expect(brokenLink?.data?.hProperties).toEqual({
-      className: ["silica-broken-link"],
-    });
-    expect(brokenLink?.children?.[0]?.value).toBe("Missing page");
-    expect(data.obsidianBrokenLinks).toEqual([{ target: "missing" }]);
+    expect(wikilink?.type).toBe("obsidianWikilink");
+    expect(wikilink?.target).toBe("missing");
+    expect(wikilink?.alias).toBe("Missing page");
+    expect(wikilink?.children?.[0]?.value).toBe("Missing page");
+    expect(data).toEqual({});
   });
 });

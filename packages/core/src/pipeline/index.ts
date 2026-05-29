@@ -21,8 +21,11 @@ import type {
   RenderResult,
   TocItem,
 } from "../types.js";
-import { resolveWikiLink, slugToHref } from "../path.js";
 import { rehypeShikiCodeBlockWrapper } from "./code-block.js";
+import {
+  createSilicaObsidianHandlers,
+  remarkSilicaObsidian,
+} from "./obsidian.js";
 import {
   getDataArray,
   mergeBrokenLinks,
@@ -158,10 +161,10 @@ export async function renderMarkdown(
   const frontmatter = parsed.data;
   const obsidianBrokenLinks = getDataArray<{ target: string }>(
     file.data,
-    "obsidianBrokenLinks",
+    "silicaObsidianBrokenLinks",
   ).map((link) => ({ source: String(context.slug), target: link.target }));
   const links = unique([
-    ...getDataArray<string>(file.data, "obsidianLinks"),
+    ...getDataArray<string>(file.data, "silicaObsidianLinks"),
     ...getDataArray<string>(file.data, "links"),
   ]);
   const toc = getDataArray<TocItem>(file.data, "toc");
@@ -191,13 +194,13 @@ export async function analyzeMarkdown(
   const frontmatter = parsed.data;
   const brokenLinks = getDataArray<{ target: string }>(
     file.data,
-    "obsidianBrokenLinks",
+    "silicaObsidianBrokenLinks",
   ).map((link) => ({ source: String(context.slug), target: link.target }));
 
   return {
     frontmatter,
     toc: [],
-    links: getDataArray<string>(file.data, "obsidianLinks"),
+    links: getDataArray<string>(file.data, "silicaObsidianLinks"),
     brokenLinks,
     plainText,
     title: getTitle(frontmatter, plainText),
@@ -239,9 +242,11 @@ function baseProcessor(context: RenderContext) {
     .use(remarkFrontmatter, ["yaml"])
     .use(remarkGfm)
     .use(remarkMath)
-    .use(remarkObsidian, createObsidianOptions(context))
+    .use(remarkObsidian, { inlineTags: context.tags?.inline ?? true })
+    .use(remarkSilicaObsidian, context)
     .use(remarkRehype, {
       allowDangerousHtml: true,
+      handlers: createSilicaObsidianHandlers(context),
     });
 }
 
@@ -251,28 +256,12 @@ async function runRemarkObsidian(markdown: string, context: RenderContext) {
     .use(remarkFrontmatter, ["yaml"])
     .use(remarkGfm)
     .use(remarkMath)
-    .use(remarkObsidian, createObsidianOptions(context));
+    .use(remarkObsidian, { inlineTags: context.tags?.inline ?? true })
+    .use(remarkSilicaObsidian, context);
   const tree = processor.parse(markdown);
   const file = { data: {} };
   await processor.run(tree, file);
   return file;
-}
-
-function createObsidianOptions(context: RenderContext) {
-  return {
-    assetBaseUrl: context.assetBaseUrl,
-    inlineTags: context.tags?.inline ?? true,
-    resolveWikilink(target: string) {
-      return resolveWikiLink(
-        context.slug,
-        target,
-        context.allSlugs,
-        context.wikilinkStrategy ?? "shortest",
-        context.ordering,
-      );
-    },
-    slugToHref,
-  };
 }
 
 function remarkCollectPlainText() {

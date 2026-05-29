@@ -19,12 +19,12 @@ Merge the Version Packages PR when ready to publish. npm trusted publishing uses
 
 ## Release scripts
 
-| Script                            | Command                                          | Purpose                                      |
-| --------------------------------- | ------------------------------------------------ | -------------------------------------------- |
-| `npm run release:check`           | scaffold check + build + lint + typecheck + test | Validate repo before release                 |
+| Script                            | Command                                          | Purpose                                        |
+| --------------------------------- | ------------------------------------------------ | ---------------------------------------------- |
+| `npm run release:check`           | scaffold check + build + lint + typecheck + test | Validate repo before release                   |
 | `npm run release:version`         | `changeset version` + `scaffold-versions:update` | Bump versions, update changelogs and scaffolds |
-| `npm run release:publish`         | `changeset publish`                              | Publish changed packages to npm              |
-| `npm run scaffold-versions:check` | sync scaffold package versions against published | CI guard for create template versions      |
+| `npm run release:publish`         | `changeset publish`                              | Publish changed packages to npm                |
+| `npm run scaffold-versions:check` | sync scaffold package versions against published | CI guard for create template versions          |
 
 ## Manual commands (local debugging)
 

@@ -83,6 +83,17 @@ Do **not** hand-write empty changeset files. CI runs `changeset status --since=m
 
 The release automation requires a changeset on every PR to function correctly.
 
+### Dependabot PRs
+
+Dependabot PRs get a changeset automatically in the **Require Changeset** workflow:
+
+| Change                                                                                                        | Changeset                                                            |
+| ------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------- |
+| Runtime dependency bump in a publishable package (`dependencies`, `peerDependencies`, `optionalDependencies`) | `patch` on each affected package, e.g. `Bump better-auth to 1.6.12.` |
+| Dev dependencies, CI, lockfile-only, or other non-release changes                                             | `npx changeset --empty`                                              |
+
+Publishable packages are those with `publishConfig.access: public` and not `private: true`.
+
 ## PR Conventions
 
 ### Pre-merge checklist

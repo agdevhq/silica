@@ -10,10 +10,14 @@ jobs:
     name: Require Changeset
     if: github.head_ref != 'changeset-release/main'
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: read
     steps:
       - name: Checkout Repo
         uses: actions/checkout@v6
         with:
+          ref: ${{ github.head_ref }}
           fetch-depth: 0
 
       - name: Fetch main branch
@@ -27,6 +31,26 @@ jobs:
 
       - name: Install Dependencies
         run: npm ci
+
+      - name: Add Dependabot changeset
+        if: github.event.pull_request.user.login == 'dependabot[bot]'
+        env:
+          BASE_REF: main
+        run: node scripts/dependabot-changeset.mjs
+
+      - name: Commit Dependabot changeset
+        if: github.event.pull_request.user.login == 'dependabot[bot]'
+        run: |
+          if git diff --quiet -- .changeset; then
+            echo "No changeset changes to commit."
+            exit 0
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add .changeset/
+          git commit -m "Add changeset for Dependabot dependency updates"
+          git push
 
       - name: Check for changeset
         run: npx changeset status --since=main

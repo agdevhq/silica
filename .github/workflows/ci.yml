@@ -47,4 +47,4 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Skip CI for Version Packages PR
-        run: echo "Version Packages PR — code was validated on feature PRs; Release workflow runs release:check before publish."
+        run: echo "Version Packages PR — validated on feature PRs and main CI; Release runs after CI passes on main."

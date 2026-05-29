@@ -9,11 +9,13 @@ Releases happen from `main`, not from feature branches. Multiple changesets accu
 
 ## Automated release flow
 
-On every push to `main`, the Release workflow (`.github/workflows/release.yml`):
+On every successful CI run on `main`, the Release workflow (`.github/workflows/release.yml`) runs:
 
-1. Runs `npm run release:check`
+1. Builds packages (needed before `changeset publish`)
 2. If pending changesets exist → opens or updates the **Version Packages** PR (`changeset-release/main`)
 3. If no pending changesets remain (Version Packages PR was merged) → runs `npm run release:publish`
+
+Release does not re-run lint, test, or typecheck — CI on `main` is the gate. Use **Actions → Release → Run workflow** to re-trigger manually.
 
 Merge the Version Packages PR when ready to publish. npm trusted publishing uses OIDC — see the `npm-trusted-publishing` skill for setup.
 

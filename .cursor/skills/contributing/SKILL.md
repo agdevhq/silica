@@ -43,7 +43,7 @@ If writing a changeset by hand, use this exact format:
 
 ```md
 ---
-'@silicajs/cli': patch
+"@silicajs/cli": patch
 ---
 
 Short description of the change for the changelog.

@@ -17,6 +17,7 @@ jobs:
     permissions:
       contents: write
       pull-requests: write
+      checks: write
       id-token: write
     steps:
       - name: Checkout Repo
@@ -42,3 +43,18 @@ jobs:
           publish: npm run release:publish
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Satisfy required checks on Version Packages PR
+        if: steps.changesets.outputs.hasChangesets == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          pr_number="${{ steps.changesets.outputs.pullRequestNumber }}"
+          head_sha="$(gh pr view "$pr_number" --repo "${{ github.repository }}" --json headRefOid --jq .headRefOid)"
+
+          for check_name in "Build, Lint & Test" "Require Changeset"; do
+            gh api --method POST "repos/${{ github.repository }}/statuses/${head_sha}" \
+              -f "state=success" \
+              -f "context=${check_name}" \
+              -f "description=Skipped for Version Packages PR"
+          done

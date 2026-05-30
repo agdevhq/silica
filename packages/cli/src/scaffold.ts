@@ -78,6 +78,11 @@ function packageJson(name: string): string {
         "react-dom": "^19.2.6",
       },
       devDependencies: {
+        "@tailwindcss/postcss": "^4.1.18",
+        "@types/node": "^25.9.1",
+        "@types/react": "^19.2.10",
+        "@types/react-dom": "^19.2.3",
+        tailwindcss: "^4.1.18",
         typescript: "^6.0.3",
       },
     },

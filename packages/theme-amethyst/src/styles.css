@@ -3,7 +3,9 @@
 
 @source "../../ui/src/**/*.{ts,tsx}";
 @source "../../components/src/**/*.{ts,tsx}";
+@source "../../components/dist/**/*.js";
 @source "../src/**/*.{ts,tsx}";
+@source "../dist/**/*.js";
 
 /*
  * Every neutral/foreground token we override must be declared in BOTH :root

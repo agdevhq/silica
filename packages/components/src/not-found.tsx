@@ -28,7 +28,10 @@ export function NotFound({
           <CardDescription>{description}</CardDescription>
         </CardHeader>
         <CardContent>
-          <Button variant="outline" render={<a href={cta.href}>{cta.label}</a>} />
+          <Button
+            variant="outline"
+            render={<a href={cta.href}>{cta.label}</a>}
+          />
         </CardContent>
       </Card>
     </main>

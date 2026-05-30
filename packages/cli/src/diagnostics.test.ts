@@ -8,6 +8,12 @@ describe("formatBrokenWikilinks", () => {
         { source: "index", target: "Missing" },
         { source: "notes/auth", target: "Other" },
       ]),
-    ).toBe(["[silica] broken wikilinks:", "  index -> Missing", "  notes/auth -> Other"].join("\n"));
+    ).toBe(
+      [
+        "[silica] broken wikilinks:",
+        "  index -> Missing",
+        "  notes/auth -> Other",
+      ].join("\n"),
+    );
   });
 });

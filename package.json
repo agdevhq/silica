@@ -15,7 +15,7 @@
     "dev": "turbo watch build --filter=docs^... & turbo run dev --filter=docs",
     "e2e": "npm run build && playwright test",
     "lint": "turbo run lint",
-    "release:check": "npm run scaffold-versions:check && npm run build && npm run lint && npm run typecheck && npm test",
+    "release:check": "npm run scaffold-versions:check && npm run format && npm run build && npm run lint && npm run typecheck && npm test",
     "release:publish": "changeset publish",
     "release:version": "changeset version && npm run scaffold-versions:update",
     "scaffold-versions:check": "node scripts/sync-scaffold-versions.mjs --check",

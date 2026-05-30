@@ -18,7 +18,10 @@ export type TocListProps = {
 export function TocList({ items, activeId, className }: TocListProps) {
   if (items.length === 0) return null;
   return (
-    <ol data-slot="toc-list" className={cn("flex flex-col gap-1 text-sm", className)}>
+    <ol
+      data-slot="toc-list"
+      className={cn("flex flex-col gap-1 text-sm", className)}
+    >
       {items.map((item) => {
         const isActive = activeId === item.id;
         return (
@@ -32,7 +35,7 @@ export function TocList({ items, activeId, className }: TocListProps) {
                 "block rounded-md px-2 py-1 transition-colors",
                 isActive
                   ? "font-medium text-primary"
-                  : "text-muted-foreground hover:text-foreground"
+                  : "text-muted-foreground hover:text-foreground",
               )}
             >
               {item.label}

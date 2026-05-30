@@ -54,7 +54,7 @@ Short description of the change for the changelog.
 Rules:
 
 - YAML frontmatter between `---` delimiters (required)
-- Package names are **quoted** with single quotes
+- Package names are **quoted** with double quotes (Prettier default)
 - Bump type is one of: `patch`, `minor`, `major`
 - Body below the frontmatter is the changelog entry
 
@@ -104,7 +104,7 @@ The changeset commit is pushed with a repo deploy key (`DEPENDABOT_CHANGESET_DEP
 Before opening or updating a PR, verify:
 
 1. Code changes are complete and tested
-2. `npm run release:check` passes (build + lint + typecheck + test + scaffold version sync)
+2. `npm run release:check` passes (format + build + lint + typecheck + test + scaffold version sync)
 3. Changeset file is included, or PR is labeled **`skip-changeset`**
 4. PR description explains **what** and **why**
 

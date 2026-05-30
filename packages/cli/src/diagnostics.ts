@@ -9,7 +9,9 @@ export function formatBrokenWikilinks(links: BrokenLinkDiagnostic[]): string {
     "[silica] broken wikilinks:",
     ...links
       .slice()
-      .sort((a, b) => `${a.source}\0${a.target}`.localeCompare(`${b.source}\0${b.target}`))
+      .sort((a, b) =>
+        `${a.source}\0${a.target}`.localeCompare(`${b.source}\0${b.target}`),
+      )
       .map((link) => `  ${link.source} -> ${link.target}`),
   ].join("\n");
 }

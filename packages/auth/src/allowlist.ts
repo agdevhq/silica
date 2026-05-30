@@ -3,10 +3,15 @@ export type AllowlistConfig = {
   allowedDomains?: string[];
 };
 
-export function isEmailAllowed(email: string | undefined | null, config: AllowlistConfig): boolean {
+export function isEmailAllowed(
+  email: string | undefined | null,
+  config: AllowlistConfig,
+): boolean {
   if (!email) return false;
   const normalized = email.trim().toLowerCase();
-  const allowedEmails = new Set((config.allowedEmails ?? []).map((item) => item.trim().toLowerCase()));
+  const allowedEmails = new Set(
+    (config.allowedEmails ?? []).map((item) => item.trim().toLowerCase()),
+  );
   if (allowedEmails.has(normalized)) return true;
 
   return (config.allowedDomains ?? []).some((domain) => {

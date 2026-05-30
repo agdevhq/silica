@@ -5,7 +5,7 @@
   "type": "module",
   "license": "MIT",
   "bin": {
-    "create-silica": "./dist/index.js"
+    "create-silica": "dist/index.js"
   },
   "exports": {
     ".": {
@@ -24,5 +24,17 @@
   },
   "dependencies": {
     "@silicajs/create": "^0.1.1"
+  },
+  "homepage": "https://github.com/agdevhq/silica/tree/main/packages/create-silica#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/agdevhq/silica.git",
+    "directory": "packages/create-silica"
+  },
+  "bugs": {
+    "url": "https://github.com/agdevhq/silica/issues"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }

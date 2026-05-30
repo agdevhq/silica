@@ -8,7 +8,7 @@
     "access": "public"
   },
   "bin": {
-    "silicajs-create": "./dist/bin.js"
+    "silicajs-create": "dist/bin.js"
   },
   "exports": {
     ".": {
@@ -27,5 +27,14 @@
   },
   "dependencies": {
     "@silicajs/cli": "^0.1.1"
+  },
+  "homepage": "https://github.com/agdevhq/silica/tree/main/packages/create#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/agdevhq/silica.git",
+    "directory": "packages/create"
+  },
+  "bugs": {
+    "url": "https://github.com/agdevhq/silica/issues"
   }
 }

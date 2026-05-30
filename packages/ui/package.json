@@ -47,5 +47,14 @@
     "react": "^19.2.6",
     "react-dom": "^19.2.6",
     "tailwindcss": "^4.1.18"
+  },
+  "homepage": "https://github.com/agdevhq/silica/tree/main/packages/ui#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/agdevhq/silica.git",
+    "directory": "packages/ui"
+  },
+  "bugs": {
+    "url": "https://github.com/agdevhq/silica/issues"
   }
 }

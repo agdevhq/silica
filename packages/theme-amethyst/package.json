@@ -41,5 +41,14 @@
     "react": "^19.2.6",
     "react-dom": "^19.2.6",
     "tsup": "^8.5.1"
+  },
+  "homepage": "https://github.com/agdevhq/silica/tree/main/packages/theme-amethyst#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/agdevhq/silica.git",
+    "directory": "packages/theme-amethyst"
+  },
+  "bugs": {
+    "url": "https://github.com/agdevhq/silica/issues"
   }
 }

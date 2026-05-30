@@ -1,6 +1,6 @@
 {
   "name": "@silicajs/cli",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Silica command-line interface.",
   "type": "module",
   "license": "MIT",
@@ -27,7 +27,7 @@
   },
   "dependencies": {
     "@silicajs/core": "^0.1.0",
-    "@silicajs/next": "^0.1.0",
+    "@silicajs/next": "^0.1.1",
     "chokidar": "^5.0.0",
     "commander": "^15.0.0",
     "execa": "^9.6.1",

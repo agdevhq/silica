@@ -40,7 +40,10 @@ describe("silica CLI helpers", () => {
     expect(await fs.pathExists(path.join(root, "next.config.ts"))).toBe(false);
     const scaffoldPackageJson = JSON.parse(
       await fs.readFile(path.join(root, "package.json"), "utf8"),
-    ) as { dependencies: Record<string, string> };
+    ) as {
+      dependencies: Record<string, string>;
+      devDependencies: Record<string, string>;
+    };
     expect(scaffoldPackageJson.dependencies["@silicajs/cli"]).toBe(
       scaffoldDependencyRanges["@silicajs/cli"],
     );
@@ -53,6 +56,10 @@ describe("silica CLI helpers", () => {
     expect(scaffoldPackageJson.dependencies["@silicajs/theme-amethyst"]).toBe(
       scaffoldDependencyRanges["@silicajs/theme-amethyst"],
     );
+    expect(scaffoldPackageJson.devDependencies["@types/react"]).toBe(
+      "^19.2.10",
+    );
+    expect(scaffoldPackageJson.devDependencies.tailwindcss).toBe("^4.1.18");
   });
 
   it("materializes the hidden Next.js app and preserves user public files", async () => {

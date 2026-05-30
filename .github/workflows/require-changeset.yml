@@ -59,7 +59,12 @@ jobs:
           ssh-keyscan github.com >> ~/.ssh/known_hosts
           git push "git@github.com:${{ github.repository }}.git" "HEAD:${{ github.head_ref }}"
 
+      - name: Skip changeset check
+        if: contains(github.event.pull_request.labels.*.name, 'skip-changeset')
+        run: echo "PR labeled skip-changeset — no package version bump expected."
+
       - name: Check for changeset
+        if: ${{ !contains(github.event.pull_request.labels.*.name, 'skip-changeset') }}
         run: npx changeset status --since=main
 
   require-changeset-version-packages:

@@ -24,5 +24,14 @@
   },
   "dependencies": {
     "flexsearch": "^0.8.212"
+  },
+  "homepage": "https://github.com/agdevhq/silica/tree/main/packages/search#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/agdevhq/silica.git",
+    "directory": "packages/search"
+  },
+  "bugs": {
+    "url": "https://github.com/agdevhq/silica/issues"
   }
 }

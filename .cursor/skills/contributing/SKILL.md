@@ -25,7 +25,9 @@ No long-lived `develop` or `release/*` branches. Feature/fix branches are short-
 
 ## Changesets
 
-Every PR **must** include a changeset. Changesets drive version bumps and changelog generation.
+Every PR **must** include a changeset, unless it is labeled **`skip-changeset`**. Changesets drive version bumps and changelog generation.
+
+Use **`skip-changeset`** when the PR should not trigger a package release — for example package metadata (`repository`, `homepage`), CI/workflow changes, or docs-only edits. Do not add an empty changeset for these; empty changesets on `main` block the release workflow from publishing.
 
 ### Creating a changeset
 
@@ -71,17 +73,16 @@ Selecting either package in a changeset bumps both to the same version.
 
 All other publishable packages are versioned independently. List only the packages that actually changed.
 
-### Empty changesets
+### No version bump (`skip-changeset`)
 
-For changes that do not affect published packages (CI, internal tooling, docs, tests):
+When a PR does not need a package release, add the **`skip-changeset`** label instead of a changeset:
 
-```bash
-npx changeset --empty
-```
+- CI / workflow changes
+- Docs-only changes
+- Package metadata (`repository`, `homepage`, `bugs`) with no functional change
+- Other changes that do not affect published package contents
 
-Do **not** hand-write empty changeset files. CI runs `changeset status --since=main`, which only recognizes changesets created through the CLI (including `--empty`).
-
-The release automation requires a changeset on every PR to function correctly.
+Do **not** use `npx changeset --empty` for these PRs. Empty changesets satisfy the PR check but, if merged alone to `main`, prevent release from publishing until they are removed.
 
 ### Dependabot PRs
 
@@ -90,7 +91,7 @@ Dependabot PRs get a changeset automatically in the **Require Changeset** workfl
 | Change                                                                                                        | Changeset                                                            |
 | ------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------- |
 | Runtime dependency bump in a publishable package (`dependencies`, `peerDependencies`, `optionalDependencies`) | `patch` on each affected package, e.g. `Bump better-auth to 1.6.12.` |
-| Dev dependencies, CI, lockfile-only, or other non-release changes                                             | `npx changeset --empty`                                              |
+| Dev dependencies, CI, lockfile-only, or other non-release changes                                             | `npx changeset --empty` (added automatically by CI)                  |
 
 Publishable packages are those with `publishConfig.access: public` and not `private: true`.
 
@@ -104,7 +105,7 @@ Before opening or updating a PR, verify:
 
 1. Code changes are complete and tested
 2. `npm run release:check` passes (build + lint + typecheck + test + scaffold version sync)
-3. Changeset file is included
+3. Changeset file is included, or PR is labeled **`skip-changeset`**
 4. PR description explains **what** and **why**
 
 ### Typical flow
@@ -127,9 +128,9 @@ After review, merge to `main` (squash).
 
 ## Quick Reference
 
-| Task                  | Command / Action                 |
-| --------------------- | -------------------------------- |
-| Start feature         | `git checkout -b feat/name main` |
-| Add changeset         | `npm run changeset`              |
-| Empty changeset       | `npx changeset --empty`          |
-| Validate before merge | `npm run release:check`          |
+| Task                  | Command / Action                     |
+| --------------------- | ------------------------------------ |
+| Start feature         | `git checkout -b feat/name main`     |
+| Add changeset         | `npm run changeset`                  |
+| No version bump       | add **`skip-changeset`** label to PR |
+| Validate before merge | `npm run release:check`              |

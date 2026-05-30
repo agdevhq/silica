@@ -100,5 +100,14 @@
     "next": "^16.2.6",
     "react": "^19.2.6",
     "react-dom": "^19.2.6"
+  },
+  "homepage": "https://github.com/agdevhq/silica/tree/main/packages/next#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/agdevhq/silica.git",
+    "directory": "packages/next"
+  },
+  "bugs": {
+    "url": "https://github.com/agdevhq/silica/issues"
   }
 }

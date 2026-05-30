@@ -88,7 +88,7 @@
     "@silicajs/core": "^0.1.0",
     "@silicajs/remark-obsidian": "^0.1.0",
     "@silicajs/search": "^0.1.0",
-    "better-auth": "^1.6.11",
+    "better-auth": "1.6.11",
     "katex": "^0.17.0"
   },
   "peerDependencies": {

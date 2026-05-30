@@ -1,6 +1,6 @@
 {
   "name": "@silicajs/auth",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Better Auth wrapper and allowlist helpers for Silica.",
   "type": "module",
   "license": "MIT",

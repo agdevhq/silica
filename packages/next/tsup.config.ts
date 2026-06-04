@@ -25,6 +25,7 @@ export default defineConfig({
     "@silicajs/theme-amethyst",
     "@silicajs/ui",
     "better-auth/next-js",
+    "better-auth/react",
     "fs-extra",
     "next",
     "next/cache",

@@ -26,6 +26,8 @@ export type SilicaAuthConfig = {
 export type SilicaConfig = {
   title?: string;
   description?: string;
+  /** Public asset path (e.g. `/logo.svg`) or absolute URL shown on sign-in. */
+  logo?: string;
   baseUrl?: string;
   contentDir?: string;
   theme?: ThemeConfig;
@@ -50,6 +52,7 @@ export type ResolvedSilicaConfig = {
   projectRoot: string;
   title: string;
   description: string;
+  logo?: string;
   baseUrl?: string;
   contentDir: string;
   theme: ThemeConfig;

@@ -10,7 +10,9 @@ import {
 describe("generated templates", () => {
   it("loads generated app templates from files", () => {
     expect(getSilicaTemplates().map((template) => template.path)).toEqual([
-      "app/[[...slug]]/page.tsx",
+      "app/(site)/[[...slug]]/page.tsx",
+      "app/(site)/layout.tsx",
+      "app/(site)/tags/[...tag]/page.tsx",
       "app/api/auth/[...all]/route.ts",
       "app/api/search/route.ts",
       "app/api/silica/dev-events/route.ts",
@@ -19,7 +21,6 @@ describe("generated templates", () => {
       "app/not-allowed/page.tsx",
       "app/not-found.tsx",
       "app/sign-in/page.tsx",
-      "app/tags/[...tag]/page.tsx",
       "postcss.config.mjs",
       "proxy.ts",
     ]);

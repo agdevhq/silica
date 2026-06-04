@@ -1,4 +1,5 @@
 export { defineConfig, loadConfig, resolveConfig } from "./config.js";
+export { resolvePublicAssetPath } from "./logo.js";
 export {
   isMarkdownFile,
   scanContent,

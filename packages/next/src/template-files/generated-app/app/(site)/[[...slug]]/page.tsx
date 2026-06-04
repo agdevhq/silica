@@ -1,4 +1,4 @@
-import theme from "../../silica-theme";
+import theme from "../../../silica-theme";
 import { VaultContent } from "@silicajs/next/routes/page";
 export {
   generateMetadata,

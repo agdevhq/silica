@@ -13,7 +13,16 @@ const PUBLIC_PREFIXES = [
   "/api/silica/revalidate",
   "/api/silica/dev-events",
 ];
-const PUBLIC_PATHS = ["/sign-in", "/not-allowed", "/favicon.ico"];
+const PUBLIC_PATHS = [
+  "/sign-in",
+  "/not-allowed",
+  "/favicon.ico",
+  "/robots.txt",
+  "/sitemap.xml",
+];
+
+/** Root-level branding assets from `public/` (logo, favicon, etc.). */
+const PUBLIC_ASSET_PATTERN = /^\/[^/]+\.(?:svg|png|jpe?g|webp|ico)$/i;
 
 export async function silicaProxy(
   request: NextRequest,
@@ -60,6 +69,7 @@ export const config = {
 export function isSilicaPublicPath(pathname: string): boolean {
   return (
     PUBLIC_PATHS.includes(pathname) ||
+    PUBLIC_ASSET_PATTERN.test(pathname) ||
     PUBLIC_PREFIXES.some(
       (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`),
     )

@@ -1,6 +1,7 @@
 import path from "node:path";
 import { existsSync } from "node:fs";
 import { createJiti } from "jiti";
+import { resolvePublicAssetPath } from "./logo.js";
 import type { ResolvedSilicaConfig, SilicaConfig } from "./types.js";
 
 export function defineConfig(config: SilicaConfig): SilicaConfig {
@@ -58,6 +59,7 @@ export function resolveConfig(
     projectRoot,
     title: config.title ?? "Silica",
     description: config.description ?? "A Silica knowledge site",
+    logo: resolvePublicAssetPath(config.logo),
     baseUrl: config.baseUrl,
     contentDir: config.contentDir ?? "content",
     theme: config.theme ?? "default",

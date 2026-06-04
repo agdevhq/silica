@@ -22,6 +22,7 @@ export default defineConfig({
 | ------------- | --------------------------- | ------------------------------------------------- |
 | `title`       | `"Silica"`                  | Site name in the header, metadata, and search     |
 | `description` | `"A Silica knowledge site"` | Default page description                          |
+| `logo`        | —                           | Logo on the sign-in page (`/logo.svg` or a URL)   |
 | `baseUrl`     | —                           | Your public URL, used for the sitemap and sign-in |
 | `contentDir`  | `"content"`                 | Folder that holds your Markdown vault             |
 | `theme`       | `"default"`                 | The site theme                                    |

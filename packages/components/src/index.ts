@@ -4,7 +4,9 @@ export {
   DarkModeToggle,
   type DarkModeToggleProps,
 } from "./dark-mode-toggle.js";
+export { GoogleIcon } from "./google-icon.js";
 export { NotAllowed, type NotAllowedProps } from "./not-allowed.js";
+export { SignInShell, type SignInShellProps } from "./sign-in-shell.js";
 export { NotFound, type NotFoundProps } from "./not-found.js";
 export { PageProperties, type PagePropertiesProps } from "./page-properties.js";
 export {

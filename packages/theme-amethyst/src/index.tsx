@@ -43,6 +43,47 @@ const THEME_INIT_SCRIPT = String.raw`
 })();
 `;
 
+export function RootLayout({
+  config,
+  children,
+  Provider = DefaultProvider,
+}: Pick<ThemeLayoutProps, "config" | "children" | "Provider">) {
+  return (
+    <html lang="en" suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
+      </head>
+      <body className="min-h-svh bg-background font-sans text-foreground antialiased">
+        <Provider>{children}</Provider>
+      </body>
+    </html>
+  );
+}
+
+export function SiteLayout({
+  navigation,
+  config,
+  children,
+}: Pick<ThemeLayoutProps, "navigation" | "config" | "children">) {
+  return (
+    <SidebarProvider>
+      <Sidebar navigation={navigation} config={config} />
+      <SidebarInset>
+        <header className="sticky top-0 z-10 flex h-12 shrink-0 items-center gap-2 border-b border-border bg-background px-3 md:hidden">
+          <SidebarTrigger />
+          <SilicaLink
+            href="/"
+            className="truncate text-sm font-semibold tracking-tight text-foreground"
+          >
+            {config.title}
+          </SilicaLink>
+        </header>
+        {children}
+      </SidebarInset>
+    </SidebarProvider>
+  );
+}
+
 export function Layout({
   navigation,
   config,
@@ -50,30 +91,11 @@ export function Layout({
   Provider = DefaultProvider,
 }: ThemeLayoutProps) {
   return (
-    <html lang="en" suppressHydrationWarning>
-      <head>
-        <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
-      </head>
-      <body className="min-h-svh bg-background font-sans text-foreground antialiased">
-        <Provider>
-          <SidebarProvider>
-            <Sidebar navigation={navigation} config={config} />
-            <SidebarInset>
-              <header className="sticky top-0 z-10 flex h-12 shrink-0 items-center gap-2 border-b border-border bg-background px-3 md:hidden">
-                <SidebarTrigger />
-                <SilicaLink
-                  href="/"
-                  className="truncate text-sm font-semibold tracking-tight text-foreground"
-                >
-                  {config.title}
-                </SilicaLink>
-              </header>
-              {children}
-            </SidebarInset>
-          </SidebarProvider>
-        </Provider>
-      </body>
-    </html>
+    <RootLayout config={config} Provider={Provider}>
+      <SiteLayout navigation={navigation} config={config}>
+        {children}
+      </SiteLayout>
+    </RootLayout>
   );
 }
 
@@ -133,4 +155,4 @@ export const components = {
   "silica-mermaid": Mermaid,
 };
 
-export default { Layout, PageRenderer, components };
+export default { RootLayout, SiteLayout, Layout, PageRenderer, components };

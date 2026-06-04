@@ -8,6 +8,5 @@ export default async function SiteLayout({
   children: ReactNode;
 }) {
   const props = await getLayoutProps();
-  const SiteLayoutComponent = theme.SiteLayout ?? theme.Layout;
-  return <SiteLayoutComponent {...props}>{children}</SiteLayoutComponent>;
+  return <theme.SiteLayout {...props}>{children}</theme.SiteLayout>;
 }

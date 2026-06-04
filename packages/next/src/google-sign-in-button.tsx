@@ -11,13 +11,22 @@ export type GoogleSignInButtonProps = {
   errorCallbackURL?: string;
 };
 
-function resolveCallbackURL(explicit?: string): string {
-  if (explicit?.startsWith("/")) return explicit;
+export function resolveCallbackURL(explicit?: string): string {
+  if (isInternalCallbackPath(explicit)) return explicit;
   if (typeof window === "undefined") return "/";
   const fromQuery = new URLSearchParams(window.location.search).get(
     "callbackUrl",
   );
-  return fromQuery?.startsWith("/") ? fromQuery : "/";
+  return isInternalCallbackPath(fromQuery) ? fromQuery : "/";
+}
+
+function isInternalCallbackPath(value?: string | null): value is string {
+  return Boolean(
+    value &&
+    value.startsWith("/") &&
+    !value.startsWith("//") &&
+    !value.includes("\\"),
+  );
 }
 
 export function GoogleSignInButton({

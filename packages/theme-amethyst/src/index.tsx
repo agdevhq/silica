@@ -1,6 +1,10 @@
 import type { ReactNode } from "react";
 import { tagToHref } from "@silicajs/core/runtime";
-import type { ThemeLayoutProps, ThemePageProps } from "@silicajs/core/theme";
+import type {
+  ThemePageProps,
+  ThemeRootLayoutProps,
+  ThemeSiteLayoutProps,
+} from "@silicajs/core/theme";
 import {
   Backlinks,
   Breadcrumbs,
@@ -47,7 +51,7 @@ export function RootLayout({
   config,
   children,
   Provider = DefaultProvider,
-}: Pick<ThemeLayoutProps, "config" | "children" | "Provider">) {
+}: ThemeRootLayoutProps) {
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
@@ -64,7 +68,7 @@ export function SiteLayout({
   navigation,
   config,
   children,
-}: Pick<ThemeLayoutProps, "navigation" | "config" | "children">) {
+}: ThemeSiteLayoutProps) {
   return (
     <SidebarProvider>
       <Sidebar navigation={navigation} config={config} />
@@ -81,21 +85,6 @@ export function SiteLayout({
         {children}
       </SidebarInset>
     </SidebarProvider>
-  );
-}
-
-export function Layout({
-  navigation,
-  config,
-  children,
-  Provider = DefaultProvider,
-}: ThemeLayoutProps) {
-  return (
-    <RootLayout config={config} Provider={Provider}>
-      <SiteLayout navigation={navigation} config={config}>
-        {children}
-      </SiteLayout>
-    </RootLayout>
   );
 }
 
@@ -155,4 +144,4 @@ export const components = {
   "silica-mermaid": Mermaid,
 };
 
-export default { RootLayout, SiteLayout, Layout, PageRenderer, components };
+export default { RootLayout, SiteLayout, PageRenderer, components };

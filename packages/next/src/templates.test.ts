@@ -47,6 +47,7 @@ describe("generated templates", () => {
         projectRoot: "/tmp/site",
         title: "Test",
         description: "Test",
+        logo: "/logo.svg",
         contentDir: "content",
         theme: "default",
         auth: {
@@ -61,6 +62,23 @@ describe("generated templates", () => {
         filters: { removeDrafts: true, explicitPublish: false },
       }),
     ).toContain('"authEnabled": true');
+  });
+
+  it("bakes the configured logo into generated proxy public paths", () => {
+    expect(
+      proxyTemplate({
+        projectRoot: "/tmp/site",
+        title: "Test",
+        description: "Test",
+        logo: "/logo.svg",
+        contentDir: "content",
+        theme: "default",
+        wikilinks: { strategy: "shortest", strict: false },
+        tags: { inline: true },
+        ordering: { numericPrefixes: true },
+        filters: { removeDrafts: true, explicitPublish: false },
+      }),
+    ).toContain('"publicPaths": [\n    "/logo.svg"\n  ]');
   });
 
   it("renders the tsconfig extends placeholder when a user config exists", () => {

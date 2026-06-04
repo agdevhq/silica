@@ -10,8 +10,4 @@ export default defineConfig({
     strategy: "shortest",
     strict: false,
   },
-  auth: {
-    provider: "google",
-    allowedDomains: ["omnifact.ai"],
-  },
 });

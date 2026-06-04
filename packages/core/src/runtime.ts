@@ -29,11 +29,12 @@ export type {
   SilicaEmbedProps,
   SilicaMermaidProps,
   ThemeLayoutConfig,
-  ThemeLayoutProps,
   ThemeNavigationEntry,
   ThemePage,
   ThemePageProps,
   ThemeProviderComponent,
+  ThemeRootLayoutProps,
+  ThemeSiteLayoutProps,
 } from "./theme.js";
 export type {
   AnalyzeResult,

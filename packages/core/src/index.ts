@@ -36,7 +36,9 @@ export {
 } from "./pipeline/frontmatter.js";
 export {
   analyzeMarkdown,
+  generateDescriptionFromContent,
   getDescription,
+  getMetaDescription,
   getTitle,
   renderMarkdown,
   renderMarkdownHtml,

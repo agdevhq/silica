@@ -15,7 +15,6 @@ import rehypeReact from "rehype-react";
 import rehypeStringify from "rehype-stringify";
 import { getTags, remarkObsidian } from "@silicajs/remark-obsidian";
 import { Fragment, jsx, jsxs } from "react/jsx-runtime";
-import { visit } from "unist-util-visit";
 import type {
   AnalyzeResult,
   RenderContext,
@@ -40,8 +39,30 @@ import {
 type MdastNode = {
   type: string;
   value?: string;
+  raw?: string;
+  tag?: string;
   children?: MdastNode[];
 };
+
+type PlainTextOptions = {
+  skipLeadingHeading?: boolean;
+};
+
+const plainTextSkipTypes = new Set([
+  "code",
+  "definition",
+  "footnoteDefinition",
+  "footnoteReference",
+  "image",
+  "imageReference",
+  "inlineMath",
+  "math",
+  "obsidianBlockId",
+  "obsidianComment",
+  "obsidianWikiEmbed",
+  "thematicBreak",
+  "yaml",
+]);
 
 const headingLinkIcon = {
   type: "element",
@@ -234,7 +255,7 @@ export async function renderMarkdown(
     brokenLinks: mergeBrokenLinks(obsidianBrokenLinks, []),
     plainText,
     title: getTitle(frontmatter, plainText),
-    description: getDescription(frontmatter, plainText),
+    description: getDescription(frontmatter),
     tags: getTags(frontmatter, parsed.content, { inline: inlineTags }),
   };
 }
@@ -284,6 +305,7 @@ export async function analyzeMarkdown(
     file.data,
     "silicaObsidianBrokenLinks",
   ).map((link) => ({ source: String(context.slug), target: link.target }));
+  const description = getDescription(frontmatter);
 
   return {
     frontmatter,
@@ -292,7 +314,10 @@ export async function analyzeMarkdown(
     brokenLinks,
     plainText,
     title: getTitle(frontmatter, plainText),
-    description: getDescription(frontmatter, plainText),
+    description,
+    generatedDescription: description
+      ? undefined
+      : generateDescriptionFromContent(parsed.content),
     tags: getTags(frontmatter, parsed.content, { inline: inlineTags }),
   };
 }
@@ -312,16 +337,46 @@ export function getTitle(
 
 export function getDescription(
   frontmatter: Record<string, unknown>,
-  plainText: string,
 ): string | undefined {
   if (
     typeof frontmatter.description === "string" &&
     frontmatter.description.trim()
   ) {
-    return frontmatter.description.trim();
+    return cleanPlainText(frontmatter.description.trim());
   }
-  const sentence = extractPlainText(plainText).slice(0, 180).trim();
-  return sentence || undefined;
+  return undefined;
+}
+
+export function generateDescriptionFromContent(
+  markdown: string,
+  maxLength = 160,
+): string | undefined {
+  return cleanPlainText(markdown, maxLength, { skipLeadingHeading: true });
+}
+
+export function getMetaDescription(
+  entry: {
+    description?: string;
+    generatedDescription?: string;
+  },
+  maxLength = 160,
+): string | undefined {
+  const text = entry.description ?? entry.generatedDescription;
+  if (!text) return undefined;
+  if (text.length <= maxLength) return text;
+  return cleanPlainText(text, maxLength);
+}
+
+function cleanPlainText(
+  text: string,
+  maxLength?: number,
+  options: PlainTextOptions = {},
+): string | undefined {
+  const cleaned = extractPlainText(text, options).trim();
+  if (!cleaned) return undefined;
+  if (maxLength === undefined) return cleaned;
+  const truncated = cleaned.slice(0, maxLength).trim();
+  return truncated || undefined;
 }
 
 function baseProcessor(context: RenderContext) {
@@ -352,27 +407,57 @@ async function runRemarkObsidian(markdown: string, context: RenderContext) {
   return file;
 }
 
-function remarkCollectPlainText() {
-  return (tree: MdastNode, file: { data: Record<string, unknown> }) => {
-    const parts: string[] = [];
-    visit(tree, (node: MdastNode) => {
-      if (typeof node.value === "string") parts.push(node.value);
-    });
-    file.data.plainText = parts.join(" ");
-  };
+function extractPlainText(
+  markdown: string,
+  options: PlainTextOptions = {},
+): string {
+  const tree = parsePlainTextMarkdown(markdown);
+  const children =
+    options.skipLeadingHeading && tree.children?.[0]?.type === "heading"
+      ? tree.children.slice(1)
+      : (tree.children ?? []);
+  const parts: string[] = [];
+
+  for (const child of children) {
+    collectPlainText(child, parts);
+  }
+
+  return normalizePlainText(parts.join(" "));
 }
 
-function extractPlainText(markdown: string): string {
-  return markdown
-    .replace(/```[\s\S]*?```/g, "")
-    .replace(/%%[\s\S]*?%%/g, "")
-    .replace(/\^\[[^\]]+]/g, "")
-    .replace(/(?:^|\s)\^[A-Za-z0-9-]+/g, " ")
-    .replace(/`([^`]+)`/g, "$1")
-    .replace(/!\[[^\]]*]\([^)]+\)/g, "")
-    .replace(/\[([^\]]+)]\([^)]+\)/g, "$1")
-    .replace(/[#>*_\-~`]+/g, " ")
+function parsePlainTextMarkdown(markdown: string): MdastNode {
+  return unified()
+    .use(remarkParse)
+    .use(remarkFrontmatter, ["yaml"])
+    .use(remarkGfm)
+    .use(remarkMath)
+    .use(remarkObsidian)
+    .parse(markdown) as MdastNode;
+}
+
+function collectPlainText(node: MdastNode, parts: string[]): void {
+  if (plainTextSkipTypes.has(node.type)) return;
+
+  if (node.type === "obsidianTag") {
+    const raw = node.raw?.replace(/^#/, "");
+    const tag = raw || node.tag;
+    if (tag) parts.push(tag);
+    return;
+  }
+
+  if (typeof node.value === "string") {
+    parts.push(node.value);
+  }
+
+  for (const child of node.children ?? []) {
+    collectPlainText(child, parts);
+  }
+}
+
+function normalizePlainText(text: string): string {
+  return text
     .replace(/\s+/g, " ")
+    .replace(/\s+([.,;:!?])/g, "$1")
     .trim();
 }
 

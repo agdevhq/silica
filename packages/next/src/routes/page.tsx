@@ -3,6 +3,7 @@ import type { AnchorHTMLAttributes } from "react";
 import { cacheLife, cacheTag } from "next/cache";
 import { notFound } from "next/navigation";
 import {
+  getMetaDescription,
   renderMarkdown,
   renderMarkdownHtml,
   resolveWikiLink,
@@ -44,7 +45,7 @@ export async function generateMetadata({ params }: PageProps) {
   if (!entry) return {};
   return {
     title: entry.title,
-    description: entry.description,
+    description: getMetaDescription(entry),
   };
 }
 

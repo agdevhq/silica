@@ -11,7 +11,7 @@ Every page can start with a block of YAML between `---` fences. This is the same
 ---
 title: Authentication Guide
 menu_label: Auth
-description: Shown under the page title and in search results
+description: Shown under the page title
 date: 2026-05-25
 draft: true
 publish: true
@@ -23,17 +23,19 @@ listed: false
 
 These keys have special meaning to Silica:
 
-| Key                    | What it does                                                |
-| ---------------------- | ----------------------------------------------------------- |
-| `title`                | Page title; falls back to the first heading or the filename |
-| `menu_label`           | Sidebar label; falls back to `title`                        |
-| `description`          | Subtitle under the title, and the page's search/meta blurb  |
-| `date`                 | Publication date                                            |
-| `created` / `modified` | Timestamps shown with the page                              |
-| `draft`                | Hides the page from the built site (see below)              |
-| `publish`              | Marks a page for publishing in stricter setups              |
-| `listed`               | Set to `false` to keep a page reachable but out of the menu |
-| `tags`                 | Page tags (see [[writing/tags\|Tags]])                      |
+| Key                    | What it does                                                    |
+| ---------------------- | --------------------------------------------------------------- |
+| `title`                | Page title; falls back to the first heading or the filename     |
+| `menu_label`           | Sidebar label; falls back to `title`                            |
+| `description`          | Subtitle under the page title; also used for meta tags when set |
+| `date`                 | Publication date                                                |
+| `created` / `modified` | Timestamps shown with the page                                  |
+| `draft`                | Hides the page from the built site (see below)                  |
+| `publish`              | Marks a page for publishing in stricter setups                  |
+| `listed`               | Set to `false` to keep a page reachable but out of the menu     |
+| `tags`                 | Page tags (see [[writing/tags\|Tags]])                          |
+
+When `description` is omitted, the page subtitle is hidden and Silica generates a plain-text meta description from the note body for `<meta>` and social tags. Markdown formatting is stripped from manual descriptions as well.
 
 For how `draft`, `publish`, and `listed` interact, see [[publishing/drafts-and-publishing|Drafts and publishing]].
 

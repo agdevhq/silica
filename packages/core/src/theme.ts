@@ -25,6 +25,7 @@ export type ThemeNavigationEntry = {
 export type ThemeLayoutConfig = {
   title: string;
   description: string;
+  logo?: string;
   baseUrl?: string;
   authEnabled: boolean;
 };

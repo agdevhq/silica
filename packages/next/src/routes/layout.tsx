@@ -40,6 +40,7 @@ export async function getLayoutProps() {
     config: {
       title: config.title,
       description: config.description,
+      logo: config.logo,
       baseUrl: config.baseUrl,
       authEnabled: auth.authEnabled,
     },

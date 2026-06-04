@@ -81,6 +81,7 @@ export type ManifestEntry = {
   title: string;
   menuLabel: string;
   description?: string;
+  generatedDescription?: string;
   tags: string[];
   file: string;
   relativeFile: string;
@@ -172,7 +173,9 @@ export type RenderResult = {
   tags: string[];
 };
 
-export type AnalyzeResult = Omit<RenderResult, "content">;
+export type AnalyzeResult = Omit<RenderResult, "content"> & {
+  generatedDescription?: string;
+};
 
 export type PrecomputeResult = {
   manifest: Manifest;

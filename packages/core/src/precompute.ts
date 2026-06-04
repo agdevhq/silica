@@ -81,6 +81,7 @@ export async function precompute(
       title,
       menuLabel,
       description: analysis.description,
+      generatedDescription: analysis.generatedDescription,
       tags: analysis.tags,
       file: normalizeGitPath(path.join(".silica/content", file.relativePath)),
       relativeFile: file.relativePath,

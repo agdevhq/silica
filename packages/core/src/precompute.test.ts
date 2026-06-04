@@ -5,6 +5,34 @@ import { getGitDates, precompute } from "./precompute.js";
 import { resolveConfig } from "./config.js";
 
 describe("precompute", () => {
+  it("omits UI description without frontmatter but keeps a clean meta description", async () => {
+    const root = path.join(process.cwd(), ".tmp-precompute-description");
+    await fs.emptyDir(path.join(root, "content"));
+    await fs.writeFile(
+      path.join(root, "content/index.md"),
+      "# Home\n\nSee [[Notes/Auth|Auth]] and **bold** text.",
+    );
+    await fs.writeFile(
+      path.join(root, "content/explicit.md"),
+      '---\ndescription: "**Custom** summary with #topic"\n---\n# Explicit\n\nBody text.',
+    );
+
+    const result = await precompute({
+      projectRoot: root,
+      config: resolveConfig({ title: "Test" }, root),
+    });
+
+    const index = result.manifest.bySlug.index;
+    const explicit = result.manifest.bySlug["explicit"];
+
+    expect(index?.description).toBeUndefined();
+    expect(index?.generatedDescription).toBe("See Auth and bold text.");
+    expect(explicit?.description).toBe("Custom summary with topic");
+    expect(explicit?.generatedDescription).toBeUndefined();
+
+    await fs.remove(root);
+  });
+
   it("uses menu_label for navigation labels without changing page title", async () => {
     const root = path.join(process.cwd(), ".tmp-precompute-menu-label");
     await fs.emptyDir(path.join(root, "content"));

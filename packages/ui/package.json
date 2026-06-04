@@ -45,7 +45,7 @@
     "@types/react": "^19.2.10",
     "@types/react-dom": "^19.2.3",
     "react": "^19.2.6",
-    "react-dom": "^19.2.6",
+    "react-dom": "^19.2.7",
     "tailwindcss": "^4.1.18"
   },
   "homepage": "https://github.com/agdevhq/silica/tree/main/packages/ui#readme",

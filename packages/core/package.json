@@ -62,7 +62,7 @@
     "react": "^19.2.0"
   },
   "devDependencies": {
-    "react": "^19.2.6",
+    "react": "^19.2.7",
     "react-dom": "^19.2.6"
   },
   "homepage": "https://github.com/agdevhq/silica/tree/main/packages/core#readme",

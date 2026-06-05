@@ -54,9 +54,9 @@ export function Sidebar({ navigation, config }: SidebarProps) {
         </SidebarGroup>
       </SidebarContent>
       {config.authEnabled ? (
-        <SidebarFooter className="border-t border-sidebar-border">
+        <SidebarFooter className="border-t border-sidebar-border p-2">
           <Suspense fallback={null}>
-            <UserMenu />
+            <UserMenu logo={config.logo} />
           </Suspense>
         </SidebarFooter>
       ) : null}

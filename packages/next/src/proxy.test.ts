@@ -8,4 +8,11 @@ describe("silica proxy helpers", () => {
     expect(isSilicaPublicPath("/api/authors")).toBe(false);
     expect(isSilicaPublicPath("/api/authenticated-search")).toBe(false);
   });
+
+  it("allows configured public branding assets", () => {
+    expect(isSilicaPublicPath("/favicon.svg", ["/favicon.svg"])).toBe(true);
+    expect(isSilicaPublicPath("/logo.png", ["/logo.png"])).toBe(true);
+    expect(isSilicaPublicPath("/logo.png")).toBe(false);
+    expect(isSilicaPublicPath("/nested/logo.svg")).toBe(false);
+  });
 });

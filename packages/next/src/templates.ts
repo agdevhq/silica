@@ -36,6 +36,7 @@ const silicaProxyConfig = ${JSON.stringify(
       authEnabled: Boolean(config.auth),
       allowedDomains: config.auth?.allowedDomains ?? [],
       allowedEmails: config.auth?.allowedEmails ?? [],
+      publicPaths: config.logo ? [config.logo] : [],
     },
     null,
     2,

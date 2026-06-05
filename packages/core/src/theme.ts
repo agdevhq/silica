@@ -25,6 +25,7 @@ export type ThemeNavigationEntry = {
 export type ThemeLayoutConfig = {
   title: string;
   description: string;
+  logo?: string;
   baseUrl?: string;
   authEnabled: boolean;
 };
@@ -33,13 +34,18 @@ export type ThemeProviderComponent = (props: {
   children: React.ReactNode;
 }) => React.ReactNode;
 
-export type ThemeLayoutProps = {
+export type ThemeRootLayoutProps = {
+  config: ThemeLayoutConfig;
+  children: React.ReactNode;
+  Provider?: ThemeProviderComponent;
+};
+
+export type ThemeSiteLayoutProps = {
   navigation: {
     entries: ThemeNavigationEntry[];
   };
   config: ThemeLayoutConfig;
   children: React.ReactNode;
-  Provider?: ThemeProviderComponent;
 };
 
 export type ThemePage = {
@@ -60,7 +66,8 @@ export type ThemePageProps = {
 };
 
 export type SilicaTheme = {
-  Layout: (props: ThemeLayoutProps) => React.ReactNode;
+  RootLayout: (props: ThemeRootLayoutProps) => React.ReactNode;
+  SiteLayout: (props: ThemeSiteLayoutProps) => React.ReactNode;
   PageRenderer: (props: ThemePageProps) => React.ReactNode;
   components?: MarkdownComponents;
 };

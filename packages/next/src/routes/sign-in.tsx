@@ -1,32 +1,39 @@
-import { cacheLife } from "next/cache";
+import { cacheLife, cacheTag } from "next/cache";
+import { SignInShell } from "@silicajs/components";
+import { GoogleSignInButton } from "../google-sign-in-button.js";
 import { resolveRuntimeAuthConfig } from "../auth-config.js";
-import { loadResolvedConfig } from "../server-data.js";
+import { loadBuildId, loadResolvedConfig } from "../server-data.js";
 
 export default async function SignInPage() {
   const config = await getSignInConfig();
   const authEnabled = resolveRuntimeAuthConfig(config).authEnabled;
+
   return (
-    <main className="silica-status-page">
-      <h1>Sign in</h1>
-      <p>Use your Google account to access {config.title}.</p>
+    <SignInShell
+      title={config.title}
+      logo={config.logo}
+      headline="Sign in required"
+      subheadline={
+        authEnabled
+          ? `${config.title} is private. Sign in with Google to access.`
+          : undefined
+      }
+    >
       {authEnabled ? (
-        <form action="/api/auth/sign-in/social" method="post">
-          <input type="hidden" name="provider" value="google" />
-          <input type="hidden" name="callbackURL" value="/" />
-          <input type="hidden" name="errorCallbackURL" value="/not-allowed" />
-          <button className="silica-primary-link" type="submit">
-            Continue with Google
-          </button>
-        </form>
+        <GoogleSignInButton errorCallbackURL="/not-allowed" />
       ) : (
-        <p>Authentication is not enabled for this site.</p>
+        <p className="text-center text-sm text-muted-foreground">
+          Authentication is not enabled for this site.
+        </p>
       )}
-    </main>
+    </SignInShell>
   );
 }
 
 async function getSignInConfig() {
   "use cache";
   cacheLife("max");
+  const buildId = await loadBuildId();
+  cacheTag("build", `build:${buildId}`);
   return loadResolvedConfig();
 }

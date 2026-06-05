@@ -12,11 +12,11 @@ export default async function RootLayout({
 }: {
   children: ReactNode;
 }) {
-  const props = await getLayoutProps();
+  const { config } = await getLayoutProps();
   return (
-    <theme.Layout {...props} Provider={SilicaNextRoutingProvider}>
+    <theme.RootLayout config={config} Provider={SilicaNextRoutingProvider}>
       <SilicaDevReload />
       {children}
-    </theme.Layout>
+    </theme.RootLayout>
   );
 }

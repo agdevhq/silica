@@ -5,6 +5,7 @@ export type SilicaProxyOptions = {
   authEnabled?: boolean;
   allowedDomains?: readonly string[];
   allowedEmails?: readonly string[];
+  publicPaths?: readonly string[];
 };
 
 const PUBLIC_PREFIXES = [
@@ -13,7 +14,13 @@ const PUBLIC_PREFIXES = [
   "/api/silica/revalidate",
   "/api/silica/dev-events",
 ];
-const PUBLIC_PATHS = ["/sign-in", "/not-allowed", "/favicon.ico"];
+const PUBLIC_PATHS = [
+  "/sign-in",
+  "/not-allowed",
+  "/favicon.ico",
+  "/robots.txt",
+  "/sitemap.xml",
+];
 
 export async function silicaProxy(
   request: NextRequest,
@@ -24,7 +31,9 @@ export async function silicaProxy(
   const authEnabled =
     options.authEnabled === true || process.env.SILICA_AUTH_ENABLED === "true";
   if (!authEnabled) return NextResponse.next();
-  if (isSilicaPublicPath(pathname)) return NextResponse.next();
+  if (isSilicaPublicPath(pathname, options.publicPaths)) {
+    return NextResponse.next();
+  }
 
   const allowedDomains = uniqueList([
     ...(options.allowedDomains ?? []),
@@ -57,9 +66,17 @@ export const config = {
   matcher: ["/((?!_next/static|_next/image|favicon.ico).*)"],
 };
 
-export function isSilicaPublicPath(pathname: string): boolean {
+export function isSilicaPublicPath(
+  pathname: string,
+  publicPaths: readonly string[] = [],
+): boolean {
+  const allowedPublicPaths = new Set([
+    ...PUBLIC_PATHS,
+    ...publicPaths.filter(isPublicPath),
+  ]);
+
   return (
-    PUBLIC_PATHS.includes(pathname) ||
+    allowedPublicPaths.has(pathname) ||
     PUBLIC_PREFIXES.some(
       (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`),
     )
@@ -77,4 +94,8 @@ function parseList(value: string | undefined): string[] {
 
 function uniqueList(values: readonly string[]): string[] {
   return [...new Set(values.map((item) => item.trim()).filter(Boolean))];
+}
+
+function isPublicPath(pathname: string): boolean {
+  return pathname.startsWith("/") && !pathname.startsWith("//");
 }

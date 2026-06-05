@@ -1,5 +1,14 @@
 # @silicajs/ui
 
+## 0.1.2
+
+### Patch Changes
+
+- 45e8717: Fix Google sign-in flow, add a branded private sign-in page with optional `logo` config, keep auth routes free of the vault sidebar, rebuild the sidebar user menu with avatar and session details, and show a pointer cursor on menu and command items.
+- 040ca54: Inline shadcn Tailwind utilities into the UI stylesheet and keep shadcn as development tooling only.
+- ccc9c98: Bump lucide-react to 1.17.0.
+- 7d65239: Bump shadcn to 4.10.0.
+
 ## 0.1.1
 
 ### Patch Changes

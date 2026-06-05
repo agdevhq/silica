@@ -1,5 +1,16 @@
 # @silicajs/cli
 
+## 0.1.3
+
+### Patch Changes
+
+- a014a0c: Fix fresh scaffold dependency layout and Tailwind source detection for installed themes.
+- Updated dependencies [45e8717]
+- Updated dependencies [fa2ed69]
+- Updated dependencies [a014a0c]
+  - @silicajs/core@0.1.1
+  - @silicajs/next@0.1.2
+
 ## 0.1.2
 
 ### Patch Changes

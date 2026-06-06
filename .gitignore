@@ -9,6 +9,7 @@ playwright-report/
 .silica/
 .next/
 out/
+docs/content-large/
 
 # Environment files
 .env

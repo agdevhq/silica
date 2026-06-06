@@ -14,6 +14,7 @@ describe("generated templates", () => {
       "app/(site)/layout.tsx",
       "app/(site)/tags/[...tag]/page.tsx",
       "app/api/auth/[...all]/route.ts",
+      "app/api/navigation/route.ts",
       "app/api/search/route.ts",
       "app/api/silica/dev-events/route.ts",
       "app/api/silica/revalidate/route.ts",
@@ -32,6 +33,7 @@ describe("generated templates", () => {
 
   it("traces only precomputed runtime content", () => {
     expect(nextConfigTemplate()).toContain('"../content/**/*"');
+    expect(nextConfigTemplate()).toContain('"../navigation.json"');
     expect(nextConfigTemplate()).not.toContain('"../../content/**/*"');
   });
 

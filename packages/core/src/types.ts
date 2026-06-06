@@ -110,6 +110,17 @@ export type Graph = {
   brokenLinks: BrokenLink[];
 };
 
+export type NavigationEntry = {
+  slug: string;
+  title: string;
+  sortKey?: string;
+};
+
+export type Navigation = {
+  version: 1;
+  entries: NavigationEntry[];
+};
+
 export type BrokenLink = {
   source: string;
   target: string;

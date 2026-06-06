@@ -7,6 +7,7 @@ import {
   renderMarkdown,
   renderMarkdownHtml,
   resolveWikiLink,
+  slugToHref,
   type RenderContext,
 } from "@silicajs/core/runtime";
 import { SilicaLink } from "@silicajs/components/routing";
@@ -17,7 +18,11 @@ import {
   loadResolvedConfig,
   normalizeRouteSlug,
 } from "../server-data.js";
-import type { SilicaTheme } from "@silicajs/core/theme";
+import type {
+  SilicaTheme,
+  ThemeBacklink,
+  ThemeBreadcrumb,
+} from "@silicajs/core/theme";
 
 function MarkdownLink({
   href,
@@ -123,8 +128,8 @@ export async function VaultContent({
   return (
     <theme.PageRenderer
       config={config}
-      graph={graph}
-      manifest={manifest}
+      breadcrumbs={makeBreadcrumbs(slug, manifest)}
+      backlinks={makeBacklinks(slug, manifest, graph)}
       page={{
         slug,
         title: rendered.title ?? entry.title,
@@ -132,10 +137,57 @@ export async function VaultContent({
         content: rendered.content,
         frontmatter: rendered.frontmatter,
         toc: rendered.toc,
+        tags: entry.tags,
         entry,
       }}
     />
   );
+}
+
+function makeBreadcrumbs(
+  slug: string,
+  manifest: Awaited<ReturnType<typeof loadManifest>>,
+): ThemeBreadcrumb[] {
+  if (slug === "index" || !slug.includes("/")) return [];
+
+  const breadcrumbs: ThemeBreadcrumb[] = [{ label: "Home", href: "/" }];
+  const segments = slug.split("/").slice(0, -1);
+  let acc = "";
+  for (const segment of segments) {
+    acc = acc ? `${acc}/${segment}` : segment;
+    breadcrumbs.push({
+      label: prettySegment(segment),
+      href: breadcrumbSegmentHref(acc, manifest),
+    });
+  }
+  return breadcrumbs;
+}
+
+function breadcrumbSegmentHref(
+  segmentPath: string,
+  manifest: Awaited<ReturnType<typeof loadManifest>>,
+): string | undefined {
+  if (manifest.bySlug[segmentPath]) return slugToHref(segmentPath);
+  const indexSlug = `${segmentPath}/index`;
+  if (manifest.bySlug[indexSlug]) return slugToHref(indexSlug);
+  return undefined;
+}
+
+function makeBacklinks(
+  slug: string,
+  manifest: Awaited<ReturnType<typeof loadManifest>>,
+  graph: Awaited<ReturnType<typeof loadGraph>>,
+): ThemeBacklink[] {
+  return (graph.backlinks[slug] ?? []).map((source) => ({
+    slug: source,
+    title: manifest.bySlug[source]?.title ?? source,
+  }));
+}
+
+function prettySegment(segment: string): string {
+  return segment
+    .replace(/[-_]/g, " ")
+    .replace(/\b\w/g, (letter) => letter.toUpperCase());
 }
 
 function scopeEmbedMarkdown(

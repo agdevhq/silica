@@ -3,6 +3,7 @@ import fs from "fs-extra";
 import type {
   Graph,
   Manifest,
+  Navigation,
   ResolvedSilicaConfig,
 } from "@silicajs/core/runtime";
 
@@ -44,6 +45,12 @@ export async function loadGraph(): Promise<Graph> {
   return fs.readJson(
     path.join(getSilicaRoot(), "graph.json"),
   ) as Promise<Graph>;
+}
+
+export async function loadNavigation(): Promise<Navigation> {
+  return fs.readJson(
+    path.join(getSilicaRoot(), "navigation.json"),
+  ) as Promise<Navigation>;
 }
 
 export async function loadBuildId(): Promise<string> {

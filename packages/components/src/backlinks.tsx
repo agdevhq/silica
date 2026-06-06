@@ -1,5 +1,3 @@
-import type { Graph, Manifest } from "@silicajs/core/runtime";
-
 import {
   Card,
   CardContent,
@@ -10,20 +8,17 @@ import {
 import { SilicaLink } from "./routing.js";
 import { slugToHref } from "./slug.js";
 
-export type BacklinksProps = {
-  graph: Graph;
+export type BacklinkItem = {
   slug: string;
-  manifest: Manifest;
+  title: string;
+};
+
+export type BacklinksProps = {
+  backlinks: BacklinkItem[];
   className?: string;
 };
 
-export function Backlinks({
-  graph,
-  slug,
-  manifest,
-  className,
-}: BacklinksProps) {
-  const backlinks = graph.backlinks[slug] ?? [];
+export function Backlinks({ backlinks, className }: BacklinksProps) {
   if (backlinks.length === 0) return null;
   return (
     <Card size="sm" className={className} data-slot="backlinks">
@@ -32,19 +27,16 @@ export function Backlinks({
       </CardHeader>
       <CardContent>
         <ul className="flex flex-col gap-1.5 text-sm">
-          {backlinks.map((source) => {
-            const entry = manifest.bySlug[source];
-            return (
-              <li key={source}>
-                <SilicaLink
-                  href={slugToHref(source)}
-                  className="text-primary hover:underline"
-                >
-                  {entry?.title ?? source}
-                </SilicaLink>
-              </li>
-            );
-          })}
+          {backlinks.map((backlink) => (
+            <li key={backlink.slug}>
+              <SilicaLink
+                href={slugToHref(backlink.slug)}
+                className="text-primary hover:underline"
+              >
+                {backlink.title}
+              </SilicaLink>
+            </li>
+          ))}
         </ul>
       </CardContent>
     </Card>

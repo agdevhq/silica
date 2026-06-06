@@ -1,10 +1,6 @@
 import { cacheLife, cacheTag } from "next/cache";
 import { resolveRuntimeAuthConfig } from "../auth-config.js";
-import {
-  loadBuildId,
-  loadManifest,
-  loadResolvedConfig,
-} from "../server-data.js";
+import { loadBuildId, loadResolvedConfig } from "../server-data.js";
 
 export async function generateMetadata() {
   const { config } = await getLayoutProps();
@@ -22,21 +18,10 @@ export async function getLayoutProps() {
   cacheLife("max");
   const buildId = await loadBuildId();
   cacheTag("build", `build:${buildId}`);
-  const [manifest, config] = await Promise.all([
-    loadManifest(),
-    loadResolvedConfig(),
-  ]);
+  const config = await loadResolvedConfig();
   const auth = resolveRuntimeAuthConfig(config);
   return {
-    navigation: {
-      entries: manifest.entries
-        .filter((entry) => entry.frontmatter.listed !== false)
-        .map((entry) => ({
-          slug: entry.slug,
-          title: entry.menuLabel ?? entry.title,
-          sortKey: entry.sortKey,
-        })),
-    },
+    navigationEndpoint: `/api/navigation?build=${encodeURIComponent(buildId)}`,
     config: {
       title: config.title,
       description: config.description,

@@ -13,6 +13,7 @@ export {
   loadBuildId,
   loadGraph,
   loadManifest,
+  loadNavigation,
   loadResolvedConfig,
 } from "./server-data.js";
 export { SilicaNextRoutingProvider } from "./routing-provider.js";

@@ -1,10 +1,7 @@
 "use client";
 
 import { Suspense } from "react";
-import type {
-  ThemeLayoutConfig,
-  ThemeNavigationEntry,
-} from "@silicajs/core/theme";
+import type { ThemeLayoutConfig } from "@silicajs/core/theme";
 import {
   DarkModeToggle,
   SearchTrigger,
@@ -23,13 +20,11 @@ import {
 } from "@silicajs/ui/components/sidebar";
 
 export type SidebarProps = {
-  navigation: {
-    entries: ThemeNavigationEntry[];
-  };
+  navigationEndpoint: string;
   config: ThemeLayoutConfig;
 };
 
-export function Sidebar({ navigation, config }: SidebarProps) {
+export function Sidebar({ navigationEndpoint, config }: SidebarProps) {
   return (
     <ShadcnSidebar>
       <SidebarHeader className="gap-3 border-b border-sidebar-border">
@@ -49,7 +44,7 @@ export function Sidebar({ navigation, config }: SidebarProps) {
       <SidebarContent>
         <SidebarGroup>
           <SidebarGroupContent>
-            <VaultTree entries={navigation.entries} />
+            <VaultTree navigationEndpoint={navigationEndpoint} />
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>

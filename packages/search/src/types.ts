@@ -7,33 +7,25 @@ export type SearchRecord = {
   tags: string[];
 };
 
-export type StoredSearchRecord = Omit<SearchRecord, "content"> & {
-  excerpt: string;
-};
-
-export type SerializedSearchIndex = {
+export type SearchDatabaseMetadata = {
   version: 1;
-  config: SearchIndexConfig;
-  records: StoredSearchRecord[];
-  exported: Record<string, string>;
+  databasePath: string;
+  recordCount: number;
   builtAt: string;
 };
 
-export type SearchIndexConfig = {
-  tokenize: "forward" | "full" | "reverse" | "strict";
-  document: {
-    id: "id";
-    index: ["title", "content", "tags"];
-    store: ["slug", "title", "description", "tags"];
-  };
+export type SearchHighlightPart = {
+  text: string;
+  highlighted: boolean;
 };
 
 export type SearchResult = {
   slug: string;
   title: string;
+  titleParts: SearchHighlightPart[];
   description?: string;
   tags: string[];
-  excerpt: string;
+  excerptParts: SearchHighlightPart[];
   score: number;
 };
 

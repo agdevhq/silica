@@ -3,7 +3,11 @@ import { execFile } from "node:child_process";
 import path from "node:path";
 import { promisify } from "node:util";
 import fs from "fs-extra";
-import { buildSearchIndex, type SearchRecord } from "@silicajs/search";
+import {
+  buildSearchDatabase,
+  SEARCH_DATABASE_FILENAME,
+  type SearchRecord,
+} from "@silicajs/search";
 import { loadConfig } from "./config.js";
 import { scanContent, type ContentMarkdownFile } from "./files.js";
 import {
@@ -119,7 +123,11 @@ export async function precompute(
   const manifest = makeManifest(config, entries);
   const graph = makeGraph(graphLinks, brokenLinks);
   const buildId = crypto.randomUUID();
-  const searchIndex = await buildSearchIndex(searchRecords);
+  await buildSearchDatabase(
+    searchRecords,
+    path.join(projectRoot, ".silica", SEARCH_DATABASE_FILENAME),
+  );
+  await fs.remove(path.join(projectRoot, ".silica/search-index.json"));
 
   await writeJson(
     path.join(projectRoot, ".silica/manifest.json"),
@@ -127,10 +135,6 @@ export async function precompute(
   );
   await writeJson(path.join(projectRoot, ".silica/graph.json"), graph);
   await writeJson(path.join(projectRoot, ".silica/config.json"), config);
-  await writeJson(
-    path.join(projectRoot, ".silica/search-index.json"),
-    searchIndex,
-  );
   await fs.writeFile(
     path.join(projectRoot, ".silica/build-id.txt"),
     `${buildId}\n`,

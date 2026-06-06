@@ -44,7 +44,7 @@ npm run dev
 | `@silicajs/next`            | Next.js runtime adapter — generated routes, server loaders, proxy, and templates.                                                |
 | `@silicajs/cli`             | `silica create/dev/build/start` and `.silica/next` materialization.                                                              |
 | `@silicajs/auth`            | Better Auth wrapper and allowlist helpers.                                                                                       |
-| `@silicajs/search`          | FlexSearch index build/load/query helpers.                                                                                       |
+| `@silicajs/search`          | SQLite full-text search database build/load/query helpers.                                                                       |
 | `@silicajs/theme-amethyst`  | Default amethyst/violet theme — pure composition over `@silicajs/ui` + `@silicajs/components`.                                   |
 | `@silicajs/create`          | Internal scaffolder wrapper around `silica create`.                                                                              |
 | `create-silica`             | User-facing `npx create-silica` package.                                                                                         |
@@ -52,7 +52,7 @@ npm run dev
 ## Architecture
 
 1. `@silicajs/cli` materializes `.silica/next/` from templates in `@silicajs/next`.
-2. `@silicajs/core` scans `content/`, filters drafts, builds `manifest.json`, `graph.json`, `search-index.json`, and copies assets to `.silica/next/public/silica/`.
+2. `@silicajs/core` scans `content/`, filters drafts, builds `manifest.json`, `graph.json`, `search.db`, and copies assets to `.silica/next/public/silica/`.
 3. Next.js (via `@silicajs/next`) renders vault pages from `.silica/next/app/[[...slug]]/page.tsx`. The cached `VaultContent` server component reads markdown from disk and returns a React tree.
 4. The theme owns persistent layout chrome while `@silicajs/components` provides the vault tree, breadcrumbs, ToC, backlinks, dark mode, and search UI on top of `@silicajs/ui` primitives.
 5. Auth settings are baked into generated `proxy.ts`, which enforces access before cached pages, search, or vault assets are served.

@@ -1,7 +1,7 @@
 import { performance } from "node:perf_hooks";
-import { hydrateSearchIndex } from "./load.js";
+import { loadSearchIndex } from "./load.js";
 import { querySearchIndex } from "./query.js";
-import type { SearchQueryOptions, SerializedSearchIndex } from "./types.js";
+import type { SearchQueryOptions } from "./types.js";
 
 export type SearchBenchmarkOptions = SearchQueryOptions & {
   query: string;
@@ -16,11 +16,11 @@ export type SearchBenchmarkResult = {
 };
 
 export async function benchmarkSearchIndex(
-  artifact: SerializedSearchIndex,
+  databasePath: string,
   { query, warmRuns = 10, ...queryOptions }: SearchBenchmarkOptions,
 ): Promise<SearchBenchmarkResult> {
   const coldStart = performance.now();
-  const loaded = await hydrateSearchIndex(artifact);
+  const loaded = await loadSearchIndex(databasePath);
   const coldResults = querySearchIndex(loaded, query, queryOptions);
   const coldMs = performance.now() - coldStart;
 
@@ -31,12 +31,16 @@ export async function benchmarkSearchIndex(
   }
   const warmMs = (performance.now() - warmStart) / runs;
 
-  return {
-    coldMs: round(coldMs),
-    warmMs: round(warmMs),
-    warmRuns: runs,
-    resultCount: coldResults.length,
-  };
+  try {
+    return {
+      coldMs: round(coldMs),
+      warmMs: round(warmMs),
+      warmRuns: runs,
+      resultCount: coldResults.length,
+    };
+  } finally {
+    loaded.close();
+  }
 }
 
 function round(value: number): number {

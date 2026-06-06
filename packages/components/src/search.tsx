@@ -22,10 +22,16 @@ import { SearchIcon } from "lucide-react";
 import { useSilicaRouting } from "./routing.js";
 import { slugToHref } from "./slug.js";
 
+type SearchHighlightPart = {
+  text: string;
+  highlighted: boolean;
+};
+
 type SearchResult = {
   slug: string;
   title: string;
-  excerpt: string;
+  titleParts: SearchHighlightPart[];
+  excerptParts: SearchHighlightPart[];
 };
 
 export type SearchTriggerProps = {
@@ -168,11 +174,11 @@ export function SearchPalette({ open, onOpenChange }: SearchPaletteProps) {
               >
                 <div className="flex min-w-0 flex-col gap-0.5">
                   <span className="truncate font-medium text-foreground">
-                    {result.title}
+                    <HighlightedText parts={result.titleParts} />
                   </span>
-                  {result.excerpt ? (
+                  {result.excerptParts.length > 0 ? (
                     <span className="truncate text-xs text-muted-foreground">
-                      {result.excerpt}
+                      <HighlightedText parts={result.excerptParts} />
                     </span>
                   ) : null}
                 </div>
@@ -182,5 +188,24 @@ export function SearchPalette({ open, onOpenChange }: SearchPaletteProps) {
         </Command>
       </DialogContent>
     </Dialog>
+  );
+}
+
+function HighlightedText({ parts }: { parts: SearchHighlightPart[] }) {
+  return (
+    <>
+      {parts.map((part, index) =>
+        part.highlighted ? (
+          <mark
+            key={index}
+            className="bg-transparent p-0 font-medium text-primary"
+          >
+            {part.text}
+          </mark>
+        ) : (
+          <React.Fragment key={index}>{part.text}</React.Fragment>
+        ),
+      )}
+    </>
   );
 }

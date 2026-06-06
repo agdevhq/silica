@@ -12,14 +12,14 @@ const nextConfig: NextConfig = {
     "@silicajs/ui",
     "@silicajs/theme-amethyst",
   ],
-  serverExternalPackages: ["flexsearch"],
+  serverExternalPackages: ["better-sqlite3"],
   outputFileTracingIncludes: {
     "/*": [
       "../content/**/*",
       "../manifest.json",
       "../graph.json",
       "../config.json",
-      "../search-index.json",
+      "../search.db",
       "../build-id.txt",
     ],
   },

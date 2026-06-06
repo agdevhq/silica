@@ -31,7 +31,6 @@ export type {
   ThemeBacklink,
   ThemeBreadcrumb,
   ThemeLayoutConfig,
-  ThemeNavigationEntry,
   ThemePage,
   ThemePageProps,
   ThemeProviderComponent,

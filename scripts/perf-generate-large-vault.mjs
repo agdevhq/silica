@@ -124,7 +124,7 @@ function numberOption(name, fallback) {
 function isSafeOutputDirectory(directory) {
   const relative = path.relative(process.cwd(), directory);
   return (
-    relative &&
+    relative.length > 0 &&
     !relative.startsWith("..") &&
     !path.isAbsolute(relative) &&
     path.basename(directory) !== "content"

@@ -2,7 +2,6 @@ import type React from "react";
 import type {
   ManifestEntry,
   MarkdownComponents,
-  NavigationEntry,
   ResolvedSilicaConfig,
   TocItem,
 } from "./types.js";
@@ -14,8 +13,6 @@ export type {
   SilicaEmbedProps,
   SilicaMermaidProps,
 } from "./types.js";
-
-export type ThemeNavigationEntry = NavigationEntry;
 
 export type ThemeBreadcrumb = {
   label: string;

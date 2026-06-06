@@ -36,6 +36,11 @@ type NavigationResponse = {
 
 const navigationCache = new Map<string, Promise<VaultTreeEntry[]>>();
 
+type NavigationState =
+  | { status: "loading"; entries: VaultTreeEntry[] }
+  | { status: "loaded"; entries: VaultTreeEntry[] }
+  | { status: "error"; entries: VaultTreeEntry[] };
+
 type FolderNode = {
   key: string;
   name: string;
@@ -145,23 +150,24 @@ function activeIdFromSlug(slug: string | undefined): string | undefined {
 }
 
 export type VaultTreeProps = {
-  entries?: VaultTreeEntry[];
-  navigationEndpoint?: string;
+  navigationEndpoint: string;
   currentSlug?: string;
   showHomeLink?: boolean;
 };
 
 export function VaultTree({
-  entries: entriesProp,
   navigationEndpoint,
   currentSlug: currentSlugProp,
   showHomeLink = true,
 }: VaultTreeProps) {
   const { Link, currentSlug: routedCurrentSlug } = useSilicaRouting();
-  const [loadedEntries, setLoadedEntries] = React.useState<VaultTreeEntry[]>(
-    entriesProp ?? [],
+  const [navigationState, setNavigationState] = React.useState<NavigationState>(
+    {
+      status: "loading",
+      entries: [],
+    },
   );
-  const entries = entriesProp ?? loadedEntries;
+  const entries = navigationState.entries;
   const currentSlug = currentSlugProp ?? routedCurrentSlug;
   const { nodes, homeEntry } = React.useMemo(
     () => buildTreeFromEntries(entries),
@@ -174,19 +180,21 @@ export function VaultTree({
   const [expanded, setExpanded] = React.useState<Set<string>>(new Set());
 
   React.useEffect(() => {
-    if (entriesProp || !navigationEndpoint) return;
     let active = true;
+    setNavigationState({ status: "loading", entries: [] });
     loadNavigationEntries(navigationEndpoint)
       .then((nextEntries) => {
-        if (active) setLoadedEntries(nextEntries);
+        if (active) {
+          setNavigationState({ status: "loaded", entries: nextEntries });
+        }
       })
       .catch(() => {
-        if (active) setLoadedEntries([]);
+        if (active) setNavigationState({ status: "error", entries: [] });
       });
     return () => {
       active = false;
     };
-  }, [entriesProp, navigationEndpoint]);
+  }, [navigationEndpoint]);
 
   // Hydrate expansion state from localStorage and re-sync ancestor expansion
   // whenever the active slug changes (e.g. on client-side navigation).
@@ -230,11 +238,20 @@ export function VaultTree({
           </SidebarMenuButton>
         </SidebarMenuItem>
       ) : null}
-      {entries.length === 0 && navigationEndpoint ? (
+      {navigationState.status === "loading" ? (
         <SidebarMenuItem>
           <SidebarMenuButton disabled>
             <span className="truncate text-muted-foreground">
               Loading navigation...
+            </span>
+          </SidebarMenuButton>
+        </SidebarMenuItem>
+      ) : null}
+      {navigationState.status === "error" ? (
+        <SidebarMenuItem>
+          <SidebarMenuButton disabled>
+            <span className="truncate text-muted-foreground">
+              Navigation unavailable
             </span>
           </SidebarMenuButton>
         </SidebarMenuItem>
@@ -253,7 +270,9 @@ export function VaultTree({
   );
 }
 
-function loadNavigationEntries(endpoint: string): Promise<VaultTreeEntry[]> {
+export function loadNavigationEntries(
+  endpoint: string,
+): Promise<VaultTreeEntry[]> {
   const cached = navigationCache.get(endpoint);
   if (cached) return cached;
 
@@ -262,7 +281,11 @@ function loadNavigationEntries(endpoint: string): Promise<VaultTreeEntry[]> {
       if (!response.ok) throw new Error("Failed to load navigation.");
       return response.json() as Promise<NavigationResponse>;
     })
-    .then((navigation) => navigation.entries);
+    .then((navigation) => navigation.entries)
+    .catch((error: unknown) => {
+      navigationCache.delete(endpoint);
+      throw error;
+    });
   navigationCache.set(endpoint, promise);
   return promise;
 }

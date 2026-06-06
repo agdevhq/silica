@@ -1,6 +1,6 @@
 {
   "name": "@silicajs/search",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Server-side SQLite full-text search builder and query helpers for Silica.",
   "type": "module",
   "license": "MIT",

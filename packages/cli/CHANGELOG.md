@@ -1,5 +1,13 @@
 # @silicajs/cli
 
+## 0.1.4
+
+### Patch Changes
+
+- Updated dependencies [5525573]
+  - @silicajs/core@0.2.0
+  - @silicajs/next@0.2.0
+
 ## 0.1.3
 
 ### Patch Changes

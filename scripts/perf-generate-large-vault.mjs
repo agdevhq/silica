@@ -12,11 +12,7 @@ if (noteCount < 1000) {
   throw new Error("Use at least 1000 notes to keep this fixture meaningful.");
 }
 
-if (
-  outDir === process.cwd() ||
-  path.basename(outDir) === "content" ||
-  path.parse(outDir).root === outDir
-) {
+if (!isSafeOutputDirectory(outDir)) {
   throw new Error(`Refusing to replace unsafe output directory: ${outDir}`);
 }
 
@@ -123,6 +119,16 @@ function numberOption(name, fallback) {
     throw new Error(`--${name} must be a positive integer.`);
   }
   return value;
+}
+
+function isSafeOutputDirectory(directory) {
+  const relative = path.relative(process.cwd(), directory);
+  return (
+    relative &&
+    !relative.startsWith("..") &&
+    !path.isAbsolute(relative) &&
+    path.basename(directory) !== "content"
+  );
 }
 
 function makeNotePath(index) {

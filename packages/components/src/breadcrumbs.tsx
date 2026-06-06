@@ -28,12 +28,11 @@ export function Breadcrumbs({ items, className }: BreadcrumbsProps) {
     <Breadcrumb className={className}>
       <BreadcrumbList>
         {items.map((item, index) => {
-          const isLast = index === items.length - 1;
           return (
             <React.Fragment key={`${item.href ?? item.label}:${index}`}>
               {index > 0 ? <BreadcrumbSeparator /> : null}
               <BreadcrumbItem>
-                {item.href && !isLast ? (
+                {item.href ? (
                   <BreadcrumbLink
                     render={
                       <SilicaLink href={item.href}>{item.label}</SilicaLink>

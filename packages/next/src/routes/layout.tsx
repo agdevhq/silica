@@ -21,7 +21,7 @@ export async function getLayoutProps() {
   const config = await loadResolvedConfig();
   const auth = resolveRuntimeAuthConfig(config);
   return {
-    navigationEndpoint: "/api/navigation",
+    navigationEndpoint: `/api/navigation?build=${encodeURIComponent(buildId)}`,
     config: {
       title: config.title,
       description: config.description,

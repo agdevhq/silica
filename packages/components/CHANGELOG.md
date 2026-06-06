@@ -1,5 +1,13 @@
 # @silicajs/components
 
+## 0.1.3
+
+### Patch Changes
+
+- 5dbfe9f: Replace the FlexSearch JSON artifact with a server-side SQLite FTS database and return structured search result highlights.
+- Updated dependencies [5dbfe9f]
+  - @silicajs/core@0.1.2
+
 ## 0.1.2
 
 ### Patch Changes

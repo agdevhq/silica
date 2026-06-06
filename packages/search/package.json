@@ -1,7 +1,7 @@
 {
   "name": "@silicajs/search",
   "version": "0.1.0",
-  "description": "Server-side FlexSearch index builder and query helpers for Silica.",
+  "description": "Server-side SQLite full-text search builder and query helpers for Silica.",
   "type": "module",
   "license": "MIT",
   "publishConfig": {
@@ -23,7 +23,7 @@
     "lint": "tsc --noEmit"
   },
   "dependencies": {
-    "flexsearch": "^0.8.212"
+    "better-sqlite3": "^12.10.0"
   },
   "homepage": "https://github.com/agdevhq/silica/tree/main/packages/search#readme",
   "repository": {
@@ -33,5 +33,8 @@
   },
   "bugs": {
     "url": "https://github.com/agdevhq/silica/issues"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^7.6.13"
   }
 }

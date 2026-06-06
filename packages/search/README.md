@@ -1,7 +1,7 @@
 # @silicajs/search
 
-Server-side FlexSearch helpers for Silica.
+Server-side SQLite full-text search helpers for Silica.
 
-The build step creates a serialized `Document` index and records bundle. The generated Next.js `/api/search` route lazy-loads that artifact into a process-level singleton and returns ranked results with excerpts.
+The build step creates a `search.db` SQLite database with an FTS5 index over vault content. The generated Next.js `/api/search` route lazy-loads that database into a process-level singleton and returns ranked results with excerpts.
 
 Includes a benchmark helper for cold/warm search latency checks.

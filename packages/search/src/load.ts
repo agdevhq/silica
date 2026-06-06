@@ -1,43 +1,36 @@
-import { readFile } from "node:fs/promises";
-import { createSearchDocument } from "./build.js";
-import type { SerializedSearchIndex, StoredSearchRecord } from "./types.js";
+import Database from "better-sqlite3";
 
 export type LoadedSearchIndex = {
-  document: ReturnType<typeof createSearchDocument>;
-  artifact: SerializedSearchIndex;
-  recordsById: Map<string, StoredSearchRecord>;
+  databasePath: string;
+  db: Database.Database;
+  close: () => void;
 };
 
 const globalCache = globalThis as typeof globalThis & {
   __silicaSearchIndexes?: Map<string, LoadedSearchIndex>;
 };
 
-export async function hydrateSearchIndex(
-  artifact: SerializedSearchIndex,
-): Promise<LoadedSearchIndex> {
-  const document = createSearchDocument(artifact.config);
-
-  for (const [key, data] of Object.entries(artifact.exported)) {
-    document.import(key, data);
-  }
-
-  return {
-    document,
-    artifact,
-    recordsById: new Map(artifact.records.map((record) => [record.id, record])),
-  };
-}
-
 export async function loadSearchIndex(
-  artifactPath: string,
+  databasePath: string,
 ): Promise<LoadedSearchIndex> {
   const cache = (globalCache.__silicaSearchIndexes ??= new Map());
-  const cached = cache.get(artifactPath);
+  const cached = cache.get(databasePath);
   if (cached) return cached;
 
-  const raw = await readFile(artifactPath, "utf8");
-  const artifact = JSON.parse(raw) as SerializedSearchIndex;
-  const loaded = await hydrateSearchIndex(artifact);
-  cache.set(artifactPath, loaded);
+  const db = new Database(databasePath, {
+    fileMustExist: true,
+    readonly: true,
+  });
+  db.pragma("query_only = ON");
+
+  const loaded: LoadedSearchIndex = {
+    databasePath,
+    db,
+    close: () => {
+      db.close();
+      cache.delete(databasePath);
+    },
+  };
+  cache.set(databasePath, loaded);
   return loaded;
 }

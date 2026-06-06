@@ -144,9 +144,9 @@ describe("precompute", () => {
       "index",
       "notes/auth",
     ]);
-    expect(
-      await fs.pathExists(path.join(root, ".silica/search-index.json")),
-    ).toBe(true);
+    expect(await fs.pathExists(path.join(root, ".silica/search.db"))).toBe(
+      true,
+    );
     expect(
       await fs.pathExists(
         path.join(root, ".silica/next/public/silica/image.png"),

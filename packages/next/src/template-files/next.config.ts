@@ -17,6 +17,7 @@ const nextConfig: NextConfig = {
     "/*": [
       "../content/**/*",
       "../manifest.json",
+      "../navigation.json",
       "../graph.json",
       "../config.json",
       "../search.db",

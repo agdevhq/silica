@@ -1,5 +1,13 @@
-export { Backlinks, type BacklinksProps } from "./backlinks.js";
-export { Breadcrumbs, type BreadcrumbsProps } from "./breadcrumbs.js";
+export {
+  Backlinks,
+  type BacklinkItem,
+  type BacklinksProps,
+} from "./backlinks.js";
+export {
+  Breadcrumbs,
+  type BreadcrumbLinkItem,
+  type BreadcrumbsProps,
+} from "./breadcrumbs.js";
 export {
   DarkModeToggle,
   type DarkModeToggleProps,

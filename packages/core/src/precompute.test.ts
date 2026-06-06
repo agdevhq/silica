@@ -117,7 +117,7 @@ describe("precompute", () => {
     await fs.ensureDir(path.join(root, "content/notes"));
     await fs.writeFile(
       path.join(root, "content/notes/auth.md"),
-      "# Auth\nOAuth notes.",
+      "---\ntitle: Auth\n---\n# Auth\nOAuth notes.",
     );
     await fs.writeFile(
       path.join(root, "content/notes/embed-helper.md"),
@@ -147,6 +147,15 @@ describe("precompute", () => {
     expect(await fs.pathExists(path.join(root, ".silica/search.db"))).toBe(
       true,
     );
+    await expect(
+      fs.readJson(path.join(root, ".silica/navigation.json")),
+    ).resolves.toEqual({
+      version: 1,
+      entries: [
+        { slug: "index", title: "Home" },
+        { slug: "notes/auth", title: "Auth" },
+      ],
+    });
     expect(
       await fs.pathExists(
         path.join(root, ".silica/next/public/silica/image.png"),

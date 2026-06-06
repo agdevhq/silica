@@ -44,6 +44,10 @@
       "types": "./dist/routes/api-search.d.ts",
       "import": "./dist/routes/api-search.js"
     },
+    "./routes/api-navigation": {
+      "types": "./dist/routes/api-navigation.d.ts",
+      "import": "./dist/routes/api-navigation.js"
+    },
     "./routes/api-revalidate": {
       "types": "./dist/routes/api-revalidate.d.ts",
       "import": "./dist/routes/api-revalidate.js"

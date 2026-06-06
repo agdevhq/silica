@@ -65,13 +65,13 @@ export function RootLayout({
 }
 
 export function SiteLayout({
-  navigation,
+  navigationEndpoint,
   config,
   children,
 }: ThemeSiteLayoutProps) {
   return (
     <SidebarProvider>
-      <Sidebar navigation={navigation} config={config} />
+      <Sidebar navigationEndpoint={navigationEndpoint} config={config} />
       <SidebarInset>
         <header className="sticky top-0 z-10 flex h-12 shrink-0 items-center gap-2 border-b border-border bg-background px-3 md:hidden">
           <SidebarTrigger />
@@ -88,18 +88,14 @@ export function SiteLayout({
   );
 }
 
-export function PageRenderer({ page, graph, manifest }: ThemePageProps) {
-  const hasBreadcrumb = page.slug !== "index" && page.slug.includes("/");
+export function PageRenderer({ page, breadcrumbs, backlinks }: ThemePageProps) {
+  const hasBreadcrumbs = breadcrumbs.length > 0;
   return (
     <div className="mx-auto w-full max-w-6xl px-8 py-12 lg:grid lg:grid-cols-[minmax(0,1fr)_14rem] lg:gap-12">
       <article className="min-w-0">
         <header className="mb-10 flex flex-col gap-3">
-          {hasBreadcrumb ? (
-            <Breadcrumbs
-              slug={page.slug}
-              allSlugs={manifest.allSlugs}
-              className="text-xs"
-            />
+          {hasBreadcrumbs ? (
+            <Breadcrumbs items={breadcrumbs} className="text-xs" />
           ) : null}
           <h1 className="text-4xl font-bold tracking-tight text-foreground">
             {page.title}
@@ -110,9 +106,9 @@ export function PageRenderer({ page, graph, manifest }: ThemePageProps) {
             </p>
           ) : null}
           <PageProperties frontmatter={page.frontmatter} />
-          {page.entry.tags.length > 0 ? (
+          {page.tags.length > 0 ? (
             <div className="flex flex-wrap gap-2 pt-1">
-              {page.entry.tags.map((tag) => (
+              {page.tags.map((tag) => (
                 <SilicaLink
                   key={tag}
                   href={tagToHref(tag)}
@@ -127,7 +123,7 @@ export function PageRenderer({ page, graph, manifest }: ThemePageProps) {
         </header>
         <div className="prose max-w-none">{page.content}</div>
         <div className="mt-16">
-          <Backlinks graph={graph} slug={page.slug} manifest={manifest} />
+          <Backlinks backlinks={backlinks} />
         </div>
       </article>
       <aside className="mt-12 hidden lg:sticky lg:top-12 lg:mt-0 lg:block lg:self-start">

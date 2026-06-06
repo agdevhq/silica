@@ -21,12 +21,20 @@ import { useSilicaRouting, type SilicaLinkComponent } from "./routing.js";
 import { prettySegment, slugToHref } from "./slug.js";
 
 const STORAGE_KEY = "silica-tree-expanded";
+const SUBMENU_CLASS_NAME = "ml-2.5 mr-0 pl-2 pr-0";
 
 export type VaultTreeEntry = {
   slug: string;
   title: string;
   sortKey?: string;
 };
+
+type NavigationResponse = {
+  version: 1;
+  entries: VaultTreeEntry[];
+};
+
+const navigationCache = new Map<string, Promise<VaultTreeEntry[]>>();
 
 type FolderNode = {
   key: string;
@@ -137,17 +145,23 @@ function activeIdFromSlug(slug: string | undefined): string | undefined {
 }
 
 export type VaultTreeProps = {
-  entries: VaultTreeEntry[];
+  entries?: VaultTreeEntry[];
+  navigationEndpoint?: string;
   currentSlug?: string;
   showHomeLink?: boolean;
 };
 
 export function VaultTree({
-  entries,
+  entries: entriesProp,
+  navigationEndpoint,
   currentSlug: currentSlugProp,
   showHomeLink = true,
 }: VaultTreeProps) {
   const { Link, currentSlug: routedCurrentSlug } = useSilicaRouting();
+  const [loadedEntries, setLoadedEntries] = React.useState<VaultTreeEntry[]>(
+    entriesProp ?? [],
+  );
+  const entries = entriesProp ?? loadedEntries;
   const currentSlug = currentSlugProp ?? routedCurrentSlug;
   const { nodes, homeEntry } = React.useMemo(
     () => buildTreeFromEntries(entries),
@@ -158,6 +172,21 @@ export function VaultTree({
   const homeIsActive = currentSlug === "index" || currentSlug === undefined;
 
   const [expanded, setExpanded] = React.useState<Set<string>>(new Set());
+
+  React.useEffect(() => {
+    if (entriesProp || !navigationEndpoint) return;
+    let active = true;
+    loadNavigationEntries(navigationEndpoint)
+      .then((nextEntries) => {
+        if (active) setLoadedEntries(nextEntries);
+      })
+      .catch(() => {
+        if (active) setLoadedEntries([]);
+      });
+    return () => {
+      active = false;
+    };
+  }, [entriesProp, navigationEndpoint]);
 
   // Hydrate expansion state from localStorage and re-sync ancestor expansion
   // whenever the active slug changes (e.g. on client-side navigation).
@@ -201,6 +230,15 @@ export function VaultTree({
           </SidebarMenuButton>
         </SidebarMenuItem>
       ) : null}
+      {entries.length === 0 && navigationEndpoint ? (
+        <SidebarMenuItem>
+          <SidebarMenuButton disabled>
+            <span className="truncate text-muted-foreground">
+              Loading navigation...
+            </span>
+          </SidebarMenuButton>
+        </SidebarMenuItem>
+      ) : null}
       {nodes.map((node) => (
         <VaultTreeNode
           key={node.key}
@@ -213,6 +251,20 @@ export function VaultTree({
       ))}
     </SidebarMenu>
   );
+}
+
+function loadNavigationEntries(endpoint: string): Promise<VaultTreeEntry[]> {
+  const cached = navigationCache.get(endpoint);
+  if (cached) return cached;
+
+  const promise = fetch(endpoint)
+    .then((response) => {
+      if (!response.ok) throw new Error("Failed to load navigation.");
+      return response.json() as Promise<NavigationResponse>;
+    })
+    .then((navigation) => navigation.entries);
+  navigationCache.set(endpoint, promise);
+  return promise;
 }
 
 type VaultTreeNodeProps = {
@@ -271,7 +323,7 @@ function VaultTreeNode({
             }
           />
           <CollapsibleContent>
-            <SidebarMenuSub>
+            <SidebarMenuSub className={SUBMENU_CLASS_NAME}>
               {node.children.map((child) => (
                 <VaultTreeNode
                   key={child.key}
@@ -303,7 +355,7 @@ function VaultTreeNode({
           <span className="truncate">{label}</span>
         </SidebarMenuButton>
         <CollapsibleContent>
-          <SidebarMenuSub>
+          <SidebarMenuSub className={SUBMENU_CLASS_NAME}>
             {node.children.map((child) => (
               <VaultTreeNode
                 key={child.key}

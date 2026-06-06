@@ -1,9 +1,8 @@
 import type React from "react";
 import type {
-  Graph,
-  Manifest,
   ManifestEntry,
   MarkdownComponents,
+  NavigationEntry,
   ResolvedSilicaConfig,
   TocItem,
 } from "./types.js";
@@ -16,10 +15,16 @@ export type {
   SilicaMermaidProps,
 } from "./types.js";
 
-export type ThemeNavigationEntry = {
+export type ThemeNavigationEntry = NavigationEntry;
+
+export type ThemeBreadcrumb = {
+  label: string;
+  href?: string;
+};
+
+export type ThemeBacklink = {
   slug: string;
   title: string;
-  sortKey?: string;
 };
 
 export type ThemeLayoutConfig = {
@@ -41,9 +46,7 @@ export type ThemeRootLayoutProps = {
 };
 
 export type ThemeSiteLayoutProps = {
-  navigation: {
-    entries: ThemeNavigationEntry[];
-  };
+  navigationEndpoint: string;
   config: ThemeLayoutConfig;
   children: React.ReactNode;
 };
@@ -55,13 +58,14 @@ export type ThemePage = {
   content: React.ReactNode;
   frontmatter: Record<string, unknown>;
   toc: TocItem[];
+  tags: string[];
   entry: ManifestEntry;
 };
 
 export type ThemePageProps = {
   page: ThemePage;
-  graph: Graph;
-  manifest: Manifest;
+  breadcrumbs: ThemeBreadcrumb[];
+  backlinks: ThemeBacklink[];
   config: ResolvedSilicaConfig;
 };
 

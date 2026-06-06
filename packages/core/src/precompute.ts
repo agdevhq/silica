@@ -23,6 +23,7 @@ import type {
   Graph,
   Manifest,
   ManifestEntry,
+  Navigation,
   PrecomputeResult,
   ResolvedSilicaConfig,
 } from "./types.js";
@@ -133,6 +134,10 @@ export async function precompute(
     path.join(projectRoot, ".silica/manifest.json"),
     serializeManifest(manifest),
   );
+  await writeJson(
+    path.join(projectRoot, ".silica/navigation.json"),
+    makeNavigation(manifest),
+  );
   await writeJson(path.join(projectRoot, ".silica/graph.json"), graph);
   await writeJson(path.join(projectRoot, ".silica/config.json"), config);
   await fs.writeFile(
@@ -177,6 +182,17 @@ function serializeManifest(
     generatedAt: manifest.generatedAt,
     contentDir: manifest.contentDir,
     entries: manifest.entries,
+  };
+}
+
+function makeNavigation(manifest: Manifest): Navigation {
+  return {
+    version: 1,
+    entries: manifest.entries.filter(isListedEntry).map((entry) => ({
+      slug: entry.slug,
+      title: entry.menuLabel,
+      sortKey: entry.sortKey,
+    })),
   };
 }
 

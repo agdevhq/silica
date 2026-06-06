@@ -10,41 +10,37 @@ import {
 } from "@silicajs/ui/components/breadcrumb";
 
 import { SilicaLink } from "./routing.js";
-import { breadcrumbSegmentHref, prettySegment } from "./slug.js";
+
+export type BreadcrumbLinkItem = {
+  label: string;
+  href?: string;
+};
 
 export type BreadcrumbsProps = {
-  slug: string;
-  allSlugs: readonly string[];
+  items: BreadcrumbLinkItem[];
   className?: string;
 };
 
-export function Breadcrumbs({ slug, allSlugs, className }: BreadcrumbsProps) {
-  const segments = slug === "index" ? [] : slug.split("/").slice(0, -1);
-  let acc = "";
+export function Breadcrumbs({ items, className }: BreadcrumbsProps) {
+  if (items.length === 0) return null;
+
   return (
     <Breadcrumb className={className}>
       <BreadcrumbList>
-        <BreadcrumbItem>
-          {segments.length === 0 ? (
-            <BreadcrumbPage>Home</BreadcrumbPage>
-          ) : (
-            <BreadcrumbLink render={<SilicaLink href="/">Home</SilicaLink>} />
-          )}
-        </BreadcrumbItem>
-        {segments.map((segment) => {
-          acc = acc ? `${acc}/${segment}` : segment;
-          const label = prettySegment(segment);
-          const href = breadcrumbSegmentHref(acc, allSlugs);
+        {items.map((item, index) => {
+          const isLast = index === items.length - 1;
           return (
-            <React.Fragment key={acc}>
-              <BreadcrumbSeparator />
+            <React.Fragment key={`${item.href ?? item.label}:${index}`}>
+              {index > 0 ? <BreadcrumbSeparator /> : null}
               <BreadcrumbItem>
-                {href ? (
+                {item.href && !isLast ? (
                   <BreadcrumbLink
-                    render={<SilicaLink href={href}>{label}</SilicaLink>}
+                    render={
+                      <SilicaLink href={item.href}>{item.label}</SilicaLink>
+                    }
                   />
                 ) : (
-                  <BreadcrumbPage>{label}</BreadcrumbPage>
+                  <BreadcrumbPage>{item.label}</BreadcrumbPage>
                 )}
               </BreadcrumbItem>
             </React.Fragment>

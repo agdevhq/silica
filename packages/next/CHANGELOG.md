@@ -1,5 +1,17 @@
 # @silicajs/next
 
+## 0.2.0
+
+### Minor Changes
+
+- 5525573: Move large navigation data out of per-page render payloads and pass page-local breadcrumb and backlink slices to themes.
+
+### Patch Changes
+
+- Updated dependencies [5525573]
+  - @silicajs/core@0.2.0
+  - @silicajs/components@0.2.0
+
 ## 0.1.3
 
 ### Patch Changes

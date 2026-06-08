@@ -1,5 +1,6 @@
 ---
-"@silicajs/core": patch
+"@silicajs/core": minor
+"@silicajs/next": patch
 ---
 
-Use note file names as fallback page titles instead of deriving titles from markdown body content.
+Use manifest metadata as the page source of truth and fall back to note file names for missing titles.

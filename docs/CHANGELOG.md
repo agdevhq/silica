@@ -1,5 +1,15 @@
 # docs
 
+## 0.1.3
+
+### Patch Changes
+
+- Updated dependencies [605efb3]
+  - @silicajs/core@0.3.0
+  - @silicajs/next@0.2.1
+  - @silicajs/cli@0.1.5
+  - @silicajs/theme-amethyst@0.2.1
+
 ## 0.1.2
 
 ### Patch Changes

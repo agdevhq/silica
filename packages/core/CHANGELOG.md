@@ -1,5 +1,11 @@
 # @silicajs/core
 
+## 0.3.0
+
+### Minor Changes
+
+- 605efb3: Use manifest metadata as the page source of truth and fall back to note file names for missing titles.
+
 ## 0.2.0
 
 ### Minor Changes

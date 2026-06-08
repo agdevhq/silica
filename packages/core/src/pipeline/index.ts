@@ -28,7 +28,6 @@ import {
 } from "./obsidian.js";
 import {
   getDataArray,
-  mergeBrokenLinks,
   rehypeCleanFootnoteHeadings,
   rehypeCollectTocAndLinks,
   rehypeExternalLinks,
@@ -193,7 +192,6 @@ export async function renderMarkdown(
   context: RenderContext,
 ): Promise<RenderResult> {
   const parsed = matter(raw);
-  const inlineTags = context.tags?.inline ?? true;
   const processor = baseProcessor(context)
     .use(rehypeUnwrapSilicaEmbeds)
     .use(rehypeRaw)
@@ -235,28 +233,11 @@ export async function renderMarkdown(
     });
 
   const file = await processor.process(parsed.content);
-  const frontmatter = parsed.data;
-  const obsidianBrokenLinks = getDataArray<{ target: string }>(
-    file.data,
-    "silicaObsidianBrokenLinks",
-  ).map((link) => ({ source: String(context.slug), target: link.target }));
-  const links = unique([
-    ...getDataArray<string>(file.data, "silicaObsidianLinks"),
-    ...getDataArray<string>(file.data, "links"),
-  ]);
   const toc = getDataArray<TocItem>(file.data, "toc");
-  const plainText = extractPlainText(parsed.content);
 
   return {
     content: file.result,
-    frontmatter,
     toc,
-    links,
-    brokenLinks: mergeBrokenLinks(obsidianBrokenLinks, []),
-    plainText,
-    title: getTitle(frontmatter, plainText),
-    description: getDescription(frontmatter),
-    tags: getTags(frontmatter, parsed.content, { inline: inlineTags }),
   };
 }
 
@@ -309,11 +290,10 @@ export async function analyzeMarkdown(
 
   return {
     frontmatter,
-    toc: [],
     links: getDataArray<string>(file.data, "silicaObsidianLinks"),
     brokenLinks,
     plainText,
-    title: getTitle(frontmatter, plainText),
+    title: getTitle(frontmatter),
     description,
     generatedDescription: description
       ? undefined
@@ -324,15 +304,10 @@ export async function analyzeMarkdown(
 
 export function getTitle(
   frontmatter: Record<string, unknown>,
-  plainText: string,
 ): string | undefined {
   if (typeof frontmatter.title === "string" && frontmatter.title.trim())
     return frontmatter.title.trim();
-  const heading = plainText
-    .split("\n")
-    .map((line) => line.trim())
-    .find(Boolean);
-  return heading?.replace(/^#+\s*/, "");
+  return undefined;
 }
 
 export function getDescription(
@@ -463,8 +438,4 @@ function normalizePlainText(text: string): string {
 
 function hasCodeFence(markdown: string): boolean {
   return /(^|\n)(```|~~~)/.test(markdown);
-}
-
-function unique(values: string[]): string[] {
-  return [...new Set(values.filter(Boolean))];
 }

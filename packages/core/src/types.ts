@@ -177,18 +177,18 @@ export type MarkdownComponents = {
 
 export type RenderResult = {
   content: ReactNode;
-  frontmatter: Record<string, unknown>;
   toc: TocItem[];
+};
+
+export type AnalyzeResult = {
+  frontmatter: Record<string, unknown>;
   links: string[];
   brokenLinks: BrokenLink[];
   plainText: string;
   title?: string;
   description?: string;
-  tags: string[];
-};
-
-export type AnalyzeResult = Omit<RenderResult, "content"> & {
   generatedDescription?: string;
+  tags: string[];
 };
 
 export type PrecomputeResult = {

@@ -132,10 +132,10 @@ export async function VaultContent({
       backlinks={makeBacklinks(slug, manifest, graph)}
       page={{
         slug,
-        title: rendered.title ?? entry.title,
-        description: rendered.description ?? entry.description,
+        title: entry.title,
+        description: entry.description,
         content: rendered.content,
-        frontmatter: rendered.frontmatter,
+        frontmatter: entry.frontmatter,
         toc: rendered.toc,
         tags: entry.tags,
         entry,

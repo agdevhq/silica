@@ -54,6 +54,101 @@ describe("precompute", () => {
     await fs.remove(root);
   });
 
+  it("uses file names for notes without frontmatter titles", async () => {
+    const root = path.join(process.cwd(), ".tmp-precompute-filename-title");
+    await fs.emptyDir(path.join(root, "content/Notes"));
+    await fs.writeFile(
+      path.join(root, "content/index.md"),
+      "# Home Heading\n\nSee [[Notes/Source Note|Source]].",
+    );
+    await fs.writeFile(
+      path.join(root, "content/Notes/Source Note.md"),
+      [
+        "---",
+        "tags: [source]",
+        "---",
+        "# Heading That Should Not Become The Title",
+        "",
+        "This note links back to [[index|Home]].",
+        "",
+        "Long body text. ".repeat(500),
+      ].join("\n"),
+    );
+
+    const result = await precompute({
+      projectRoot: root,
+      config: resolveConfig({ title: "Test" }, root),
+    });
+
+    const source = result.manifest.bySlug["notes/source-note"];
+    expect(source?.title).toBe("Source Note");
+    expect(source?.title).not.toContain("Long body text");
+    expect(
+      result.searchRecords.find((record) => record.slug === source?.slug)
+        ?.title,
+    ).toBe("Source Note");
+    expect(result.graph.backlinks["notes/source-note"]).toEqual(["index"]);
+    expect(result.manifest.bySlug.index?.title).toBe("Home");
+    await expect(
+      fs.readJson(path.join(root, ".silica/navigation.json")),
+    ).resolves.toEqual({
+      version: 1,
+      entries: [
+        { slug: "index", title: "Home" },
+        { slug: "notes/source-note", title: "Source Note" },
+      ],
+    });
+
+    await fs.remove(root);
+  });
+
+  it("keeps backlink titles short for large notes without frontmatter titles", async () => {
+    const root = path.join(
+      process.cwd(),
+      ".tmp-precompute-backlink-title-bloat",
+    );
+    await fs.emptyDir(path.join(root, "content/notes"));
+    await fs.writeFile(
+      path.join(root, "content/hub.md"),
+      "---\ntitle: Hub\n---\n# Hub",
+    );
+    for (let index = 0; index < 12; index += 1) {
+      const padded = String(index).padStart(2, "0");
+      await fs.writeFile(
+        path.join(root, `content/notes/Source ${padded}.md`),
+        [
+          "---",
+          "type: synthetic",
+          "---",
+          `# Heading ${padded} That Should Not Become The Title`,
+          "",
+          "[[hub|Hub]]",
+          "",
+          `Body marker ${padded}. `.repeat(1_000),
+        ].join("\n"),
+      );
+    }
+
+    const result = await precompute({
+      projectRoot: root,
+      config: resolveConfig({ title: "Test" }, root),
+    });
+    const backlinkTitles = (result.graph.backlinks.hub ?? []).map(
+      (source) => result.manifest.bySlug[source]?.title ?? source,
+    );
+    const serializedBacklinks = JSON.stringify(backlinkTitles);
+
+    expect(backlinkTitles).toHaveLength(12);
+    expect(backlinkTitles).toContain("Source 00");
+    expect(serializedBacklinks).not.toContain("Body marker");
+    expect(serializedBacklinks.length).toBeLessThan(500);
+    expect(
+      Math.max(...result.manifest.entries.map((entry) => entry.title.length)),
+    ).toBeLessThan(20);
+
+    await fs.remove(root);
+  });
+
   it("uses numeric prefixes for ordering while keeping slugs clean", async () => {
     const root = path.join(process.cwd(), ".tmp-precompute-numeric-prefixes");
     await fs.emptyDir(path.join(root, "content/02_Guides"));
@@ -103,6 +198,7 @@ describe("precompute", () => {
     });
 
     expect(result.manifest.allSlugs).toEqual(["01_home"]);
+    expect(result.manifest.entries[0]?.title).toBe("01_Home");
 
     await fs.remove(root);
   });

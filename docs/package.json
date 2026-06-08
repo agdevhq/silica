@@ -1,6 +1,6 @@
 {
   "name": "docs",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "private": true,
   "type": "module",
   "scripts": {
@@ -15,11 +15,11 @@
   },
   "dependencies": {
     "@silicajs/auth": "^0.1.0",
-    "@silicajs/cli": "^0.1.4",
-    "@silicajs/core": "^0.2.0",
-    "@silicajs/next": "^0.2.0",
+    "@silicajs/cli": "^0.1.5",
+    "@silicajs/core": "^0.3.0",
+    "@silicajs/next": "^0.2.1",
     "@silicajs/search": "^0.2.0",
-    "@silicajs/theme-amethyst": "^0.2.0",
+    "@silicajs/theme-amethyst": "^0.2.1",
     "next": "^16.2.7",
     "react": "^19.2.6",
     "react-dom": "^19.2.7"

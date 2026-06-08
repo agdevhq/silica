@@ -1,5 +1,14 @@
 # @silicajs/next
 
+## 0.2.1
+
+### Patch Changes
+
+- 605efb3: Use manifest metadata as the page source of truth and fall back to note file names for missing titles.
+- Updated dependencies [605efb3]
+  - @silicajs/core@0.3.0
+  - @silicajs/components@0.2.1
+
 ## 0.2.0
 
 ### Minor Changes

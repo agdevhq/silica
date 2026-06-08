@@ -1,9 +1,11 @@
 import { describe, expect, it } from "vitest";
 import {
   asFullSlug,
+  numericPrefixSortKey,
   resolveWikiLink,
   simplifySlug,
   slugifyFilePath,
+  slugifySegment,
   slugToHref,
 } from "./path.js";
 
@@ -16,12 +18,41 @@ describe("path helpers", () => {
     expect(slugToHref("index")).toBe("/");
   });
 
+  it("preserves dotted names after stripping document extensions", () => {
+    expect(slugifyFilePath("notes/Dr. Alice Example.md")).toBe(
+      "notes/dr-alice-example",
+    );
+    expect(slugifyFilePath("notes/Dr. Bob Example.md")).toBe(
+      "notes/dr-bob-example",
+    );
+    expect(slugifyFilePath("notes/Acme Inc. Notes.md")).toBe(
+      "notes/acme-inc-notes",
+    );
+    expect(slugifyFilePath("notes/v1.2 Release Notes.md")).toBe(
+      "notes/v1-2-release-notes",
+    );
+  });
+
+  it("slugifies path segments without treating dotted names as extensions", () => {
+    expect(slugifySegment("Dr. Alice Example")).toBe("dr-alice-example");
+    expect(slugifySegment("Acme Inc. Notes")).toBe("acme-inc-notes");
+  });
+
   it("can strip numeric ordering prefixes from slugs", () => {
     expect(
       slugifyFilePath("01_Getting Started/02_Install.md", "content", {
         numericPrefixes: true,
       }),
     ).toBe("getting-started/install");
+  });
+
+  it("preserves dotted names in numeric prefix sort keys", () => {
+    expect(numericPrefixSortKey("01. v1.2 Release Notes.md")).toBe(
+      "0000000001:v1-2-release-notes",
+    );
+    expect(numericPrefixSortKey("01. Dr. Alice Example.md")).toBe(
+      "0000000001:dr-alice-example",
+    );
   });
 
   it("resolves shortest wikilinks by basename", () => {

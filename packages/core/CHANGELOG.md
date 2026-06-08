@@ -1,5 +1,11 @@
 # @silicajs/core
 
+## 0.3.1
+
+### Patch Changes
+
+- fb20567: Preserve periods inside document names when generating slugs.
+
 ## 0.3.0
 
 ### Minor Changes

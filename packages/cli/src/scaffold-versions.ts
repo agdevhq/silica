@@ -3,7 +3,7 @@
 
 export const scaffoldDependencyRanges = {
   "@silicajs/cli": "^0.1.5",
-  "@silicajs/core": "^0.3.0",
+  "@silicajs/core": "^0.3.1",
   "@silicajs/next": "^0.2.1",
   "@silicajs/theme-amethyst": "^0.2.1",
 } as const;

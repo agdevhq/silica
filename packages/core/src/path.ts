@@ -17,6 +17,7 @@ export type SlugifyOptions = {
 };
 
 const NUMERIC_PREFIX_RE = /^(\d+)[\s._-]+(.+)$/;
+const DOCUMENT_EXTENSION_RE = /\.(md|markdown|mdx)$/i;
 const UNORDERED_SEGMENT_SORT_PREFIX = "~~~~~~~~~~";
 
 export function asFilePath(value: string): FilePath {
@@ -51,10 +52,9 @@ export function slugifySegment(
   segment: string,
   options: SlugifyOptions = {},
 ): string {
-  const stem = segment.replace(/\.[^.]+$/, "");
   const displaySegment = options.numericPrefixes
-    ? stripNumericPrefix(stem)
-    : stem;
+    ? stripNumericPrefix(segment)
+    : segment;
   return displaySegment
     .normalize("NFKD")
     .replace(/[\u0300-\u036f]/g, "")
@@ -72,7 +72,7 @@ export function normalizeSlug(
 ): string {
   const cleaned = normalizePath(value)
     .replace(/^\.\//, "")
-    .replace(/\.(md|markdown|mdx)$/i, "");
+    .replace(DOCUMENT_EXTENSION_RE, "");
   const parts = cleaned
     .split("/")
     .filter(Boolean)
@@ -96,13 +96,14 @@ export function slugifyFilePath(
 
 export function hasNumericPrefixInPath(filePath: string): boolean {
   return normalizePath(filePath)
+    .replace(DOCUMENT_EXTENSION_RE, "")
     .split("/")
-    .some((segment) => hasNumericPrefix(segment.replace(/\.[^.]+$/, "")));
+    .some((segment) => hasNumericPrefix(segment));
 }
 
 export function numericPrefixSortKey(filePath: string): string {
   return normalizePath(filePath)
-    .replace(/\.(md|markdown|mdx)$/i, "")
+    .replace(DOCUMENT_EXTENSION_RE, "")
     .split("/")
     .filter(Boolean)
     .map(numericPrefixSortSegment)
@@ -181,10 +182,9 @@ export function joinSegments(...segments: string[]): string {
 }
 
 function numericPrefixSortSegment(segment: string): string {
-  const stem = segment.replace(/\.[^.]+$/, "");
-  const match = NUMERIC_PREFIX_RE.exec(stem);
+  const match = NUMERIC_PREFIX_RE.exec(segment);
   if (!match) {
-    return `${UNORDERED_SEGMENT_SORT_PREFIX}:${slugifySegment(stem)}`;
+    return `${UNORDERED_SEGMENT_SORT_PREFIX}:${slugifySegment(segment)}`;
   }
 
   const order = match[1]!.padStart(10, "0");

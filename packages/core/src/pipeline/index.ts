@@ -254,7 +254,7 @@ export async function renderMarkdown(
     links,
     brokenLinks: mergeBrokenLinks(obsidianBrokenLinks, []),
     plainText,
-    title: getTitle(frontmatter, plainText),
+    title: getTitle(frontmatter),
     description: getDescription(frontmatter),
     tags: getTags(frontmatter, parsed.content, { inline: inlineTags }),
   };
@@ -313,7 +313,7 @@ export async function analyzeMarkdown(
     links: getDataArray<string>(file.data, "silicaObsidianLinks"),
     brokenLinks,
     plainText,
-    title: getTitle(frontmatter, plainText),
+    title: getTitle(frontmatter),
     description,
     generatedDescription: description
       ? undefined
@@ -324,15 +324,10 @@ export async function analyzeMarkdown(
 
 export function getTitle(
   frontmatter: Record<string, unknown>,
-  plainText: string,
 ): string | undefined {
   if (typeof frontmatter.title === "string" && frontmatter.title.trim())
     return frontmatter.title.trim();
-  const heading = plainText
-    .split("\n")
-    .map((line) => line.trim())
-    .find(Boolean);
-  return heading?.replace(/^#+\s*/, "");
+  return undefined;
 }
 
 export function getDescription(

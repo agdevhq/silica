@@ -1,8 +1,29 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
-import { renderMarkdown, renderMarkdownHtml } from "./pipeline/index.js";
+import {
+  getTitle,
+  renderMarkdown,
+  renderMarkdownHtml,
+} from "./pipeline/index.js";
 
 describe("renderMarkdown", () => {
+  it("only derives titles from explicit frontmatter", async () => {
+    expect(getTitle({ title: "  Frontmatter Title  " })).toBe(
+      "Frontmatter Title",
+    );
+    expect(getTitle({})).toBeUndefined();
+
+    const result = await renderMarkdown(
+      "# Heading That Should Not Become A Title\n\nLong body. ".repeat(100),
+      {
+        slug: "index",
+        allSlugs: ["index"],
+      },
+    );
+
+    expect(result.title).toBeUndefined();
+  }, 15_000);
+
   it("renders heading title and icon permalinks", async () => {
     const result = await renderMarkdown("## Linked Heading", {
       slug: "index",

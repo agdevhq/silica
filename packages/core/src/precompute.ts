@@ -14,6 +14,7 @@ import {
   asFullSlug,
   hasNumericPrefixInPath,
   numericPrefixSortKey,
+  stripNumericPrefix,
   slugToHref,
 } from "./path.js";
 import { getMenuLabel } from "./pipeline/frontmatter.js";
@@ -74,7 +75,8 @@ export async function precompute(
       ordering: config.ordering,
     });
 
-    const title = analysis.title ?? titleFromSlug(file.slug);
+    const title =
+      analysis.title ?? titleFromFilePath(file.relativePath, config.ordering);
     const menuLabel = getMenuLabel(file.frontmatter, title);
     const sortKey =
       config.ordering.numericPrefixes &&
@@ -396,10 +398,13 @@ function stringifyDate(value?: Date): string | undefined {
   return value?.toISOString();
 }
 
-function titleFromSlug(slug: string): string {
-  const leaf = slug.split("/").at(-1) ?? slug;
-  return leaf
-    .replace(/-/g, " ")
-    .replace(/\b\w/g, (letter) => letter.toUpperCase())
-    .replace(/^Index$/, "Home");
+function titleFromFilePath(
+  relativePath: string,
+  ordering: ResolvedSilicaConfig["ordering"],
+): string {
+  const stem = path.posix
+    .basename(normalizeGitPath(relativePath))
+    .replace(/\.(md|markdown|mdx)$/i, "");
+  const title = ordering.numericPrefixes ? stripNumericPrefix(stem) : stem;
+  return /^index$/i.test(title) ? "Home" : title;
 }

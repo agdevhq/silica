@@ -21,7 +21,8 @@ export type WikiLinkResolutionIndex = {
   uniqueSlugByBasename: ReadonlyMap<string, string | null>;
 };
 
-const NUMERIC_PREFIX_RE = /^(\d+)[\s._-]+(.+)$/;
+const NUMERIC_PREFIX_RE =
+  /^(\d{1,2}|0\d+|\d{3,}(?=[._]))(?:[\s._]+|-(?!\d{1,2}(?:\D|$)))(.+)$/;
 const DOCUMENT_EXTENSION_RE = /\.(md|markdown|mdx)$/i;
 const UNORDERED_SEGMENT_SORT_PREFIX = "~~~~~~~~~~";
 
@@ -156,7 +157,9 @@ export function createWikiLinkResolutionIndex(
   options: SlugifyOptions = {},
 ): WikiLinkResolutionIndex {
   const candidates = new Set(
-    allSlugs.map((slug) => normalizeSlug(slug, options)),
+    allSlugs.map((slug) =>
+      normalizeSlug(slug, { ...options, numericPrefixes: false }),
+    ),
   );
   const uniqueSlugByBasename = new Map<string, string | null>();
 

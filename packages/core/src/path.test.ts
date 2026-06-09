@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   asFullSlug,
   createWikiLinkResolutionIndex,
+  normalizeSlug,
   numericPrefixSortKey,
   resolveWikiLink,
   simplifySlug,
@@ -45,6 +46,78 @@ describe("path helpers", () => {
         numericPrefixes: true,
       }),
     ).toBe("getting-started/install");
+    expect(
+      slugifyFilePath("001 Appendix/120. Reference.md", "content", {
+        numericPrefixes: true,
+      }),
+    ).toBe("appendix/reference");
+  });
+
+  it("does not strip date-like numeric prefixes from slugs", () => {
+    const options = { numericPrefixes: true };
+
+    expect(
+      slugifyFilePath(
+        "journal/2026-04-10 Standup Notes.md",
+        "content",
+        options,
+      ),
+    ).toBe("journal/2026-04-10-standup-notes");
+    expect(
+      slugifyFilePath("journal/2026-04 Planning.md", "content", options),
+    ).toBe("journal/2026-04-planning");
+    expect(slugifyFilePath("journal/04-10 Notes.md", "content", options)).toBe(
+      "journal/04-10-notes",
+    );
+  });
+
+  it("does not strip non-sorting numeric prefixes from slugs", () => {
+    const options = { numericPrefixes: true };
+
+    expect(slugifyFilePath("notes/2026 Roadmap.md", "content", options)).toBe(
+      "notes/2026-roadmap",
+    );
+    expect(
+      slugifyFilePath("notes/404 Error Pages.md", "content", options),
+    ).toBe("notes/404-error-pages");
+  });
+
+  it("resolves wikilinks to date-like numeric filenames", () => {
+    const options = { numericPrefixes: true };
+    const slug = slugifyFilePath(
+      "content/journal/2026-04-10 Standup Notes.md",
+      "content",
+      options,
+    );
+    const index = createWikiLinkResolutionIndex([slug], options);
+
+    expect(normalizeSlug("2026-04-10 Standup Notes", options)).toBe(
+      "2026-04-10-standup-notes",
+    );
+    expect(
+      resolveWikiLink(
+        "journal/index",
+        "2026-04-10 Standup Notes",
+        index,
+        "shortest",
+        options,
+      ),
+    ).toBe("journal/2026-04-10-standup-notes");
+  });
+
+  it("strips sortable numeric prefixes only once when resolving wikilinks", () => {
+    const options = { numericPrefixes: true };
+    const slug = slugifyFilePath(
+      "content/notes/01 02 Intro.md",
+      "content",
+      options,
+    );
+    const index = createWikiLinkResolutionIndex([slug], options);
+
+    expect(slug).toBe("notes/02-intro");
+    expect(
+      resolveWikiLink("notes/index", "01 02 Intro", index, "shortest", options),
+    ).toBe("notes/02-intro");
   });
 
   it("preserves dotted names in numeric prefix sort keys", () => {
@@ -53,6 +126,10 @@ describe("path helpers", () => {
     );
     expect(numericPrefixSortKey("01. Dr. Alice Example.md")).toBe(
       "0000000001:dr-alice-example",
+    );
+    expect(numericPrefixSortKey("001 Appendix.md")).toBe("0000000001:appendix");
+    expect(numericPrefixSortKey("120. Reference.md")).toBe(
+      "0000000120:reference",
     );
   });
 

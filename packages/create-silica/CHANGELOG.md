@@ -1,5 +1,11 @@
 # create-silica
 
+## 0.1.2
+
+### Patch Changes
+
+- @silicajs/create@0.1.2
+
 ## 0.1.1
 
 ### Patch Changes

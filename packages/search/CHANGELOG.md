@@ -1,5 +1,11 @@
 # @silicajs/search
 
+## 0.3.0
+
+### Minor Changes
+
+- cbdf8ca: Add configurable prerender selection with stable vault render hashes, persistent filesystem-backed render caching, and a consolidated SQLite vault database for metadata and search.
+
 ## 0.2.0
 
 ### Minor Changes

@@ -1,6 +1,6 @@
 {
   "name": "@silicajs/next",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "description": "Next.js runtime, routes, templates, and proxy for Silica.",
   "type": "module",
   "license": "MIT",
@@ -88,8 +88,8 @@
   },
   "dependencies": {
     "@silicajs/auth": "^0.1.1",
-    "@silicajs/components": "^0.2.1",
-    "@silicajs/core": "^0.3.0",
+    "@silicajs/components": "^0.2.2",
+    "@silicajs/core": "^0.4.0",
     "@silicajs/remark-obsidian": "^0.1.0",
     "@silicajs/search": "^0.2.0",
     "better-auth": "1.6.11",

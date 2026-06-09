@@ -1,5 +1,11 @@
 # @silicajs/core
 
+## 0.4.0
+
+### Minor Changes
+
+- fc07754: Speed up large vault builds by indexing wikilinks once, parallelizing markdown precompute analysis, reusing cached Next runtime data during page generation, and supporting Next config overrides from `silica.config.ts`.
+
 ## 0.3.1
 
 ### Patch Changes

@@ -1,5 +1,13 @@
 # @silicajs/theme-amethyst
 
+## 0.2.2
+
+### Patch Changes
+
+- Updated dependencies [fc07754]
+  - @silicajs/core@0.4.0
+  - @silicajs/components@0.2.2
+
 ## 0.2.1
 
 ### Patch Changes

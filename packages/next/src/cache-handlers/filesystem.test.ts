@@ -1,12 +1,9 @@
 import path from "node:path";
 import { ReadableStream } from "node:stream/web";
+import Database from "better-sqlite3";
 import fs from "fs-extra";
 import { describe, expect, it } from "vitest";
-import {
-  precompute,
-  resolveConfig,
-  type PrecomputeResult,
-} from "@silicajs/core";
+import { precompute, resolveConfig } from "@silicajs/core";
 import { createFilesystemCacheHandler, type CacheEntry } from "./filesystem.js";
 
 describe("filesystem cache handler", () => {
@@ -101,21 +98,22 @@ describe("filesystem cache handler", () => {
   });
 });
 
-async function runPrecompute(root: string): Promise<PrecomputeResult> {
-  return precompute({
+async function runPrecompute(root: string): Promise<string> {
+  await precompute({
     projectRoot: root,
     config: resolveConfig({ title: "Test" }, root),
   });
+  return root;
 }
 
 async function putCachedPage(
   handler: ReturnType<typeof createFilesystemCacheHandler>,
-  result: PrecomputeResult,
+  root: string,
   slug: string,
   content: string,
 ): Promise<void> {
   await handler.set(
-    cacheKey(result, slug),
+    cacheKey(root, slug),
     Promise.resolve({
       value: streamFromString(content),
       tags: [`page:${slug}`],
@@ -129,34 +127,49 @@ async function putCachedPage(
 
 async function expectCachedPage(
   handler: ReturnType<typeof createFilesystemCacheHandler>,
-  result: PrecomputeResult,
+  root: string,
   slug: string,
   expected: string,
 ): Promise<void> {
-  const cached = await handler.get(cacheKey(result, slug), []);
+  const cached = await handler.get(cacheKey(root, slug), []);
   expect(cached, slug).toBeDefined();
   expect(await streamToString(cached!.value)).toBe(expected);
 }
 
 async function expectCacheMiss(
   handler: ReturnType<typeof createFilesystemCacheHandler>,
-  result: PrecomputeResult,
+  root: string,
   slug: string,
 ): Promise<void> {
-  await expect(
-    handler.get(cacheKey(result, slug), []),
-  ).resolves.toBeUndefined();
+  await expect(handler.get(cacheKey(root, slug), [])).resolves.toBeUndefined();
 }
 
-function cacheKey(result: PrecomputeResult, slug: string): string {
-  const entry = result.routeCacheKeys.entries[slug];
-  expect(entry, slug).toBeDefined();
-  return [
-    "vault-content",
-    result.cacheState.renderEnvironmentHash,
-    slug,
-    entry!.renderHash,
-  ].join(":");
+function cacheKey(root: string, slug: string): string {
+  const db = new Database(path.join(root, ".silica/vault.db"), {
+    fileMustExist: true,
+    readonly: true,
+  });
+  try {
+    db.pragma("query_only = ON");
+    const note = db
+      .prepare("SELECT render_hash FROM notes WHERE slug = ?")
+      .get(slug) as { render_hash: string } | undefined;
+    const metadata = db
+      .prepare(
+        "SELECT value FROM vault_metadata WHERE key = 'renderEnvironmentHash'",
+      )
+      .get() as { value: string } | undefined;
+    expect(note, slug).toBeDefined();
+    expect(metadata).toBeDefined();
+    return [
+      "vault-content",
+      metadata!.value,
+      slug,
+      note!.render_hash,
+    ].join(":");
+  } finally {
+    db.close();
+  }
 }
 
 function streamFromString(value: string): ReadableStream<Uint8Array> {

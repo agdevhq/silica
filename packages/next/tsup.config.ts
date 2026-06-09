@@ -26,6 +26,7 @@ export default defineConfig({
     "@silicajs/ui",
     "better-auth/next-js",
     "better-auth/react",
+    "better-sqlite3",
     "fs-extra",
     "next",
     "next/cache",

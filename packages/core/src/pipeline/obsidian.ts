@@ -73,13 +73,7 @@ export function remarkSilicaObsidian(context: RenderContext) {
         return;
       }
 
-      const resolved = resolveWikiLink(
-        context.slug,
-        targetPath,
-        context.wikilinkIndex,
-        context.wikilinkStrategy ?? "shortest",
-        context.ordering,
-      );
+      const resolved = resolveWikiTarget(context, targetPath);
 
       node.data = { ...node.data };
       if (!resolved) {
@@ -100,6 +94,23 @@ export function remarkSilicaObsidian(context: RenderContext) {
     file.data.silicaObsidianEmbeds = [...embeds];
     file.data.silicaObsidianBrokenLinks = brokenLinks;
   };
+}
+
+function resolveWikiTarget(
+  context: RenderContext,
+  targetPath: string,
+): string | undefined {
+  if (context.resolveWikiLink) {
+    return context.resolveWikiLink(context.slug, targetPath);
+  }
+  if (!context.wikilinkIndex) return undefined;
+  return resolveWikiLink(
+    context.slug,
+    targetPath,
+    context.wikilinkIndex,
+    context.wikilinkStrategy ?? "shortest",
+    context.ordering,
+  );
 }
 
 export function createSilicaObsidianHandlers(context: RenderContext) {

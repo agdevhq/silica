@@ -47,9 +47,10 @@ describe("generated templates", () => {
 
   it("traces only precomputed runtime content", () => {
     expect(nextConfigTemplate()).toContain('"../content/**/*"');
-    expect(nextConfigTemplate()).toContain('"../navigation.json"');
-    expect(nextConfigTemplate()).toContain('"../cache-state.json"');
-    expect(nextConfigTemplate()).toContain('"../route-cache-keys.json"');
+    expect(nextConfigTemplate()).toContain('"../vault.db"');
+    expect(nextConfigTemplate()).not.toContain('"../navigation.json"');
+    expect(nextConfigTemplate()).not.toContain('"../cache-state.json"');
+    expect(nextConfigTemplate()).not.toContain('"../route-cache-keys.json"');
     expect(nextConfigTemplate()).not.toContain('"../../content/**/*"');
   });
 

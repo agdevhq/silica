@@ -192,7 +192,11 @@ export type BrokenLink = {
 
 export type RenderContext = {
   slug: FullSlug | string;
-  wikilinkIndex: WikiLinkResolutionIndex;
+  wikilinkIndex?: WikiLinkResolutionIndex;
+  resolveWikiLink?: (
+    currentSlug: FullSlug | string,
+    target: string,
+  ) => string | undefined;
   assetBaseUrl?: string;
   resolveEmbed?: (
     target: ObsidianLinkTarget,
@@ -265,21 +269,15 @@ export type RenderCacheState = {
   version: 1;
   renderEnvironmentHash: string;
   configHash: string;
-  siteMetadataHash: string;
+  navigationHash: string;
+  tagIndexHash: string;
   themeHash?: string;
   rendererVersion: string;
   generatedAt: string;
 };
 
-export type RouteCacheKeyManifest = {
-  version: 1;
-  renderEnvironmentHash: string;
-  entries: Record<string, { renderHash: string }>;
-};
-
 export type PrecomputeResult = {
   manifest: Manifest;
-  routeCacheKeys: RouteCacheKeyManifest;
   graph: Graph;
   searchRecords: SearchRecord[];
   prerender: PrerenderManifest;

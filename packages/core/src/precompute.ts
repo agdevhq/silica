@@ -5,11 +5,7 @@ import path from "node:path";
 import { promisify } from "node:util";
 import { Worker } from "node:worker_threads";
 import fs from "fs-extra";
-import {
-  buildSearchDatabase,
-  SEARCH_DATABASE_FILENAME,
-  type SearchRecord,
-} from "@silicajs/search";
+import { type SearchRecord } from "@silicajs/search";
 import { loadConfig } from "./config.js";
 import { scanContent, type ContentMarkdownFile } from "./files.js";
 import {
@@ -29,13 +25,12 @@ import type {
   Graph,
   Manifest,
   ManifestEntry,
-  Navigation,
   PrecomputeResult,
   PrerenderManifest,
   RenderCacheState,
-  RouteCacheKeyManifest,
   ResolvedSilicaConfig,
 } from "./types.js";
+import { writeVaultDatabase } from "./vault-db.js";
 
 const execFileAsync = promisify(execFile);
 const MIN_PARALLEL_ANALYSIS_FILES = 64;
@@ -142,44 +137,17 @@ export async function precompute(
   const manifest = makeManifest(config, entries);
   const graph = makeGraph(graphLinks, brokenLinks);
   const renderHashes = makeRenderHashes(manifest, graph);
-  const cacheState = await makeRenderCacheState(
-    projectRoot,
+  const cacheState = await makeRenderCacheState(projectRoot, config, manifest);
+  const prerender = makePrerenderManifest(manifest, graph, config);
+  await writeVaultDatabase(projectRoot, {
     config,
     manifest,
     graph,
-  );
-  const prerender = makePrerenderManifest(manifest, graph, config);
-  const routeCacheKeys = makeRouteCacheKeyManifest(
-    manifest,
-    cacheState,
     renderHashes,
-  );
-  await buildSearchDatabase(
-    searchRecords,
-    path.join(projectRoot, ".silica", SEARCH_DATABASE_FILENAME),
-  );
-  await fs.remove(path.join(projectRoot, ".silica/search-index.json"));
-
-  await writeJson(
-    path.join(projectRoot, ".silica/manifest.json"),
-    serializeManifest(manifest),
-  );
-  await writeJson(
-    path.join(projectRoot, ".silica/navigation.json"),
-    makeNavigation(manifest),
-  );
-  await writeJson(path.join(projectRoot, ".silica/graph.json"), graph);
-  await writeJson(path.join(projectRoot, ".silica/config.json"), config);
-  await writeJson(path.join(projectRoot, ".silica/prerender.json"), prerender);
-  await writeJson(
-    path.join(projectRoot, ".silica/cache-state.json"),
     cacheState,
-  );
-  await writeJson(
-    path.join(projectRoot, ".silica/route-cache-keys.json"),
-    routeCacheKeys,
-  );
-  await fs.remove(path.join(projectRoot, ".silica/build-id.txt"));
+    prerender,
+    searchRecords,
+  });
   await writeSitemapAndRobots(projectRoot, config, manifest);
 
   if (config.wikilinks.strict && brokenLinks.length > 0) {
@@ -191,7 +159,6 @@ export async function precompute(
 
   return {
     manifest,
-    routeCacheKeys,
     graph,
     searchRecords,
     prerender,
@@ -388,33 +355,10 @@ async function writeRuntimeMarkdown(
   }
 }
 
-function serializeManifest(
-  manifest: Manifest,
-): Omit<Manifest, "allSlugs" | "bySlug"> {
-  return {
-    version: manifest.version,
-    generatedAt: manifest.generatedAt,
-    contentDir: manifest.contentDir,
-    entries: manifest.entries,
-  };
-}
-
-function makeNavigation(manifest: Manifest): Navigation {
-  return {
-    version: 1,
-    entries: manifest.entries.filter(isListedEntry).map((entry) => ({
-      slug: entry.slug,
-      title: entry.menuLabel,
-      sortKey: entry.sortKey,
-    })),
-  };
-}
-
 async function makeRenderCacheState(
   projectRoot: string,
   config: ResolvedSilicaConfig,
   manifest: Manifest,
-  graph: Graph,
 ): Promise<RenderCacheState> {
   const themeHash = await getThemeHash(projectRoot, config.theme);
   const configHash = hashStable({
@@ -430,19 +374,20 @@ async function makeRenderCacheState(
     ordering: config.ordering,
     filters: config.filters,
   });
-  const siteMetadataHash = hashStable({
-    entries: manifest.entries.map((entry) => ({
+  const navigationHash = hashStable({
+    entries: manifest.entries.filter(isListedEntry).map((entry) => ({
+      slug: entry.slug,
+      menuLabel: entry.menuLabel,
+      sortKey: entry.sortKey,
+    })),
+  });
+  const tagIndexHash = hashStable({
+    entries: manifest.entries.filter(isListedEntry).map((entry) => ({
       slug: entry.slug,
       title: entry.title,
-      menuLabel: entry.menuLabel,
       description: entry.description,
-      generatedDescription: entry.generatedDescription,
       tags: entry.tags,
-      sortKey: entry.sortKey,
-      frontmatter: entry.frontmatter,
     })),
-    links: graph.links,
-    backlinks: graph.backlinks,
   });
   return {
     version: 1,
@@ -452,7 +397,8 @@ async function makeRenderCacheState(
       themeHash,
     }),
     configHash,
-    siteMetadataHash,
+    navigationHash,
+    tagIndexHash,
     themeHash,
     rendererVersion: RENDER_CACHE_SCHEMA_VERSION,
     generatedAt: new Date().toISOString(),
@@ -523,23 +469,6 @@ function makePrerenderManifest(
   };
 }
 
-function makeRouteCacheKeyManifest(
-  manifest: Manifest,
-  cacheState: RenderCacheState,
-  renderHashes: Record<string, string>,
-): RouteCacheKeyManifest {
-  return {
-    version: 1,
-    renderEnvironmentHash: cacheState.renderEnvironmentHash,
-    entries: Object.fromEntries(
-      manifest.entries.map((entry) => [
-        entry.slug,
-        { renderHash: renderHashes[entry.slug] ?? "missing" },
-      ]),
-    ),
-  };
-}
-
 function selectPrerenderSlugs(
   manifest: Manifest,
   graph: Graph,
@@ -594,24 +523,26 @@ function selectPrerenderSlugs(
 }
 
 function getSlugDepth(slug: string): number {
-  return slug.split("/").filter(Boolean).length;
+  const segments = slug.split("/").filter(Boolean);
+  return Math.max(0, segments.length - 1);
 }
 
 async function getThemeHash(
   projectRoot: string,
   theme: ResolvedSilicaConfig["theme"],
 ): Promise<string | undefined> {
-  const themeName =
-    typeof theme === "object" && theme !== null
-      ? theme.name
-      : typeof theme === "string"
-        ? theme
-        : undefined;
+  const themeName = getThemeName(theme);
   if (!themeName?.startsWith(".")) return undefined;
   const themeRoot = path.resolve(projectRoot, themeName);
   if (!(await fs.pathExists(themeRoot))) return undefined;
   const files = await readThemeFiles(themeRoot);
   return hashStable(files);
+}
+
+function getThemeName(theme: ResolvedSilicaConfig["theme"]): string | undefined {
+  if (typeof theme === "string") return theme;
+  if (typeof theme === "object" && theme !== null) return theme.name;
+  return undefined;
 }
 
 async function readThemeFiles(
@@ -840,11 +771,6 @@ async function writeSitemapAndRobots(
       `User-agent: *\nAllow: /\nSitemap: ${baseUrl}/sitemap.xml\n`,
     );
   }
-}
-
-async function writeJson(filePath: string, value: unknown): Promise<void> {
-  await fs.ensureDir(path.dirname(filePath));
-  await fs.writeJson(filePath, value, { spaces: 2 });
 }
 
 function getDate(value: unknown): Date | undefined {

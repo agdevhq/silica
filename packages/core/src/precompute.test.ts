@@ -1,4 +1,5 @@
 import path from "node:path";
+import Database from "better-sqlite3";
 import fs from "fs-extra";
 import { describe, expect, it } from "vitest";
 import { getGitDates, precompute } from "./precompute.js";
@@ -89,15 +90,10 @@ describe("precompute", () => {
     ).toBe("Source Note");
     expect(result.graph.backlinks["notes/source-note"]).toEqual(["index"]);
     expect(result.manifest.bySlug.index?.title).toBe("Home");
-    await expect(
-      fs.readJson(path.join(root, ".silica/navigation.json")),
-    ).resolves.toEqual({
-      version: 1,
-      entries: [
-        { slug: "index", title: "Home" },
-        { slug: "notes/source-note", title: "Source Note" },
-      ],
-    });
+    expect(readNavigationEntries(root)).toEqual([
+      { slug: "index", title: "Home" },
+      { slug: "notes/source-note", title: "Source Note" },
+    ]);
 
     await fs.remove(root);
   });
@@ -203,7 +199,7 @@ describe("precompute", () => {
     await fs.remove(root);
   });
 
-  it("emits manifest, graph, search, and copies assets", async () => {
+  it("emits vault.db metadata, search, and copies assets", async () => {
     const root = path.join(process.cwd(), ".tmp-precompute");
     await fs.emptyDir(path.join(root, "content"));
     await fs.writeFile(
@@ -240,18 +236,14 @@ describe("precompute", () => {
       "index",
       "notes/auth",
     ]);
+    expect(await fs.pathExists(path.join(root, ".silica/vault.db"))).toBe(true);
     expect(await fs.pathExists(path.join(root, ".silica/search.db"))).toBe(
-      true,
+      false,
     );
-    await expect(
-      fs.readJson(path.join(root, ".silica/navigation.json")),
-    ).resolves.toEqual({
-      version: 1,
-      entries: [
-        { slug: "index", title: "Home" },
-        { slug: "notes/auth", title: "Auth" },
-      ],
-    });
+    expect(readNavigationEntries(root)).toEqual([
+      { slug: "index", title: "Home" },
+      { slug: "notes/auth", title: "Auth" },
+    ]);
     expect(
       await fs.pathExists(
         path.join(root, ".silica/next/public/silica/image.png"),
@@ -262,21 +254,20 @@ describe("precompute", () => {
     ).toBe(true);
     expect(
       await fs.pathExists(path.join(root, ".silica/cache-state.json")),
-    ).toBe(true);
+    ).toBe(false);
     expect(
       await fs.pathExists(path.join(root, ".silica/route-cache-keys.json")),
-    ).toBe(true);
+    ).toBe(false);
     expect(await fs.pathExists(path.join(root, ".silica/prerender.json"))).toBe(
-      true,
+      false,
     );
     expect(await fs.pathExists(path.join(root, ".silica/build-id.txt"))).toBe(
       false,
     );
     expect(result.cacheState.renderEnvironmentHash).toMatch(/^[a-f0-9]{64}$/);
     expect(result.manifest.bySlug.index?.contentHash).toMatch(/^[a-f0-9]{64}$/);
-    expect(result.routeCacheKeys.entries.index?.renderHash).toMatch(
-      /^[a-f0-9]{64}$/,
-    );
+    expect(readRenderHash(root, "index")).toMatch(/^[a-f0-9]{64}$/);
+    expect(readSearchRowCount(root)).toBe(2);
     expect(
       await fs.pathExists(path.join(root, ".silica/content/draft.md")),
     ).toBe(false);
@@ -361,9 +352,46 @@ describe("precompute", () => {
     });
 
     expect(result.prerender.slugs).toEqual(["a/b", "a/b/c", "index"]);
-    await expect(
-      fs.readJson(path.join(root, ".silica/prerender.json")),
-    ).resolves.toEqual(result.prerender);
+    expect(readPrerenderSlugs(root)).toEqual(result.prerender.slugs);
+
+    await fs.remove(root);
+  });
+
+  it("selects section pages at depth 1 for typical docs vault layout", async () => {
+    const root = path.join(
+      process.cwd(),
+      ".tmp-precompute-prerender-docs-depth",
+    );
+    await fs.emptyDir(path.join(root, "content/getting-started/deep"));
+    await fs.writeFile(path.join(root, "content/index.md"), "# Home");
+    await fs.writeFile(
+      path.join(root, "content/getting-started/installation.md"),
+      "# Installation",
+    );
+    await fs.writeFile(
+      path.join(root, "content/getting-started/deep/nested.md"),
+      "# Nested",
+    );
+
+    const result = await precompute({
+      projectRoot: root,
+      config: resolveConfig(
+        {
+          title: "Test",
+          render: {
+            prerender: {
+              depth: 1,
+            },
+          },
+        },
+        root,
+      ),
+    });
+
+    expect(result.prerender.slugs).toEqual([
+      "getting-started/installation",
+      "index",
+    ]);
 
     await fs.remove(root);
   });
@@ -413,35 +441,31 @@ describe("precompute", () => {
       "---\ntitle: Source\n---\n[[target]]\n\nOriginal body.",
     );
 
-    const first = await precompute({
+    await precompute({
       projectRoot: root,
       config: resolveConfig({ title: "Test" }, root),
     });
-    const firstTargetHash = first.routeCacheKeys.entries.target?.renderHash;
+    const firstTargetHash = readRenderHash(root, "target");
 
     await fs.writeFile(
       path.join(root, "content/source.md"),
       "---\ntitle: Source\n---\n[[target]]\n\nChanged body.",
     );
-    const bodyChange = await precompute({
+    await precompute({
       projectRoot: root,
       config: resolveConfig({ title: "Test" }, root),
     });
-    expect(bodyChange.routeCacheKeys.entries.target?.renderHash).toBe(
-      firstTargetHash,
-    );
+    expect(readRenderHash(root, "target")).toBe(firstTargetHash);
 
     await fs.writeFile(
       path.join(root, "content/source.md"),
       "---\ntitle: Source Renamed\n---\n[[target]]\n\nChanged body.",
     );
-    const titleChange = await precompute({
+    await precompute({
       projectRoot: root,
       config: resolveConfig({ title: "Test" }, root),
     });
-    expect(titleChange.routeCacheKeys.entries.target?.renderHash).not.toBe(
-      firstTargetHash,
-    );
+    expect(readRenderHash(root, "target")).not.toBe(firstTargetHash);
 
     await fs.remove(root);
   });
@@ -495,3 +519,71 @@ describe("getGitDates", () => {
     await fs.remove(root);
   });
 });
+
+function readNavigationEntries(root: string): Array<{
+  slug: string;
+  title: string;
+}> {
+  const db = openVaultDb(root);
+  try {
+    return db
+      .prepare(
+        `
+        SELECT slug, menu_label AS title
+        FROM notes
+        WHERE listed = 1
+        ORDER BY COALESCE(sort_key, slug), slug
+      `,
+      )
+      .all() as Array<{ slug: string; title: string }>;
+  } finally {
+    db.close();
+  }
+}
+
+function readPrerenderSlugs(root: string): string[] {
+  const db = openVaultDb(root);
+  try {
+    return db
+      .prepare(
+        "SELECT slug FROM notes WHERE prerender = 1 ORDER BY COALESCE(sort_key, slug), slug",
+      )
+      .all()
+      .map((row) => (row as { slug: string }).slug);
+  } finally {
+    db.close();
+  }
+}
+
+function readRenderHash(root: string, slug: string): string | undefined {
+  const db = openVaultDb(root);
+  try {
+    const row = db
+      .prepare("SELECT render_hash FROM notes WHERE slug = ?")
+      .get(slug) as { render_hash: string } | undefined;
+    return row?.render_hash;
+  } finally {
+    db.close();
+  }
+}
+
+function readSearchRowCount(root: string): number {
+  const db = openVaultDb(root);
+  try {
+    const row = db
+      .prepare("SELECT COUNT(*) AS count FROM search_index")
+      .get() as { count: number };
+    return row.count;
+  } finally {
+    db.close();
+  }
+}
+
+function openVaultDb(root: string): Database.Database {
+  const db = new Database(path.join(root, ".silica/vault.db"), {
+    fileMustExist: true,
+    readonly: true,
+  });
+  db.pragma("query_only = ON");
+  return db;
+}

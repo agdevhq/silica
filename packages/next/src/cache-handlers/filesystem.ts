@@ -1,6 +1,7 @@
 import crypto from "node:crypto";
 import path from "node:path";
 import { ReadableStream } from "node:stream/web";
+import Database from "better-sqlite3";
 import fs from "fs-extra";
 
 export type CacheEntry = {
@@ -39,7 +40,7 @@ export function createFilesystemCacheHandler(
       softTags: string[] = [],
     ): Promise<CacheEntry | undefined> {
       await ensureCacheRoot(entriesRoot);
-      await refreshTags();
+      await loadTagState();
       const stored = await readStoredEntry(getEntryPath(entriesRoot, cacheKey));
       if (!stored) return undefined;
       const now = Date.now();
@@ -79,11 +80,11 @@ export function createFilesystemCacheHandler(
     },
 
     async refreshTags(): Promise<void> {
-      await refreshTags();
+      await loadTagState();
     },
 
     async getExpiration(tags: string[]): Promise<number> {
-      await refreshTags();
+      await loadTagState();
       return getExpirationFromState(tags);
     },
 
@@ -92,7 +93,7 @@ export function createFilesystemCacheHandler(
       durations?: { expire?: number },
     ): Promise<void> {
       await ensureCacheRoot(entriesRoot);
-      await refreshTags();
+      await loadTagState();
       const now = Date.now();
       const uniqueTags = [...new Set(tags)];
       tagState ??= { version: 1, tags: {} };
@@ -106,7 +107,7 @@ export function createFilesystemCacheHandler(
     },
   };
 
-  async function refreshTags(): Promise<void> {
+  async function loadTagState(): Promise<void> {
     tagState = ((await fs.readJson(tagsPath).catch(() => undefined)) ?? {
       version: 1,
       tags: {},
@@ -126,10 +127,7 @@ async function ensureCacheRoot(entriesRoot: string): Promise<void> {
 function resolveCacheRoot(): string {
   if (process.env.SILICA_CACHE_DIR) return process.env.SILICA_CACHE_DIR;
   const projectRoot = process.env.SILICA_PROJECT_ROOT ?? process.cwd();
-  const configPath = path.join(projectRoot, ".silica/config.json");
-  const config = fs.readJsonSync(configPath, { throws: false }) as {
-    render?: { cache?: { directory?: string } };
-  } | null;
+  const config = readConfigFromVaultDb(projectRoot);
   const configured = config?.render?.cache?.directory;
   if (configured) {
     return path.isAbsolute(configured)
@@ -137,6 +135,28 @@ function resolveCacheRoot(): string {
       : path.join(projectRoot, configured);
   }
   return path.join(projectRoot, ".silica/cache/next");
+}
+
+function readConfigFromVaultDb(projectRoot: string):
+  | {
+      render?: { cache?: { directory?: string } };
+    }
+  | undefined {
+  const databasePath = path.join(projectRoot, ".silica/vault.db");
+  if (!fs.existsSync(databasePath)) return;
+  const db = new Database(databasePath, {
+    fileMustExist: true,
+    readonly: true,
+  });
+  try {
+    db.pragma("query_only = ON");
+    const row = db
+      .prepare("SELECT value FROM vault_metadata WHERE key = 'configJson'")
+      .get() as { value: string } | undefined;
+    return row ? JSON.parse(row.value) : undefined;
+  } finally {
+    db.close();
+  }
 }
 
 function getEntryPath(entriesRoot: string, cacheKey: string): string {
@@ -147,9 +167,11 @@ function getEntryPath(entriesRoot: string, cacheKey: string): string {
 async function readStoredEntry(
   filePath: string,
 ): Promise<StoredCacheEntry | undefined> {
-  return fs.readJson(filePath).catch(() => undefined) as Promise<
-    StoredCacheEntry | undefined
-  >;
+  try {
+    return (await fs.readJson(filePath)) as StoredCacheEntry;
+  } catch {
+    return undefined;
+  }
 }
 
 async function writeJsonAtomic(

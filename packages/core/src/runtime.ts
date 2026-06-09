@@ -15,8 +15,11 @@ export {
   renderMarkdownHtml,
 } from "./pipeline/index.js";
 export {
+  asFullSlug,
   createWikiLinkResolutionIndex,
   hrefToSlug,
+  normalizeSlug,
+  resolveRelative,
   resolveWikiLink,
   simplifySlug,
   slugToHref,
@@ -50,7 +53,6 @@ export type {
   PrerenderManifest,
   RenderContext,
   RenderCacheState,
-  RouteCacheKeyManifest,
   RenderResult,
   ResolvedSilicaConfig,
   TocItem,

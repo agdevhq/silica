@@ -17,89 +17,8 @@ export async function buildSearchDatabase(
   try {
     db.pragma("journal_mode = DELETE");
     db.pragma("synchronous = OFF");
-    db.exec(`
-      CREATE TABLE metadata (
-        key TEXT PRIMARY KEY,
-        value TEXT NOT NULL
-      );
-
-      CREATE TABLE documents (
-        rowid INTEGER PRIMARY KEY,
-        id TEXT NOT NULL UNIQUE,
-        slug TEXT NOT NULL,
-        title TEXT NOT NULL,
-        description TEXT,
-        tags_json TEXT NOT NULL,
-        excerpt TEXT NOT NULL
-      );
-
-      CREATE TABLE document_tags (
-        document_rowid INTEGER NOT NULL,
-        tag TEXT NOT NULL,
-        PRIMARY KEY (document_rowid, tag),
-        FOREIGN KEY (document_rowid) REFERENCES documents(rowid) ON DELETE CASCADE
-      );
-
-      CREATE INDEX document_tags_tag_idx ON document_tags(tag);
-
-      CREATE VIRTUAL TABLE search_index USING fts5(
-        title,
-        content,
-        tags,
-        tokenize='porter unicode61',
-        prefix='3'
-      );
-    `);
-
-    const builtAt = new Date().toISOString();
-    const insertMetadata = db.prepare(
-      "INSERT INTO metadata (key, value) VALUES (?, ?)",
-    );
-    const insertDocument = db.prepare(`
-      INSERT INTO documents (id, slug, title, description, tags_json, excerpt)
-      VALUES (@id, @slug, @title, @description, @tagsJson, @excerpt)
-    `);
-    const insertSearch = db.prepare(`
-      INSERT INTO search_index (rowid, title, content, tags)
-      VALUES (?, ?, ?, ?)
-    `);
-    const insertTag = db.prepare(`
-      INSERT OR IGNORE INTO document_tags (document_rowid, tag)
-      VALUES (?, ?)
-    `);
-
-    const insertRecords = db.transaction((items: SearchRecord[]) => {
-      for (const record of items) {
-        const tags = record.tags.map(normalizeTag).filter(Boolean);
-        const result = insertDocument.run({
-          id: record.id,
-          slug: record.slug,
-          title: record.title,
-          description: record.description,
-          tagsJson: JSON.stringify(record.tags),
-          excerpt: makeExcerpt(
-            record.content,
-            record.description ?? record.title,
-          ),
-        });
-        const rowid = Number(result.lastInsertRowid);
-        insertSearch.run(rowid, record.title, record.content, tags.join(" "));
-        for (const tag of tags) {
-          for (const hierarchyTag of tagHierarchy(tag)) {
-            insertTag.run(rowid, hierarchyTag);
-          }
-        }
-      }
-
-      insertMetadata.run("version", "1");
-      insertMetadata.run("builtAt", builtAt);
-      insertMetadata.run("recordCount", String(items.length));
-    });
-    insertRecords(records);
-
-    db.prepare("INSERT INTO search_index(search_index) VALUES(?)").run(
-      "optimize",
-    );
+    createStandaloneNotesSchema(db);
+    const builtAt = buildSearchTables(db, records);
     db.exec("VACUUM");
 
     return {
@@ -111,6 +30,116 @@ export async function buildSearchDatabase(
   } finally {
     db.close();
   }
+}
+
+export function buildSearchTables(
+  db: Database.Database,
+  records: SearchRecord[],
+): string {
+  db.exec(`
+    DROP TABLE IF EXISTS search_index;
+    CREATE VIRTUAL TABLE search_index USING fts5(
+      title,
+      content,
+      tags,
+      tokenize='porter unicode61',
+      prefix='3'
+    );
+  `);
+
+  const builtAt = new Date().toISOString();
+  const upsertMetadata = db.prepare(`
+    INSERT INTO vault_metadata (key, value) VALUES (?, ?)
+    ON CONFLICT(key) DO UPDATE SET value = excluded.value
+  `);
+  const insertNote = db.prepare(`
+    INSERT INTO notes (
+      slug,
+      file,
+      relative_file,
+      title,
+      menu_label,
+      description,
+      generated_description,
+      frontmatter_json,
+      tags_json,
+      search_excerpt,
+      listed,
+      content_hash,
+      render_hash,
+      prerender
+    )
+    VALUES (
+      @slug,
+      @file,
+      @relativeFile,
+      @title,
+      @menuLabel,
+      @description,
+      NULL,
+      '{}',
+      @tagsJson,
+      @excerpt,
+      1,
+      @contentHash,
+      @renderHash,
+      1
+    )
+    ON CONFLICT(slug) DO UPDATE SET
+      title = excluded.title,
+      menu_label = excluded.menu_label,
+      description = excluded.description,
+      tags_json = excluded.tags_json,
+      search_excerpt = excluded.search_excerpt
+  `);
+  const selectNoteRowid = db.prepare(
+    "SELECT rowid AS rowid FROM notes WHERE slug = ?",
+  );
+  const insertSearch = db.prepare(`
+    INSERT INTO search_index (rowid, title, content, tags)
+    VALUES (?, ?, ?, ?)
+  `);
+  const insertTag = db.prepare(`
+    INSERT OR IGNORE INTO note_tags (slug, tag)
+    VALUES (?, ?)
+  `);
+
+  const insertRecords = db.transaction((items: SearchRecord[]) => {
+    for (const record of items) {
+      const tags = record.tags.map(normalizeTag).filter(Boolean);
+      const excerpt = makeExcerpt(
+        record.content,
+        record.description ?? record.title,
+      );
+      insertNote.run({
+        slug: record.slug,
+        file: "",
+        relativeFile: "",
+        title: record.title,
+        menuLabel: record.title,
+        description: record.description,
+        tagsJson: JSON.stringify(record.tags),
+        excerpt,
+        contentHash: record.id,
+        renderHash: record.id,
+      });
+      const row = selectNoteRowid.get(record.slug) as { rowid: number };
+      insertSearch.run(row.rowid, record.title, record.content, tags.join(" "));
+      for (const tag of tags) {
+        for (const hierarchyTag of tagHierarchy(tag)) {
+          insertTag.run(record.slug, hierarchyTag);
+        }
+      }
+    }
+
+    upsertMetadata.run("searchVersion", "1");
+    upsertMetadata.run("searchBuiltAt", builtAt);
+    upsertMetadata.run("searchRecordCount", String(items.length));
+  });
+  insertRecords(records);
+
+  db.prepare("INSERT INTO search_index(search_index) VALUES(?)").run("optimize");
+  return builtAt;
 }
 
 async function removeDatabaseFiles(databasePath: string): Promise<void> {
@@ -128,4 +157,42 @@ function normalizeTag(tag: string): string {
 function tagHierarchy(tag: string): string[] {
   const segments = tag.split("/").filter(Boolean);
   return segments.map((_, index) => segments.slice(0, index + 1).join("/"));
+}
+
+function createStandaloneNotesSchema(db: Database.Database): void {
+  db.exec(`
+    CREATE TABLE vault_metadata (
+      key TEXT PRIMARY KEY,
+      value TEXT NOT NULL
+    );
+
+    CREATE TABLE notes (
+      slug TEXT PRIMARY KEY,
+      file TEXT NOT NULL,
+      relative_file TEXT NOT NULL,
+      title TEXT NOT NULL,
+      menu_label TEXT NOT NULL,
+      description TEXT,
+      generated_description TEXT,
+      frontmatter_json TEXT NOT NULL,
+      tags_json TEXT NOT NULL,
+      search_excerpt TEXT NOT NULL DEFAULT '',
+      created TEXT,
+      modified TEXT,
+      sort_key TEXT,
+      listed INTEGER NOT NULL,
+      content_hash TEXT NOT NULL,
+      render_hash TEXT NOT NULL,
+      prerender INTEGER NOT NULL
+    );
+
+    CREATE TABLE note_tags (
+      slug TEXT NOT NULL,
+      tag TEXT NOT NULL,
+      PRIMARY KEY (slug, tag),
+      FOREIGN KEY (slug) REFERENCES notes(slug) ON DELETE CASCADE
+    );
+
+    CREATE INDEX note_tags_tag_idx ON note_tags(tag, slug);
+  `);
 }

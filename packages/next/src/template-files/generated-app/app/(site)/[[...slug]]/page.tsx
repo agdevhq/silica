@@ -1,6 +1,6 @@
 import theme from "../../../silica-theme";
-import routeCacheKeys from "../../../../route-cache-keys.json";
 import { VaultContent } from "@silicajs/next/routes/page";
+import { getRenderKey, normalizeRouteSlug } from "@silicajs/next/server-data";
 export {
   generateMetadata,
   generateStaticParams,
@@ -12,27 +12,13 @@ export default async function Page({
   params: Promise<{ slug?: string[] }> | { slug?: string[] };
 }) {
   const resolvedParams = await params;
-  const slug = resolvedParams?.slug?.length
-    ? resolvedParams.slug.join("/")
-    : "index";
-  const renderKey = (
-    routeCacheKeys as {
-      renderEnvironmentHash: string;
-      entries: Record<string, { renderHash: string }>;
-    }
-  ).entries[slug];
+  const slug = normalizeRouteSlug(resolvedParams?.slug);
+  const renderKey = getRenderKey(slug);
   return (
     <VaultContent
       slug={slug}
-      renderHash={renderKey?.renderHash ?? "missing"}
-      renderEnvironmentHash={
-        (
-          routeCacheKeys as {
-            renderEnvironmentHash: string;
-            entries: Record<string, { renderHash: string }>;
-          }
-        ).renderEnvironmentHash
-      }
+      renderHash={renderKey.renderHash}
+      renderEnvironmentHash={renderKey.renderEnvironmentHash}
       theme={theme}
     />
   );

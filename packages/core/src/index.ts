@@ -81,7 +81,6 @@ export type {
   PrerenderSelectorContext,
   RenderContext,
   RenderCacheState,
-  RouteCacheKeyManifest,
   RenderResult,
   ResolvedSilicaConfig,
   ResolvedSilicaPrerenderConfig,

@@ -6,23 +6,20 @@ import {
   getMetaDescription,
   renderMarkdown,
   renderMarkdownHtml,
-  resolveWikiLink,
-  slugToHref,
-  type Graph,
-  type Manifest,
   type RenderContext,
 } from "@silicajs/core/runtime";
 import { SilicaLink } from "@silicajs/components/routing";
 import {
-  loadPageRuntimeData,
-  loadPrerenderManifest,
+  getBacklinks,
+  getBreadcrumbs,
+  getPage,
+  getPageRuntimeData,
+  getPrerenderSlugs,
+  getRenderKey,
+  resolveWikiLinkFromDb,
   normalizeRouteSlug,
 } from "../server-data.js";
-import type {
-  SilicaTheme,
-  ThemeBacklink,
-  ThemeBreadcrumb,
-} from "@silicajs/core/theme";
+import type { SilicaTheme } from "@silicajs/core/theme";
 
 function MarkdownLink({
   href,
@@ -36,9 +33,9 @@ function MarkdownLink({
 }
 
 export async function generateStaticParams() {
-  const prerender = await loadPrerenderManifest();
-  const slugs = prerender.slugs.length
-    ? prerender.slugs
+  const prerenderSlugs = getPrerenderSlugs();
+  const slugs = prerenderSlugs.length
+    ? prerenderSlugs
     : ["__silica_prerender_placeholder__"];
   return slugs.map((slug) => ({
     slug: slug === "index" ? [] : slug.split("/"),
@@ -48,8 +45,12 @@ export async function generateStaticParams() {
 export async function generateMetadata({ params }: PageProps) {
   const resolvedParams = await params;
   const slug = normalizeRouteSlug(resolvedParams?.slug);
-  const manifest = await getPageManifest();
-  const entry = manifest.bySlug[slug];
+  const renderKey = getRenderKey(slug);
+  const entry = await getPageMetadata(
+    slug,
+    renderKey.renderHash,
+    renderKey.renderEnvironmentHash,
+  );
   if (!entry) return {};
   return {
     title: entry.title,
@@ -57,12 +58,19 @@ export async function generateMetadata({ params }: PageProps) {
   };
 }
 
-async function getPageManifest() {
+async function getPageMetadata(
+  slug: string,
+  renderHash: string,
+  renderEnvironmentHash: string,
+) {
   "use cache";
   cacheLife("max");
-  const { cacheState, manifest } = await loadPageRuntimeData();
-  cacheTag(`environment:${cacheState.renderEnvironmentHash}`);
-  return manifest;
+  cacheTag(
+    `environment:${renderEnvironmentHash}`,
+    `page:${slug}`,
+    `render:${renderHash}`,
+  );
+  return getPage(slug);
 }
 
 export type PageProps = {
@@ -80,46 +88,29 @@ export async function VaultContent({
   renderEnvironmentHash: string;
   theme: SilicaTheme;
 }) {
-  return (
-    <CachedVaultContent
-      slug={slug}
-      renderHash={renderHash}
-      renderEnvironmentHash={renderEnvironmentHash}
-      theme={theme}
-    />
-  );
-}
-
-async function CachedVaultContent({
-  slug,
-  renderHash,
-  renderEnvironmentHash,
-  theme,
-}: {
-  slug: string;
-  renderHash: string;
-  renderEnvironmentHash: string;
-  theme: SilicaTheme;
-}) {
   "use cache";
   cacheLife("max");
-  const { manifest, graph, config, wikilinkIndex } =
-    await loadPageRuntimeData();
+  const data = getPageRuntimeData(slug);
+  if (!data) notFound();
+  const { entry, config } = data;
   cacheTag(
     `environment:${renderEnvironmentHash}`,
     `page:${slug}`,
     `render:${renderHash}`,
   );
 
-  const entry = manifest.bySlug[slug];
-  if (!entry) notFound();
-
   const renderContext = (
     currentSlug: string,
     embedDepth = 0,
   ): RenderContext => ({
     slug: currentSlug,
-    wikilinkIndex,
+    resolveWikiLink: (_currentSlug, target) =>
+      resolveWikiLinkFromDb(
+        currentSlug,
+        target,
+        config.wikilinks.strategy,
+        config.ordering,
+      ),
     assetBaseUrl: "/silica",
     wikilinkStrategy: config.wikilinks.strategy,
     tags: config.tags,
@@ -131,15 +122,14 @@ async function CachedVaultContent({
       a: MarkdownLink,
     },
     resolveEmbed: async (target) => {
-      const resolved = resolveWikiLink(
+      const resolved = resolveWikiLinkFromDb(
         currentSlug,
         target.path || currentSlug,
-        wikilinkIndex,
         config.wikilinks.strategy,
         config.ordering,
       );
       if (!resolved || embedDepth >= 3) return;
-      const embeddedEntry = manifest.bySlug[resolved];
+      const embeddedEntry = getPage(resolved);
       if (!embeddedEntry) return;
       const embeddedRaw = await fs.readFile(embeddedEntry.file, "utf8");
       const scopedRaw = scopeEmbedMarkdown(embeddedRaw, target);
@@ -156,8 +146,8 @@ async function CachedVaultContent({
   return (
     <theme.PageRenderer
       config={config}
-      breadcrumbs={makeBreadcrumbs(slug, manifest)}
-      backlinks={makeBacklinks(slug, manifest, graph)}
+      breadcrumbs={getBreadcrumbs(slug)}
+      backlinks={getBacklinks(slug)}
       page={{
         slug,
         title: entry.title,
@@ -170,49 +160,6 @@ async function CachedVaultContent({
       }}
     />
   );
-}
-
-function makeBreadcrumbs(slug: string, manifest: Manifest): ThemeBreadcrumb[] {
-  if (slug === "index" || !slug.includes("/")) return [];
-
-  const breadcrumbs: ThemeBreadcrumb[] = [{ label: "Home", href: "/" }];
-  const segments = slug.split("/").slice(0, -1);
-  let acc = "";
-  for (const segment of segments) {
-    acc = acc ? `${acc}/${segment}` : segment;
-    breadcrumbs.push({
-      label: prettySegment(segment),
-      href: breadcrumbSegmentHref(acc, manifest),
-    });
-  }
-  return breadcrumbs;
-}
-
-function breadcrumbSegmentHref(
-  segmentPath: string,
-  manifest: Manifest,
-): string | undefined {
-  if (manifest.bySlug[segmentPath]) return slugToHref(segmentPath);
-  const indexSlug = `${segmentPath}/index`;
-  if (manifest.bySlug[indexSlug]) return slugToHref(indexSlug);
-  return undefined;
-}
-
-function makeBacklinks(
-  slug: string,
-  manifest: Manifest,
-  graph: Graph,
-): ThemeBacklink[] {
-  return (graph.backlinks[slug] ?? []).map((source) => ({
-    slug: source,
-    title: manifest.bySlug[source]?.title ?? source,
-  }));
-}
-
-function prettySegment(segment: string): string {
-  return segment
-    .replace(/[-_]/g, " ")
-    .replace(/\b\w/g, (letter) => letter.toUpperCase());
 }
 
 function scopeEmbedMarkdown(

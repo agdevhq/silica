@@ -1,6 +1,6 @@
 import * as React from "react";
 import { tagMatches } from "@silicajs/remark-obsidian";
-import { tagToHref, type Manifest } from "@silicajs/core/runtime";
+import { tagToHref, type ManifestEntry } from "@silicajs/core/runtime";
 
 import { TagBadge } from "@silicajs/ui/components/tag-badge";
 
@@ -8,20 +8,24 @@ import { SilicaLink } from "./routing.js";
 import { slugToHref } from "./slug.js";
 
 export type TagsListProps = {
-  manifest: Manifest;
+  entries: ManifestEntry[];
   tag: string;
   className?: string;
 };
 
-export function TagsList({ manifest, tag, className }: TagsListProps) {
+export function TagsList({
+  entries: allEntries,
+  tag,
+  className,
+}: TagsListProps) {
   const entries = React.useMemo(
     () =>
-      manifest.entries
+      allEntries
         .filter((entry) =>
           entry.tags.some((entryTag) => tagMatches(entryTag, tag)),
         )
         .sort((a, b) => a.title.localeCompare(b.title)),
-    [manifest.entries, tag],
+    [allEntries, tag],
   );
   const relatedTags = React.useMemo(() => {
     const counts = new Map<string, number>();

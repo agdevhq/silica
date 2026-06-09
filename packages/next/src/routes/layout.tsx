@@ -1,6 +1,6 @@
 import { cacheLife, cacheTag } from "next/cache";
 import { resolveRuntimeAuthConfig } from "../auth-config.js";
-import { loadRenderCacheState, loadResolvedConfig } from "../server-data.js";
+import { getCacheState, getConfig } from "../server-data.js";
 
 export async function generateMetadata() {
   const { config } = await getLayoutProps();
@@ -14,12 +14,15 @@ export async function generateMetadata() {
 }
 
 export async function getLayoutProps() {
+  const cacheState = getCacheState();
+  return getCachedLayoutProps(cacheState.renderEnvironmentHash);
+}
+
+async function getCachedLayoutProps(renderEnvironmentHash: string) {
   "use cache";
   cacheLife("max");
-  const cacheState = await loadRenderCacheState();
-  const renderEnvironmentHash = cacheState.renderEnvironmentHash;
   cacheTag(`environment:${renderEnvironmentHash}`);
-  const config = await loadResolvedConfig();
+  const config = getConfig();
   const auth = resolveRuntimeAuthConfig(config);
   return {
     navigationEndpoint: `/api/navigation?build=${encodeURIComponent(

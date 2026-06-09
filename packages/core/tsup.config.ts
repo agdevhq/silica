@@ -15,6 +15,7 @@ export default defineConfig({
     "@silicajs/search",
     "@silicajs/remark-obsidian",
     "@shikijs/rehype",
+    "better-sqlite3",
     "fast-glob",
     "fs-extra",
     "github-slugger",

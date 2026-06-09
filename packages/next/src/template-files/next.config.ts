@@ -8,13 +8,12 @@ import type { NextConfig } from "next";
 const require = createRequire(import.meta.url);
 const nextRoot = path.dirname(fileURLToPath(import.meta.url));
 const silicaRoot = path.resolve(nextRoot, "..");
-const cacheState = readJson<{ renderEnvironmentHash?: string }>(
-  path.join(silicaRoot, "cache-state.json"),
-);
-const resolvedConfig = readJson<{
+const vaultMetadata = readVaultMetadata(path.join(silicaRoot, "vault.db"));
+type VaultConfig = {
   render?: { cache?: { storage?: "memory" | "filesystem" } };
-}>(path.join(silicaRoot, "config.json"));
-const useFilesystemCache = resolvedConfig.render?.cache?.storage !== "memory";
+};
+const resolvedConfig = parseJson<VaultConfig>(vaultMetadata.configJson);
+const useFilesystemCache = resolvedConfig?.render?.cache?.storage !== "memory";
 
 const baseNextConfig: NextConfig = {
   cacheComponents: true,
@@ -26,7 +25,7 @@ const baseNextConfig: NextConfig = {
         },
       }
     : {}),
-  generateBuildId: async () => cacheState.renderEnvironmentHash ?? "silica",
+  generateBuildId: async () => vaultMetadata.renderEnvironmentHash ?? "silica",
   deploymentId: process.env.SILICA_DEPLOYMENT_ID,
   output: "standalone",
   transpilePackages: [
@@ -42,14 +41,7 @@ const baseNextConfig: NextConfig = {
   outputFileTracingIncludes: {
     "/*": [
       "../content/**/*",
-      "../manifest.json",
-      "../navigation.json",
-      "../graph.json",
-      "../config.json",
-      "../cache-state.json",
-      "../prerender.json",
-      "../route-cache-keys.json",
-      "../search.db",
+      "../vault.db",
     ],
   },
   experimental: {
@@ -58,12 +50,28 @@ const baseNextConfig: NextConfig = {
   },
 };
 
-function readJson<T>(filePath: string): T {
+function readVaultMetadata(databasePath: string): {
+  renderEnvironmentHash?: string;
+  configJson?: string;
+} {
+  if (!fs.existsSync(databasePath)) return {};
+  const Database = require("better-sqlite3") as typeof import("better-sqlite3");
+  const db = new Database(databasePath, {
+    fileMustExist: true,
+    readonly: true,
+  });
   try {
-    return JSON.parse(fs.readFileSync(filePath, "utf8")) as T;
-  } catch {
-    return {} as T;
+    const rows = db
+      .prepare("SELECT key, value FROM vault_metadata")
+      .all() as Array<{ key: string; value: string }>;
+    return Object.fromEntries(rows.map((row) => [row.key, row.value]));
+  } finally {
+    db.close();
   }
+}
+
+function parseJson<T>(value: string | undefined): T | undefined {
+  return value ? (JSON.parse(value) as T) : undefined;
 }
 
 /* __SILICA_CONFIG_OVERRIDE__ */

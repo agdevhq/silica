@@ -57,6 +57,20 @@ npm run dev
 4. The theme owns persistent layout chrome while `@silicajs/components` provides the vault tree, breadcrumbs, ToC, backlinks, dark mode, and search UI on top of `@silicajs/ui` primitives.
 5. Auth settings are baked into generated `proxy.ts`, which enforces access before cached pages, search, or vault assets are served.
 
+## Rendering And Cache
+
+Silica prerenders all notes by default. Every rendered note is cacheable, so a page that is not prerendered is rendered on first request and reused afterward. Large vaults can reduce build work by configuring `render.prerender`:
+
+```ts
+export default defineConfig({
+  render: {
+    prerender: { depth: 2 },
+  },
+});
+```
+
+Supported modes are `prerender: "all"`, `prerender: "none"`, depth-based prerendering, and custom selectors with `include`, `exclude`, and `limit`. The cache is always enabled for rendered vault pages; `render.cache.storage` only controls whether it uses memory or a filesystem directory.
+
 ## Development
 
 ```bash
@@ -86,10 +100,11 @@ Projects scaffolded with `silica create` include a Dockerfile:
 
 ```bash
 docker build -t my-silica-site .
-docker run --env-file .env -p 3000:3000 my-silica-site
+docker run --env-file .env -p 3000:3000 -v silica-cache:/app/.silica/cache/next my-silica-site
 ```
 
 The generated image starts the traced Next.js standalone `server.js`. If auth is enabled, the generated proxy also protects search and vault assets under `/silica/*`.
+Mounting `/app/.silica/cache/next` preserves rendered-note cache entries across container replacement for single-container deployments. Multi-replica deployments need a genuinely shared volume or a future Redis/S3/KV cache handler.
 
 ### Plain Node
 

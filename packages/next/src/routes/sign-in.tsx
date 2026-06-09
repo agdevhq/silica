@@ -2,7 +2,7 @@ import { cacheLife, cacheTag } from "next/cache";
 import { SignInShell } from "@silicajs/components";
 import { GoogleSignInButton } from "../google-sign-in-button.js";
 import { resolveRuntimeAuthConfig } from "../auth-config.js";
-import { loadBuildId, loadResolvedConfig } from "../server-data.js";
+import { loadRenderCacheState, loadResolvedConfig } from "../server-data.js";
 
 export default async function SignInPage() {
   const config = await getSignInConfig();
@@ -33,7 +33,7 @@ export default async function SignInPage() {
 async function getSignInConfig() {
   "use cache";
   cacheLife("max");
-  const buildId = await loadBuildId();
-  cacheTag("build", `build:${buildId}`);
+  const cacheState = await loadRenderCacheState();
+  cacheTag(`environment:${cacheState.renderEnvironmentHash}`);
   return loadResolvedConfig();
 }

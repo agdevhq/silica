@@ -13,7 +13,11 @@ import {
   type RenderContext,
 } from "@silicajs/core/runtime";
 import { SilicaLink } from "@silicajs/components/routing";
-import { loadPageRuntimeData, normalizeRouteSlug } from "../server-data.js";
+import {
+  loadPageRuntimeData,
+  loadPrerenderManifest,
+  normalizeRouteSlug,
+} from "../server-data.js";
 import type {
   SilicaTheme,
   ThemeBacklink,
@@ -32,9 +36,12 @@ function MarkdownLink({
 }
 
 export async function generateStaticParams() {
-  const manifest = await getPageManifest();
-  return manifest.entries.map((entry) => ({
-    slug: entry.slug === "index" ? [] : entry.slug.split("/"),
+  const prerender = await loadPrerenderManifest();
+  const slugs = prerender.slugs.length
+    ? prerender.slugs
+    : ["__silica_prerender_placeholder__"];
+  return slugs.map((slug) => ({
+    slug: slug === "index" ? [] : slug.split("/"),
   }));
 }
 
@@ -53,8 +60,8 @@ export async function generateMetadata({ params }: PageProps) {
 async function getPageManifest() {
   "use cache";
   cacheLife("max");
-  const { buildId, manifest } = await loadPageRuntimeData();
-  cacheTag("build", `build:${buildId}`);
+  const { cacheState, manifest } = await loadPageRuntimeData();
+  cacheTag(`environment:${cacheState.renderEnvironmentHash}`);
   return manifest;
 }
 
@@ -64,16 +71,45 @@ export type PageProps = {
 
 export async function VaultContent({
   slug,
+  renderHash,
+  renderEnvironmentHash,
   theme,
 }: {
   slug: string;
+  renderHash: string;
+  renderEnvironmentHash: string;
+  theme: SilicaTheme;
+}) {
+  return (
+    <CachedVaultContent
+      slug={slug}
+      renderHash={renderHash}
+      renderEnvironmentHash={renderEnvironmentHash}
+      theme={theme}
+    />
+  );
+}
+
+async function CachedVaultContent({
+  slug,
+  renderHash,
+  renderEnvironmentHash,
+  theme,
+}: {
+  slug: string;
+  renderHash: string;
+  renderEnvironmentHash: string;
   theme: SilicaTheme;
 }) {
   "use cache";
   cacheLife("max");
-  const { buildId, manifest, graph, config, wikilinkIndex } =
+  const { manifest, graph, config, wikilinkIndex } =
     await loadPageRuntimeData();
-  cacheTag("build", `build:${buildId}`, `page:${slug}`);
+  cacheTag(
+    `environment:${renderEnvironmentHash}`,
+    `page:${slug}`,
+    `render:${renderHash}`,
+  );
 
   const entry = manifest.bySlug[slug];
   if (!entry) notFound();

@@ -22,6 +22,7 @@ describe("generated templates", () => {
       "app/not-allowed/page.tsx",
       "app/not-found.tsx",
       "app/sign-in/page.tsx",
+      "cache-handlers/filesystem-cache.js",
       "postcss.config.mjs",
       "proxy.ts",
     ]);
@@ -47,7 +48,16 @@ describe("generated templates", () => {
   it("traces only precomputed runtime content", () => {
     expect(nextConfigTemplate()).toContain('"../content/**/*"');
     expect(nextConfigTemplate()).toContain('"../navigation.json"');
+    expect(nextConfigTemplate()).toContain('"../cache-state.json"');
+    expect(nextConfigTemplate()).toContain('"../route-cache-keys.json"');
     expect(nextConfigTemplate()).not.toContain('"../../content/**/*"');
+  });
+
+  it("configures stable build ids and filesystem cache handlers", () => {
+    const rendered = nextConfigTemplate();
+    expect(rendered).toContain("generateBuildId");
+    expect(rendered).toContain("cacheHandlers");
+    expect(rendered).toContain("./cache-handlers/filesystem-cache.js");
   });
 
   it("generates a static import for local themes", () => {
@@ -75,6 +85,10 @@ describe("generated templates", () => {
         tags: { inline: true },
         ordering: { numericPrefixes: true },
         filters: { removeDrafts: true, explicitPublish: false },
+        render: {
+          prerender: { strategy: "all" },
+          cache: { storage: "filesystem" },
+        },
       }),
     ).toContain('"authEnabled": true');
   });
@@ -92,6 +106,10 @@ describe("generated templates", () => {
         tags: { inline: true },
         ordering: { numericPrefixes: true },
         filters: { removeDrafts: true, explicitPublish: false },
+        render: {
+          prerender: { strategy: "all" },
+          cache: { storage: "filesystem" },
+        },
       }),
     ).toContain('"publicPaths": [\n    "/logo.svg"\n  ]');
   });

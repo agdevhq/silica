@@ -10,10 +10,13 @@ export {
 export {
   getProjectRoot,
   getSilicaRoot,
-  loadBuildId,
   loadGraph,
   loadManifest,
   loadNavigation,
+  loadPrerenderManifest,
+  loadRenderCacheState,
+  loadRenderEnvironmentHash,
+  loadRenderKey,
   loadResolvedConfig,
 } from "./server-data.js";
 export { SilicaNextRoutingProvider } from "./routing-provider.js";

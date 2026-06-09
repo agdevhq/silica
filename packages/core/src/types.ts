@@ -52,8 +52,42 @@ export type SilicaConfig = {
     removeDrafts?: boolean;
     explicitPublish?: boolean;
   };
+  render?: SilicaRenderConfig;
   nextConfig?: SilicaNextConfigOverride;
 };
+
+export type SilicaRenderConfig = {
+  prerender?: SilicaPrerenderConfig;
+  cache?: {
+    storage?: "memory" | "filesystem";
+    directory?: string;
+  };
+};
+
+export type SilicaPrerenderSelectionOptions = {
+  include?: string[];
+  exclude?: string[];
+  limit?: number;
+};
+
+export type PrerenderSelectorContext = {
+  manifest: Manifest;
+  graph: Graph;
+};
+
+export type SilicaPrerenderConfig =
+  | "all"
+  | "none"
+  | ({ strategy: "all" } & SilicaPrerenderSelectionOptions)
+  | ({ strategy: "none" } & SilicaPrerenderSelectionOptions)
+  | ({ strategy?: "depth"; depth: number } & SilicaPrerenderSelectionOptions)
+  | ({
+      strategy: "custom";
+      select?: (
+        entry: ManifestEntry,
+        context: PrerenderSelectorContext,
+      ) => boolean | number;
+    } & SilicaPrerenderSelectionOptions);
 
 export type ResolvedSilicaConfig = {
   projectRoot: string;
@@ -78,7 +112,28 @@ export type ResolvedSilicaConfig = {
     removeDrafts: boolean;
     explicitPublish: boolean;
   };
+  render: ResolvedSilicaRenderConfig;
 };
+
+export type ResolvedSilicaRenderConfig = {
+  prerender: ResolvedSilicaPrerenderConfig;
+  cache: {
+    storage: "memory" | "filesystem";
+    directory?: string;
+  };
+};
+
+export type ResolvedSilicaPrerenderConfig =
+  | ({ strategy: "all" } & SilicaPrerenderSelectionOptions)
+  | ({ strategy: "none" } & SilicaPrerenderSelectionOptions)
+  | ({ strategy: "depth"; depth: number } & SilicaPrerenderSelectionOptions)
+  | ({
+      strategy: "custom";
+      select?: (
+        entry: ManifestEntry,
+        context: PrerenderSelectorContext,
+      ) => boolean | number;
+    } & SilicaPrerenderSelectionOptions);
 
 export type TocItem = {
   id: string;
@@ -99,6 +154,8 @@ export type ManifestEntry = {
   created?: string;
   modified?: string;
   frontmatter: Record<string, unknown>;
+  contentHash: string;
+  embeds: string[];
 };
 
 export type Manifest = {
@@ -190,6 +247,7 @@ export type RenderResult = {
 export type AnalyzeResult = {
   frontmatter: Record<string, unknown>;
   links: string[];
+  embeds: string[];
   brokenLinks: BrokenLink[];
   plainText: string;
   title?: string;
@@ -198,10 +256,33 @@ export type AnalyzeResult = {
   tags: string[];
 };
 
+export type PrerenderManifest = {
+  version: 1;
+  slugs: string[];
+};
+
+export type RenderCacheState = {
+  version: 1;
+  renderEnvironmentHash: string;
+  configHash: string;
+  siteMetadataHash: string;
+  themeHash?: string;
+  rendererVersion: string;
+  generatedAt: string;
+};
+
+export type RouteCacheKeyManifest = {
+  version: 1;
+  renderEnvironmentHash: string;
+  entries: Record<string, { renderHash: string }>;
+};
+
 export type PrecomputeResult = {
   manifest: Manifest;
+  routeCacheKeys: RouteCacheKeyManifest;
   graph: Graph;
   searchRecords: SearchRecord[];
-  buildId: string;
+  prerender: PrerenderManifest;
+  cacheState: RenderCacheState;
   brokenLinks: BrokenLink[];
 };

@@ -52,8 +52,8 @@ export default async function TagsPage({ params }: TagsPageProps) {
 async function getTagsManifest() {
   "use cache";
   cacheLife("max");
-  const { buildId, manifest } = await loadPageRuntimeData();
-  cacheTag("build", `build:${buildId}`);
+  const { cacheState, manifest } = await loadPageRuntimeData();
+  cacheTag(`environment:${cacheState.renderEnvironmentHash}`);
   return manifest;
 }
 

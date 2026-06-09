@@ -60,6 +60,10 @@
       "types": "./dist/dev-reload-client.d.ts",
       "import": "./dist/dev-reload-client.js"
     },
+    "./cache-handlers/filesystem": {
+      "types": "./dist/cache-handlers/filesystem.d.ts",
+      "import": "./dist/cache-handlers/filesystem.js"
+    },
     "./proxy": {
       "types": "./dist/proxy.d.ts",
       "import": "./dist/proxy.js"

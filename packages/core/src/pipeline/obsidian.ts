@@ -49,6 +49,7 @@ type HandlerState = {
 export function remarkSilicaObsidian(context: RenderContext) {
   return async (tree: Root, file: VFileLike) => {
     const links = new Set<string>();
+    const embeds = new Set<string>();
     const brokenLinks: Array<{ target: string }> = [];
     const assetBaseUrl = context.assetBaseUrl ?? "/silica";
     const embedPromises: Array<Promise<void>> = [];
@@ -89,10 +90,14 @@ export function remarkSilicaObsidian(context: RenderContext) {
 
       node.data.silicaResolvedSlug = resolved;
       links.add(resolved);
+      if (node.type === "obsidianWikiEmbed") {
+        embeds.add(resolved);
+      }
     });
 
     await Promise.all(embedPromises);
     file.data.silicaObsidianLinks = [...links];
+    file.data.silicaObsidianEmbeds = [...embeds];
     file.data.silicaObsidianBrokenLinks = brokenLinks;
   };
 }

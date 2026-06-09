@@ -12,6 +12,10 @@ const baseConfig: ResolvedSilicaConfig = {
   tags: { inline: true },
   ordering: { numericPrefixes: true },
   filters: { removeDrafts: true, explicitPublish: false },
+  render: {
+    prerender: { strategy: "all" },
+    cache: { storage: "filesystem" },
+  },
 };
 
 describe("resolveRuntimeAuthConfig", () => {

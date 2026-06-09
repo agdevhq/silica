@@ -261,6 +261,23 @@ describe("precompute", () => {
       await fs.pathExists(path.join(root, ".silica/content/index.md")),
     ).toBe(true);
     expect(
+      await fs.pathExists(path.join(root, ".silica/cache-state.json")),
+    ).toBe(true);
+    expect(
+      await fs.pathExists(path.join(root, ".silica/route-cache-keys.json")),
+    ).toBe(true);
+    expect(await fs.pathExists(path.join(root, ".silica/prerender.json"))).toBe(
+      true,
+    );
+    expect(await fs.pathExists(path.join(root, ".silica/build-id.txt"))).toBe(
+      false,
+    );
+    expect(result.cacheState.renderEnvironmentHash).toMatch(/^[a-f0-9]{64}$/);
+    expect(result.manifest.bySlug.index?.contentHash).toMatch(/^[a-f0-9]{64}$/);
+    expect(result.routeCacheKeys.entries.index?.renderHash).toMatch(
+      /^[a-f0-9]{64}$/,
+    );
+    expect(
       await fs.pathExists(path.join(root, ".silica/content/draft.md")),
     ).toBe(false);
     expect(
@@ -314,6 +331,117 @@ describe("precompute", () => {
     });
 
     expect(result.manifest.entries[0]?.tags).toEqual(["frontmatter"]);
+
+    await fs.remove(root);
+  });
+
+  it("selects prerender slugs by depth with include and exclude overrides", async () => {
+    const root = path.join(process.cwd(), ".tmp-precompute-prerender-depth");
+    await fs.emptyDir(path.join(root, "content/a/b"));
+    await fs.writeFile(path.join(root, "content/index.md"), "# Home");
+    await fs.writeFile(path.join(root, "content/a.md"), "# A");
+    await fs.writeFile(path.join(root, "content/a/b.md"), "# B");
+    await fs.writeFile(path.join(root, "content/a/b/c.md"), "# C");
+
+    const result = await precompute({
+      projectRoot: root,
+      config: resolveConfig(
+        {
+          title: "Test",
+          render: {
+            prerender: {
+              depth: 2,
+              include: ["a/b/c"],
+              exclude: ["a"],
+            },
+          },
+        },
+        root,
+      ),
+    });
+
+    expect(result.prerender.slugs).toEqual(["a/b", "a/b/c", "index"]);
+    await expect(
+      fs.readJson(path.join(root, ".silica/prerender.json")),
+    ).resolves.toEqual(result.prerender);
+
+    await fs.remove(root);
+  });
+
+  it("uses custom prerender scores with limit and explicit includes", async () => {
+    const root = path.join(process.cwd(), ".tmp-precompute-prerender-custom");
+    await fs.emptyDir(path.join(root, "content"));
+    await fs.writeFile(path.join(root, "content/index.md"), "# Home");
+    await fs.writeFile(path.join(root, "content/hot-one.md"), "# Hot One");
+    await fs.writeFile(path.join(root, "content/hot-two.md"), "# Hot Two");
+    await fs.writeFile(path.join(root, "content/pinned.md"), "# Pinned");
+
+    const result = await precompute({
+      projectRoot: root,
+      config: resolveConfig(
+        {
+          title: "Test",
+          render: {
+            prerender: {
+              strategy: "custom",
+              limit: 1,
+              include: ["pinned"],
+              select: (entry) =>
+                entry.slug === "hot-one"
+                  ? 10
+                  : entry.slug === "hot-two"
+                    ? 20
+                    : false,
+            },
+          },
+        },
+        root,
+      ),
+    });
+
+    expect(result.prerender.slugs).toEqual(["hot-two", "pinned"]);
+
+    await fs.remove(root);
+  });
+
+  it("keeps backlink render hashes sensitive to source titles, not source bodies", async () => {
+    const root = path.join(process.cwd(), ".tmp-precompute-render-hashes");
+    await fs.emptyDir(path.join(root, "content"));
+    await fs.writeFile(path.join(root, "content/target.md"), "# Target");
+    await fs.writeFile(
+      path.join(root, "content/source.md"),
+      "---\ntitle: Source\n---\n[[target]]\n\nOriginal body.",
+    );
+
+    const first = await precompute({
+      projectRoot: root,
+      config: resolveConfig({ title: "Test" }, root),
+    });
+    const firstTargetHash = first.routeCacheKeys.entries.target?.renderHash;
+
+    await fs.writeFile(
+      path.join(root, "content/source.md"),
+      "---\ntitle: Source\n---\n[[target]]\n\nChanged body.",
+    );
+    const bodyChange = await precompute({
+      projectRoot: root,
+      config: resolveConfig({ title: "Test" }, root),
+    });
+    expect(bodyChange.routeCacheKeys.entries.target?.renderHash).toBe(
+      firstTargetHash,
+    );
+
+    await fs.writeFile(
+      path.join(root, "content/source.md"),
+      "---\ntitle: Source Renamed\n---\n[[target]]\n\nChanged body.",
+    );
+    const titleChange = await precompute({
+      projectRoot: root,
+      config: resolveConfig({ title: "Test" }, root),
+    });
+    expect(titleChange.routeCacheKeys.entries.target?.renderHash).not.toBe(
+      firstTargetHash,
+    );
 
     await fs.remove(root);
   });

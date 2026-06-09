@@ -4,13 +4,16 @@ import type {
   Graph,
   Manifest,
   Navigation,
+  PrerenderManifest,
+  RenderCacheState,
+  RouteCacheKeyManifest,
   ResolvedSilicaConfig,
   WikiLinkResolutionIndex,
 } from "@silicajs/core/runtime";
 import { createWikiLinkResolutionIndex } from "@silicajs/core/runtime";
 
 export type PageRuntimeData = {
-  buildId: string;
+  cacheState: RenderCacheState;
   manifest: Manifest;
   graph: Graph;
   config: ResolvedSilicaConfig;
@@ -67,10 +70,36 @@ export async function loadNavigation(): Promise<Navigation> {
   ) as Promise<Navigation>;
 }
 
-export async function loadBuildId(): Promise<string> {
-  return (
-    await fs.readFile(path.join(getSilicaRoot(), "build-id.txt"), "utf8")
-  ).trim();
+export async function loadRenderCacheState(): Promise<RenderCacheState> {
+  return fs.readJson(
+    path.join(getSilicaRoot(), "cache-state.json"),
+  ) as Promise<RenderCacheState>;
+}
+
+export async function loadPrerenderManifest(): Promise<PrerenderManifest> {
+  return fs.readJson(
+    path.join(getSilicaRoot(), "prerender.json"),
+  ) as Promise<PrerenderManifest>;
+}
+
+export function loadRenderKey(slug: string): {
+  renderHash: string;
+  renderEnvironmentHash: string;
+} {
+  const keys = fs.readJsonSync(
+    path.join(getSilicaRoot(), "route-cache-keys.json"),
+  ) as RouteCacheKeyManifest;
+  return {
+    renderHash: keys.entries[slug]?.renderHash ?? "missing",
+    renderEnvironmentHash: keys.renderEnvironmentHash,
+  };
+}
+
+export function loadRenderEnvironmentHash(): string {
+  const cacheState = fs.readJsonSync(
+    path.join(getSilicaRoot(), "cache-state.json"),
+  ) as RenderCacheState;
+  return cacheState.renderEnvironmentHash;
 }
 
 export async function loadResolvedConfig() {
@@ -80,8 +109,8 @@ export async function loadResolvedConfig() {
 }
 
 export async function loadPageRuntimeData(): Promise<PageRuntimeData> {
-  const buildId = await loadBuildId();
-  const cacheKey = `${getProjectRoot()}:${buildId}`;
+  const cacheState = await loadRenderCacheState();
+  const cacheKey = `${getProjectRoot()}:${cacheState.renderEnvironmentHash}:${cacheState.generatedAt}`;
   if (pageRuntimeDataCache?.cacheKey === cacheKey) {
     return pageRuntimeDataCache.promise;
   }
@@ -91,7 +120,7 @@ export async function loadPageRuntimeData(): Promise<PageRuntimeData> {
     loadGraph(),
     loadResolvedConfig(),
   ]).then(([manifest, graph, config]) => ({
-    buildId,
+    cacheState,
     manifest,
     graph,
     config,

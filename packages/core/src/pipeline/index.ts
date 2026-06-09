@@ -291,6 +291,7 @@ export async function analyzeMarkdown(
   return {
     frontmatter,
     links: getDataArray<string>(file.data, "silicaObsidianLinks"),
+    embeds: getDataArray<string>(file.data, "silicaObsidianEmbeds"),
     brokenLinks,
     plainText,
     title: getTitle(frontmatter),

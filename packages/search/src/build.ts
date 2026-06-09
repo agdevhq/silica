@@ -138,7 +138,9 @@ export function buildSearchTables(
   });
   insertRecords(records);
 
-  db.prepare("INSERT INTO search_index(search_index) VALUES(?)").run("optimize");
+  db.prepare("INSERT INTO search_index(search_index) VALUES(?)").run(
+    "optimize",
+  );
   return builtAt;
 }
 

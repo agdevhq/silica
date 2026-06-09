@@ -161,12 +161,9 @@ function cacheKey(root: string, slug: string): string {
       .get() as { value: string } | undefined;
     expect(note, slug).toBeDefined();
     expect(metadata).toBeDefined();
-    return [
-      "vault-content",
-      metadata!.value,
-      slug,
-      note!.render_hash,
-    ].join(":");
+    return ["vault-content", metadata!.value, slug, note!.render_hash].join(
+      ":",
+    );
   } finally {
     db.close();
   }

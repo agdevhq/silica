@@ -15,10 +15,12 @@ export {
   renderMarkdownHtml,
 } from "./pipeline/index.js";
 export {
+  createWikiLinkResolutionIndex,
   hrefToSlug,
   resolveWikiLink,
   simplifySlug,
   slugToHref,
+  type WikiLinkResolutionIndex,
 } from "./path.js";
 export { tagToHref } from "./tags.js";
 export type {

@@ -16,6 +16,11 @@ export type SlugifyOptions = {
   numericPrefixes?: boolean;
 };
 
+export type WikiLinkResolutionIndex = {
+  candidates: ReadonlySet<string>;
+  uniqueSlugByBasename: ReadonlyMap<string, string | null>;
+};
+
 const NUMERIC_PREFIX_RE = /^(\d+)[\s._-]+(.+)$/;
 const DOCUMENT_EXTENSION_RE = /\.(md|markdown|mdx)$/i;
 const UNORDERED_SEGMENT_SORT_PREFIX = "~~~~~~~~~~";
@@ -146,16 +151,38 @@ export function resolveRelative(
   );
 }
 
+export function createWikiLinkResolutionIndex(
+  allSlugs: readonly string[],
+  options: SlugifyOptions = {},
+): WikiLinkResolutionIndex {
+  const candidates = new Set(
+    allSlugs.map((slug) => normalizeSlug(slug, options)),
+  );
+  const uniqueSlugByBasename = new Map<string, string | null>();
+
+  for (const slug of candidates) {
+    const basename = basenameForNormalizedSlug(slug);
+    if (!basename) continue;
+    if (uniqueSlugByBasename.has(basename)) {
+      uniqueSlugByBasename.set(basename, null);
+      continue;
+    }
+    uniqueSlugByBasename.set(basename, slug);
+  }
+
+  return { candidates, uniqueSlugByBasename };
+}
+
 export function resolveWikiLink(
   currentSlug: FullSlug | string,
   target: string,
-  allSlugs: readonly string[],
+  index: WikiLinkResolutionIndex,
   strategy: "absolute" | "relative" | "shortest" = "shortest",
   options: SlugifyOptions = {},
 ): FullSlug | undefined {
   const [rawPath] = target.split("#");
   const normalizedTarget = normalizeSlug(rawPath ?? target, options);
-  const candidates = new Set(allSlugs.map((slug) => normalizeSlug(slug)));
+  const { candidates } = index;
 
   if (strategy === "absolute" && candidates.has(normalizedTarget))
     return asFullSlug(normalizedTarget);
@@ -169,16 +196,19 @@ export function resolveWikiLink(
   if (candidates.has(`${normalizedTarget}/index`))
     return asFullSlug(`${normalizedTarget}/index`);
 
-  const byBasename = [...candidates].filter((slug) => {
-    const simplified = simplifySlug(slug).toString();
-    return simplified.split("/").at(-1) === normalizedTarget.split("/").at(-1);
-  });
+  const targetBasename = normalizedTarget.split("/").at(-1) ?? "";
+  const byBasename = index.uniqueSlugByBasename.get(targetBasename);
 
-  return byBasename.length === 1 ? asFullSlug(byBasename[0]!) : undefined;
+  return byBasename ? asFullSlug(byBasename) : undefined;
 }
 
 export function joinSegments(...segments: string[]): string {
   return normalizePath(segments.filter(Boolean).join("/"));
+}
+
+function basenameForNormalizedSlug(slug: string): string {
+  const simplified = slug === "index" ? "" : slug.replace(/\/index$/, "");
+  return simplified.split("/").at(-1) ?? "";
 }
 
 function numericPrefixSortSegment(segment: string): string {

@@ -6,7 +6,7 @@ import type {
 } from "react";
 import type { SearchRecord } from "@silicajs/search";
 import type { ObsidianLinkTarget } from "@silicajs/remark-obsidian";
-import type { FullSlug } from "./path.js";
+import type { FullSlug, WikiLinkResolutionIndex } from "./path.js";
 
 export type ThemeConfig =
   | "default"
@@ -128,7 +128,7 @@ export type BrokenLink = {
 
 export type RenderContext = {
   slug: FullSlug | string;
-  allSlugs: string[];
+  wikilinkIndex: WikiLinkResolutionIndex;
   assetBaseUrl?: string;
   resolveEmbed?: (
     target: ObsidianLinkTarget,

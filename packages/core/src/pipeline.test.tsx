@@ -6,7 +6,20 @@ import {
   renderMarkdown,
   renderMarkdownHtml,
 } from "./pipeline/index.js";
+import { createWikiLinkResolutionIndex } from "./path.js";
 import type { RenderContext } from "./types.js";
+
+function testContext(
+  slug: string,
+  allSlugs: string[],
+  overrides: Omit<RenderContext, "slug" | "wikilinkIndex"> = {},
+): RenderContext {
+  return {
+    slug,
+    wikilinkIndex: createWikiLinkResolutionIndex(allSlugs),
+    ...overrides,
+  };
+}
 
 describe("renderMarkdown", () => {
   it("only analyzes titles from explicit frontmatter", async () => {
@@ -17,20 +30,17 @@ describe("renderMarkdown", () => {
 
     const result = await analyzeMarkdown(
       "# Heading That Should Not Become A Title\n\nLong body. ".repeat(100),
-      {
-        slug: "index",
-        allSlugs: ["index"],
-      },
+      testContext("index", ["index"]),
     );
 
     expect(result.title).toBeUndefined();
   }, 15_000);
 
   it("renders heading title and icon permalinks", async () => {
-    const result = await renderMarkdown("## Linked Heading", {
-      slug: "index",
-      allSlugs: ["index"],
-    });
+    const result = await renderMarkdown(
+      "## Linked Heading",
+      testContext("index", ["index"]),
+    );
 
     const html = renderToStaticMarkup(<>{result.content}</>);
 
@@ -48,10 +58,7 @@ describe("renderMarkdown", () => {
   it("renders OFM highlights and callout elements", async () => {
     const result = await renderMarkdown(
       "> [!note] Remember\n> Use ==Silica== carefully.",
-      {
-        slug: "index",
-        allSlugs: ["index"],
-      },
+      testContext("index", ["index"]),
     );
 
     const html = renderToStaticMarkup(<>{result.content}</>);
@@ -65,10 +72,7 @@ describe("renderMarkdown", () => {
   it("supports foldable callouts and hyphenated custom callout types", async () => {
     const result = await renderMarkdown(
       "> [!custom-tip]- Folded title\n> Hidden body.",
-      {
-        slug: "index",
-        allSlugs: ["index"],
-      },
+      testContext("index", ["index"]),
     );
 
     const html = renderToStaticMarkup(<>{result.content}</>);
@@ -82,21 +86,22 @@ describe("renderMarkdown", () => {
   }, 15_000);
 
   it("supports custom callout render components", async () => {
-    const result = await renderMarkdown("> [!tip] Hint\n> Body.", {
-      slug: "index",
-      allSlugs: ["index"],
-      components: {
-        "silica-callout": ({
-          children,
-          "data-callout": kind,
-          "data-callout-title": title,
-        }) => (
-          <aside data-rendered-callout={kind} data-title={title}>
-            {children}
-          </aside>
-        ),
-      },
-    });
+    const result = await renderMarkdown(
+      "> [!tip] Hint\n> Body.",
+      testContext("index", ["index"], {
+        components: {
+          "silica-callout": ({
+            children,
+            "data-callout": kind,
+            "data-callout-title": title,
+          }) => (
+            <aside data-rendered-callout={kind} data-title={title}>
+              {children}
+            </aside>
+          ),
+        },
+      }),
+    );
 
     const html = renderToStaticMarkup(<>{result.content}</>);
 
@@ -109,10 +114,7 @@ describe("renderMarkdown", () => {
 
   it("resolves wikilinks and records graph links", async () => {
     const markdown = "See [[docs/intro|Intro]].";
-    const context = {
-      slug: "index",
-      allSlugs: ["index", "docs/intro"],
-    };
+    const context = testContext("index", ["index", "docs/intro"]);
     const result = await renderMarkdown(markdown, context);
     const analysis = await analyzeMarkdown(markdown, context);
 
@@ -129,10 +131,7 @@ describe("renderMarkdown", () => {
       "| --- | --- |",
       "| tags | Page tags (see [[docs/intro\\|Intro]]) |",
     ].join("\n");
-    const context = {
-      slug: "index",
-      allSlugs: ["index", "docs/intro"],
-    };
+    const context = testContext("index", ["index", "docs/intro"]);
     const result = await renderMarkdown(markdown, context);
     const analysis = await analyzeMarkdown(markdown, context);
 
@@ -152,11 +151,9 @@ describe("renderMarkdown", () => {
         "| --- | --- |",
         "| Sized embed | ![[images/photo.png\\|120]] |",
       ].join("\n"),
-      {
-        slug: "index",
-        allSlugs: ["index"],
+      testContext("index", ["index"], {
         assetBaseUrl: "/assets",
-      },
+      }),
     );
 
     const html = renderToStaticMarkup(<>{result.content}</>);
@@ -169,10 +166,7 @@ describe("renderMarkdown", () => {
 
   it("renders unresolved wikilinks as Silica broken-link spans", async () => {
     const markdown = "[[missing|Missing page]]";
-    const context = {
-      slug: "index",
-      allSlugs: ["index"],
-    };
+    const context = testContext("index", ["index"]);
     const result = await renderMarkdown(markdown, context);
     const analysis = await analyzeMarkdown(markdown, context);
 
@@ -189,11 +183,9 @@ describe("renderMarkdown", () => {
 
   it("renders wiki asset embeds with the configured asset base URL", async () => {
     const markdown = "![[images/photo.png|Photo]]";
-    const context = {
-      slug: "index",
-      allSlugs: ["index"],
+    const context = testContext("index", ["index"], {
       assetBaseUrl: "/assets",
-    };
+    });
     const result = await renderMarkdown(markdown, context);
     const analysis = await analyzeMarkdown(markdown, context);
 
@@ -207,10 +199,7 @@ describe("renderMarkdown", () => {
   it("preserves heading and block fragments in wikilink hrefs", async () => {
     const markdown =
       "[[docs/intro#Install Guide|Install]] and [[index#^block-id|Block]]";
-    const context = {
-      slug: "index",
-      allSlugs: ["index", "docs/intro"],
-    };
+    const context = testContext("index", ["index", "docs/intro"]);
     const result = await renderMarkdown(markdown, context);
     const analysis = await analyzeMarkdown(markdown, context);
 
@@ -224,10 +213,7 @@ describe("renderMarkdown", () => {
   it("removes comments and renders block IDs and inline footnotes", async () => {
     const markdown =
       "Visible %%hidden%% text ^block-id ^[Inline **note** and [docs](https://example.com)]";
-    const context = {
-      slug: "index",
-      allSlugs: ["index"],
-    };
+    const context = testContext("index", ["index"]);
     const result = await renderMarkdown(markdown, context);
     const analysis = await analyzeMarkdown(markdown, context);
 
@@ -259,11 +245,9 @@ describe("renderMarkdown", () => {
         "![[docs/file.pdf#height=400]]",
         "![External|120](https://example.com/image.png)",
       ].join("\n\n"),
-      {
-        slug: "index",
-        allSlugs: ["index"],
+      testContext("index", ["index"], {
         assetBaseUrl: "/assets",
-      },
+      }),
     );
 
     const html = renderToStaticMarkup(<>{result.content}</>);
@@ -282,14 +266,12 @@ describe("renderMarkdown", () => {
 
   it("renders resolver-backed note embeds", async () => {
     const markdown = "![[notes/embed-me]]";
-    const context = {
-      slug: "index",
-      allSlugs: ["index", "notes/embed-me"],
+    const context = testContext("index", ["index", "notes/embed-me"], {
       resolveEmbed: (
         target: Parameters<NonNullable<RenderContext["resolveEmbed"]>>[0],
       ) =>
         target.path === "notes/embed-me" ? "<p>Embedded note</p>" : undefined,
-    };
+    });
     const result = await renderMarkdown(markdown, context);
     const analysis = await analyzeMarkdown(markdown, context);
 
@@ -303,8 +285,7 @@ describe("renderMarkdown", () => {
 
   it("renders embedded markdown fragments without pre-wrapping headings", async () => {
     const html = await renderMarkdownHtml("## Embedded Heading", {
-      slug: "notes/embed-me",
-      allSlugs: ["index", "notes/embed-me"],
+      ...testContext("notes/embed-me", ["index", "notes/embed-me"]),
     });
 
     expect(html).toContain("<h2>Embedded Heading</h2>");
@@ -314,10 +295,7 @@ describe("renderMarkdown", () => {
   it("wraps fenced code blocks with language metadata", async () => {
     const result = await renderMarkdown(
       "```ts\nconst x: number = 1;\n```\n\n```\nplain text only\n```\n",
-      {
-        slug: "index",
-        allSlugs: ["index"],
-      },
+      testContext("index", ["index"]),
     );
 
     const html = renderToStaticMarkup(<>{result.content}</>);
@@ -333,10 +311,7 @@ describe("renderMarkdown", () => {
 
   it("does not transform OFM syntax inside fenced code blocks", async () => {
     const markdown = "```markdown\n[[other-page]]\n#tag\n==highlight==\n```\n";
-    const context = {
-      slug: "index",
-      allSlugs: ["index", "other-page"],
-    };
+    const context = testContext("index", ["index", "other-page"]);
     const result = await renderMarkdown(markdown, context);
     const analysis = await analyzeMarkdown(markdown, context);
 
@@ -351,10 +326,10 @@ describe("renderMarkdown", () => {
   }, 15_000);
 
   it("renders Mermaid fences as silica-mermaid elements", async () => {
-    const result = await renderMarkdown("```mermaid\ngraph TD\nA --> B\n```", {
-      slug: "index",
-      allSlugs: ["index"],
-    });
+    const result = await renderMarkdown(
+      "```mermaid\ngraph TD\nA --> B\n```",
+      testContext("index", ["index"]),
+    );
 
     const html = renderToStaticMarkup(<>{result.content}</>);
 
@@ -364,21 +339,22 @@ describe("renderMarkdown", () => {
   }, 15_000);
 
   it("supports custom code block render components", async () => {
-    const result = await renderMarkdown("```ts\nconst x: number = 1;\n```", {
-      slug: "index",
-      allSlugs: ["index"],
-      components: {
-        "silica-code-block": ({
-          children,
-          "data-language": language,
-          "data-language-label": label,
-        }) => (
-          <figure data-rendered-code-block={language} data-title={label}>
-            {children}
-          </figure>
-        ),
-      },
-    });
+    const result = await renderMarkdown(
+      "```ts\nconst x: number = 1;\n```",
+      testContext("index", ["index"], {
+        components: {
+          "silica-code-block": ({
+            children,
+            "data-language": language,
+            "data-language-label": label,
+          }) => (
+            <figure data-rendered-code-block={language} data-title={label}>
+              {children}
+            </figure>
+          ),
+        },
+      }),
+    );
 
     const html = renderToStaticMarkup(<>{result.content}</>);
 
@@ -391,10 +367,7 @@ describe("renderMarkdown", () => {
   it("sanitizes raw HTML and escapes OFM-injected labels", async () => {
     const result = await renderMarkdown(
       '[[<img src=x onerror=alert(1)>]]\n\n<script>alert(1)</script>\n\n<img src=x onerror=alert(1)>\n\n<h2 id="raw-id">Raw heading</h2>\n\n<h2 id="footnote-label">User heading</h2>',
-      {
-        slug: "index",
-        allSlugs: ["index"],
-      },
+      testContext("index", ["index"]),
     );
 
     const html = renderToStaticMarkup(<>{result.content}</>);

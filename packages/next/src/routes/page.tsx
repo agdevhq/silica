@@ -3,6 +3,7 @@ import type { AnchorHTMLAttributes } from "react";
 import { cacheLife, cacheTag } from "next/cache";
 import { notFound } from "next/navigation";
 import {
+  createWikiLinkResolutionIndex,
   getMetaDescription,
   renderMarkdown,
   renderMarkdownHtml,
@@ -85,13 +86,17 @@ export async function VaultContent({
   ]);
   const entry = manifest.bySlug[slug];
   if (!entry) notFound();
+  const wikilinkIndex = createWikiLinkResolutionIndex(
+    manifest.allSlugs,
+    config.ordering,
+  );
 
   const renderContext = (
     currentSlug: string,
     embedDepth = 0,
   ): RenderContext => ({
     slug: currentSlug,
-    allSlugs: manifest.allSlugs,
+    wikilinkIndex,
     assetBaseUrl: "/silica",
     wikilinkStrategy: config.wikilinks.strategy,
     tags: config.tags,
@@ -106,7 +111,7 @@ export async function VaultContent({
       const resolved = resolveWikiLink(
         currentSlug,
         target.path || currentSlug,
-        manifest.allSlugs,
+        wikilinkIndex,
         config.wikilinks.strategy,
         config.ordering,
       );

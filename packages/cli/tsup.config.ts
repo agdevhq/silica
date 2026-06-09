@@ -9,6 +9,7 @@ export default defineConfig({
   external: [
     "@silicajs/core",
     "@silicajs/next",
+    "better-sqlite3",
     "chokidar",
     "commander",
     "execa",

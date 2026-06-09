@@ -2,7 +2,12 @@ import path from "node:path";
 import { existsSync } from "node:fs";
 import { createJiti } from "jiti";
 import { resolvePublicAssetPath } from "./logo.js";
-import type { ResolvedSilicaConfig, SilicaConfig } from "./types.js";
+import type {
+  ResolvedSilicaConfig,
+  ResolvedSilicaPrerenderConfig,
+  SilicaConfig,
+  SilicaPrerenderConfig,
+} from "./types.js";
 
 export function defineConfig(config: SilicaConfig): SilicaConfig {
   return config;
@@ -85,5 +90,29 @@ export function resolveConfig(
       removeDrafts: config.filters?.removeDrafts ?? true,
       explicitPublish: config.filters?.explicitPublish ?? false,
     },
+    render: {
+      prerender: resolvePrerenderConfig(config.render?.prerender),
+      cache: {
+        storage: config.render?.cache?.storage ?? "filesystem",
+        directory: config.render?.cache?.directory,
+      },
+    },
   };
+}
+
+function resolvePrerenderConfig(
+  prerender: SilicaPrerenderConfig | undefined,
+): ResolvedSilicaPrerenderConfig {
+  if (!prerender || prerender === "all") return { strategy: "all" };
+  if (prerender === "none") return { strategy: "none" };
+  if ("strategy" in prerender && prerender.strategy === "all") {
+    return { ...prerender, strategy: "all" };
+  }
+  if ("strategy" in prerender && prerender.strategy === "none") {
+    return { ...prerender, strategy: "none" };
+  }
+  if ("strategy" in prerender && prerender.strategy === "custom") {
+    return { ...prerender, strategy: "custom" };
+  }
+  return { ...prerender, strategy: "depth" };
 }

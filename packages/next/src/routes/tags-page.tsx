@@ -1,8 +1,11 @@
 import { cacheLife, cacheTag } from "next/cache";
 import { notFound } from "next/navigation";
 import { TagsList } from "@silicajs/components";
-import { getTagHierarchy, tagMatches } from "@silicajs/remark-obsidian";
-import { loadPageRuntimeData } from "../server-data.js";
+import {
+  getCacheState,
+  getEntriesForTag,
+  getTagSlugs,
+} from "../server-data.js";
 
 const EMPTY_TAG_STATIC_PARAM = "__silica_empty_tags__";
 
@@ -11,13 +14,7 @@ export type TagsPageProps = {
 };
 
 export async function generateStaticParams() {
-  const manifest = await getTagsManifest();
-  const tags = new Set(
-    manifest.entries
-      .filter(isListedEntry)
-      .flatMap((entry) => entry.tags.flatMap((tag) => getTagHierarchy(tag))),
-  );
-  const params = [...tags].map((tag) => ({ tag: tag.split("/") }));
+  const params = getTagSlugs().map((tag) => ({ tag: tag.split("/") }));
   return params.length > 0 ? params : [{ tag: [EMPTY_TAG_STATIC_PARAM] }];
 }
 
@@ -30,37 +27,27 @@ export async function generateMetadata({ params }: TagsPageProps) {
 
 export default async function TagsPage({ params }: TagsPageProps) {
   const tag = routeTagToString((await params).tag);
-  const manifest = await getTagsManifest();
-  if (
-    !manifest.entries
-      .filter(isListedEntry)
-      .some((entry) => entry.tags.some((entryTag) => tagMatches(entryTag, tag)))
-  ) {
-    notFound();
-  }
-  return (
-    <TagsList
-      manifest={{
-        ...manifest,
-        entries: manifest.entries.filter(isListedEntry),
-      }}
-      tag={tag}
-    />
+  const cacheState = getCacheState();
+  const entries = await getTagEntries(
+    tag,
+    cacheState.renderEnvironmentHash,
+    cacheState.tagIndexHash,
   );
+  if (entries.length === 0) notFound();
+  return <TagsList entries={entries} tag={tag} />;
 }
 
-async function getTagsManifest() {
+async function getTagEntries(
+  tag: string,
+  renderEnvironmentHash: string,
+  tagIndexHash: string,
+) {
   "use cache";
   cacheLife("max");
-  const { buildId, manifest } = await loadPageRuntimeData();
-  cacheTag("build", `build:${buildId}`);
-  return manifest;
+  cacheTag(`environment:${renderEnvironmentHash}`, `tags:${tagIndexHash}`);
+  return getEntriesForTag(tag);
 }
 
 function routeTagToString(tag: string | string[]): string {
   return Array.isArray(tag) ? tag.join("/") : tag;
-}
-
-function isListedEntry(entry: { frontmatter: Record<string, unknown> }) {
-  return entry.frontmatter.listed !== false;
 }

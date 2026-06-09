@@ -1,5 +1,6 @@
 import theme from "../../../silica-theme";
 import { VaultContent } from "@silicajs/next/routes/page";
+import { getRenderKey, normalizeRouteSlug } from "@silicajs/next/server-data";
 export {
   generateMetadata,
   generateStaticParams,
@@ -11,8 +12,14 @@ export default async function Page({
   params: Promise<{ slug?: string[] }> | { slug?: string[] };
 }) {
   const resolvedParams = await params;
-  const slug = resolvedParams?.slug?.length
-    ? resolvedParams.slug.join("/")
-    : "index";
-  return <VaultContent slug={slug} theme={theme} />;
+  const slug = normalizeRouteSlug(resolvedParams?.slug);
+  const renderKey = getRenderKey(slug);
+  return (
+    <VaultContent
+      slug={slug}
+      renderHash={renderKey.renderHash}
+      renderEnvironmentHash={renderKey.renderEnvironmentHash}
+      theme={theme}
+    />
+  );
 }

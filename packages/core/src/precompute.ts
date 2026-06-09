@@ -5,11 +5,7 @@ import path from "node:path";
 import { promisify } from "node:util";
 import { Worker } from "node:worker_threads";
 import fs from "fs-extra";
-import {
-  buildSearchDatabase,
-  SEARCH_DATABASE_FILENAME,
-  type SearchRecord,
-} from "@silicajs/search";
+import { type SearchRecord } from "@silicajs/search";
 import { loadConfig } from "./config.js";
 import { scanContent, type ContentMarkdownFile } from "./files.js";
 import {
@@ -29,15 +25,18 @@ import type {
   Graph,
   Manifest,
   ManifestEntry,
-  Navigation,
   PrecomputeResult,
+  PrerenderManifest,
+  RenderCacheState,
   ResolvedSilicaConfig,
 } from "./types.js";
+import { writeVaultDatabase } from "./vault-db.js";
 
 const execFileAsync = promisify(execFile);
 const MIN_PARALLEL_ANALYSIS_FILES = 64;
 const ANALYSIS_BATCH_SIZE = 16;
 const MAX_ANALYSIS_WORKERS = 12;
+const RENDER_CACHE_SCHEMA_VERSION = "silica-render-v1";
 
 export type PrecomputeOptions = {
   projectRoot?: string;
@@ -115,6 +114,8 @@ export async function precompute(
           file.stats.mtime,
       ),
       frontmatter: file.frontmatter,
+      contentHash: hashString(file.raw),
+      embeds: analysis.embeds,
     };
     entries.push(entry);
     graphLinks[file.slug] = analysis.links;
@@ -135,27 +136,18 @@ export async function precompute(
 
   const manifest = makeManifest(config, entries);
   const graph = makeGraph(graphLinks, brokenLinks);
-  const buildId = crypto.randomUUID();
-  await buildSearchDatabase(
+  const renderHashes = makeRenderHashes(manifest, graph);
+  const cacheState = await makeRenderCacheState(projectRoot, config, manifest);
+  const prerender = makePrerenderManifest(manifest, graph, config);
+  await writeVaultDatabase(projectRoot, {
+    config,
+    manifest,
+    graph,
+    renderHashes,
+    cacheState,
+    prerender,
     searchRecords,
-    path.join(projectRoot, ".silica", SEARCH_DATABASE_FILENAME),
-  );
-  await fs.remove(path.join(projectRoot, ".silica/search-index.json"));
-
-  await writeJson(
-    path.join(projectRoot, ".silica/manifest.json"),
-    serializeManifest(manifest),
-  );
-  await writeJson(
-    path.join(projectRoot, ".silica/navigation.json"),
-    makeNavigation(manifest),
-  );
-  await writeJson(path.join(projectRoot, ".silica/graph.json"), graph);
-  await writeJson(path.join(projectRoot, ".silica/config.json"), config);
-  await fs.writeFile(
-    path.join(projectRoot, ".silica/build-id.txt"),
-    `${buildId}\n`,
-  );
+  });
   await writeSitemapAndRobots(projectRoot, config, manifest);
 
   if (config.wikilinks.strict && brokenLinks.length > 0) {
@@ -169,7 +161,8 @@ export async function precompute(
     manifest,
     graph,
     searchRecords,
-    buildId,
+    prerender,
+    cacheState,
     brokenLinks,
   };
 }
@@ -362,26 +355,218 @@ async function writeRuntimeMarkdown(
   }
 }
 
-function serializeManifest(
+async function makeRenderCacheState(
+  projectRoot: string,
+  config: ResolvedSilicaConfig,
   manifest: Manifest,
-): Omit<Manifest, "allSlugs" | "bySlug"> {
+): Promise<RenderCacheState> {
+  const themeHash = await getThemeHash(projectRoot, config.theme);
+  const configHash = hashStable({
+    title: config.title,
+    description: config.description,
+    logo: config.logo,
+    baseUrl: config.baseUrl,
+    contentDir: config.contentDir,
+    theme: config.theme,
+    auth: config.auth,
+    wikilinks: config.wikilinks,
+    tags: config.tags,
+    ordering: config.ordering,
+    filters: config.filters,
+  });
+  const navigationHash = hashStable({
+    entries: manifest.entries.filter(isListedEntry).map((entry) => ({
+      slug: entry.slug,
+      menuLabel: entry.menuLabel,
+      sortKey: entry.sortKey,
+    })),
+  });
+  const tagIndexHash = hashStable({
+    entries: manifest.entries.filter(isListedEntry).map((entry) => ({
+      slug: entry.slug,
+      title: entry.title,
+      description: entry.description,
+      tags: entry.tags,
+    })),
+  });
   return {
-    version: manifest.version,
-    generatedAt: manifest.generatedAt,
-    contentDir: manifest.contentDir,
-    entries: manifest.entries,
+    version: 1,
+    renderEnvironmentHash: hashStable({
+      version: RENDER_CACHE_SCHEMA_VERSION,
+      configHash,
+      themeHash,
+    }),
+    configHash,
+    navigationHash,
+    tagIndexHash,
+    themeHash,
+    rendererVersion: RENDER_CACHE_SCHEMA_VERSION,
+    generatedAt: new Date().toISOString(),
   };
 }
 
-function makeNavigation(manifest: Manifest): Navigation {
+function makeRenderHashes(
+  manifest: Manifest,
+  graph: Graph,
+): Record<string, string> {
+  const memo = new Map<string, string>();
+  const renderHashForSlug = (
+    slug: string,
+    seen = new Set<string>(),
+  ): string => {
+    const cached = memo.get(slug);
+    if (cached) return cached;
+    const entry = manifest.bySlug[slug];
+    if (!entry) return hashStable({ missing: slug });
+    if (seen.has(slug)) {
+      return hashStable({ slug, contentHash: entry.contentHash, cycle: true });
+    }
+    const nextSeen = new Set(seen).add(slug);
+    const embedded = entry.embeds.map((target) => ({
+      slug: target,
+      renderHash: renderHashForSlug(target, nextSeen),
+    }));
+    const backlinks = (graph.backlinks[slug] ?? []).map((source) => ({
+      slug: source,
+      title: manifest.bySlug[source]?.title ?? source,
+    }));
+    const renderHash = hashStable({
+      entry: {
+        slug: entry.slug,
+        title: entry.title,
+        menuLabel: entry.menuLabel,
+        description: entry.description,
+        generatedDescription: entry.generatedDescription,
+        tags: entry.tags,
+        relativeFile: entry.relativeFile,
+        sortKey: entry.sortKey,
+        created: entry.created,
+        modified: entry.modified,
+        frontmatter: entry.frontmatter,
+        contentHash: entry.contentHash,
+      },
+      embedded,
+      backlinks,
+    });
+    memo.set(slug, renderHash);
+    return renderHash;
+  };
+
+  for (const slug of manifest.allSlugs) {
+    renderHashForSlug(slug);
+  }
+  return Object.fromEntries(memo);
+}
+
+function makePrerenderManifest(
+  manifest: Manifest,
+  graph: Graph,
+  config: ResolvedSilicaConfig,
+): PrerenderManifest {
   return {
     version: 1,
-    entries: manifest.entries.filter(isListedEntry).map((entry) => ({
-      slug: entry.slug,
-      title: entry.menuLabel,
-      sortKey: entry.sortKey,
-    })),
+    slugs: selectPrerenderSlugs(manifest, graph, config),
   };
+}
+
+function selectPrerenderSlugs(
+  manifest: Manifest,
+  graph: Graph,
+  config: ResolvedSilicaConfig,
+): string[] {
+  const prerender = config.render.prerender;
+  const entries = manifest.entries;
+  const scoreBySlug = new Map<string, number>();
+  let candidates: ManifestEntry[] = [];
+
+  if (prerender.strategy === "all") {
+    candidates = entries;
+  } else if (prerender.strategy === "depth") {
+    candidates = entries.filter(
+      (entry) =>
+        entry.slug === "index" || getSlugDepth(entry.slug) <= prerender.depth,
+    );
+  } else if (prerender.strategy === "custom") {
+    const context = { manifest, graph };
+    candidates = entries.filter((entry) => {
+      const selected = prerender.select?.(entry, context);
+      if (typeof selected === "number" && Number.isFinite(selected)) {
+        scoreBySlug.set(entry.slug, selected);
+        return true;
+      }
+      return selected === true;
+    });
+  }
+
+  const selected = new Set(
+    [...candidates]
+      .sort((left, right) => {
+        const scoreDelta =
+          (scoreBySlug.get(right.slug) ?? 0) -
+          (scoreBySlug.get(left.slug) ?? 0);
+        return scoreDelta || compareManifestEntries(left, right);
+      })
+      .slice(0, prerender.limit ?? candidates.length)
+      .map((entry) => entry.slug),
+  );
+
+  for (const slug of prerender.include ?? []) {
+    if (manifest.bySlug[slug]) selected.add(slug);
+  }
+  for (const slug of prerender.exclude ?? []) {
+    selected.delete(slug);
+  }
+
+  return manifest.entries
+    .map((entry) => entry.slug)
+    .filter((slug) => selected.has(slug));
+}
+
+function getSlugDepth(slug: string): number {
+  const segments = slug.split("/").filter(Boolean);
+  return Math.max(0, segments.length - 1);
+}
+
+async function getThemeHash(
+  projectRoot: string,
+  theme: ResolvedSilicaConfig["theme"],
+): Promise<string | undefined> {
+  const themeName = getThemeName(theme);
+  if (!themeName?.startsWith(".")) return undefined;
+  const themeRoot = path.resolve(projectRoot, themeName);
+  if (!(await fs.pathExists(themeRoot))) return undefined;
+  const files = await readThemeFiles(themeRoot);
+  return hashStable(files);
+}
+
+function getThemeName(
+  theme: ResolvedSilicaConfig["theme"],
+): string | undefined {
+  if (typeof theme === "string") return theme;
+  if (typeof theme === "object" && theme !== null) return theme.name;
+  return undefined;
+}
+
+async function readThemeFiles(
+  root: string,
+  current = root,
+): Promise<Array<{ path: string; content: string }>> {
+  const entries = await fs.readdir(current, { withFileTypes: true });
+  const results: Array<{ path: string; content: string }> = [];
+  for (const entry of entries.sort((left, right) =>
+    left.name.localeCompare(right.name),
+  )) {
+    const absolutePath = path.join(current, entry.name);
+    if (entry.isDirectory()) {
+      results.push(...(await readThemeFiles(root, absolutePath)));
+    } else if (entry.isFile()) {
+      results.push({
+        path: normalizeGitPath(path.relative(root, absolutePath)),
+        content: await fs.readFile(absolutePath, "utf8"),
+      });
+    }
+  }
+  return results;
 }
 
 export async function getGitDates(
@@ -436,6 +621,34 @@ async function getGitDatesForFiles(
 
 function normalizeGitPath(relativePath: string): string {
   return relativePath.replace(/\\/g, "/");
+}
+
+function hashString(value: string): string {
+  return crypto.createHash("sha256").update(value).digest("hex");
+}
+
+function hashStable(value: unknown): string {
+  return hashString(stableStringify(value));
+}
+
+function stableStringify(value: unknown): string {
+  if (value === undefined) return "undefined";
+  if (value instanceof Date) return JSON.stringify(value.toISOString());
+  if (Array.isArray(value)) {
+    return `[${value.map(stableStringify).join(",")}]`;
+  }
+  if (value && typeof value === "object") {
+    const entries = Object.entries(value)
+      .filter(([, entryValue]) => typeof entryValue !== "function")
+      .sort(([left], [right]) => left.localeCompare(right));
+    return `{${entries
+      .map(
+        ([key, entryValue]) =>
+          `${JSON.stringify(key)}:${stableStringify(entryValue)}`,
+      )
+      .join(",")}}`;
+  }
+  return JSON.stringify(value);
 }
 
 function filterPublished(
@@ -560,11 +773,6 @@ async function writeSitemapAndRobots(
       `User-agent: *\nAllow: /\nSitemap: ${baseUrl}/sitemap.xml\n`,
     );
   }
-}
-
-async function writeJson(filePath: string, value: unknown): Promise<void> {
-  await fs.ensureDir(path.dirname(filePath));
-  await fs.writeJson(filePath, value, { spaces: 2 });
 }
 
 function getDate(value: unknown): Date | undefined {

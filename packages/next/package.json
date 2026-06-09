@@ -60,6 +60,14 @@
       "types": "./dist/dev-reload-client.d.ts",
       "import": "./dist/dev-reload-client.js"
     },
+    "./server-data": {
+      "types": "./dist/server-data.d.ts",
+      "import": "./dist/server-data.js"
+    },
+    "./cache-handlers/filesystem": {
+      "types": "./dist/cache-handlers/filesystem.d.ts",
+      "import": "./dist/cache-handlers/filesystem.js"
+    },
     "./proxy": {
       "types": "./dist/proxy.d.ts",
       "import": "./dist/proxy.js"
@@ -93,6 +101,7 @@
     "@silicajs/remark-obsidian": "^0.1.0",
     "@silicajs/search": "^0.2.0",
     "better-auth": "1.6.11",
+    "better-sqlite3": "^12.10.0",
     "jiti": "^2.7.0",
     "katex": "^0.17.0"
   },

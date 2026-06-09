@@ -1,15 +1,24 @@
 import { toNextJsHandler } from "better-auth/next-js";
+import { cacheLife, cacheTag } from "next/cache";
 import { silicaAuth } from "@silicajs/auth";
 import { resolveRuntimeAuthConfig } from "../auth-config.js";
-import { loadResolvedConfig } from "../server-data.js";
+import { getCacheState, getConfig } from "../server-data.js";
 
 async function getAuth() {
-  const config = await loadResolvedConfig();
+  const cacheState = getCacheState();
+  const config = await getCachedAuthConfig(cacheState.renderEnvironmentHash);
   const auth = resolveRuntimeAuthConfig(config);
   return silicaAuth({
     allowedDomains: auth.allowedDomains,
     allowedEmails: auth.allowedEmails,
   });
+}
+
+async function getCachedAuthConfig(renderEnvironmentHash: string) {
+  "use cache";
+  cacheLife("max");
+  cacheTag(`environment:${renderEnvironmentHash}`);
+  return getConfig();
 }
 
 export async function GET(request: Request) {

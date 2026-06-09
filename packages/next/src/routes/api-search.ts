@@ -1,11 +1,6 @@
-import path from "node:path";
 import { NextResponse } from "next/server";
-import {
-  loadSearchIndex,
-  querySearchIndex,
-  SEARCH_DATABASE_FILENAME,
-} from "@silicajs/search";
-import { getSilicaRoot } from "../server-data.js";
+import { querySearchIndex } from "@silicajs/search";
+import { loadSearchIndex } from "../server-data.js";
 
 const MAX_QUERY_LENGTH = 120;
 const MAX_TAGS = 10;
@@ -23,9 +18,7 @@ export async function GET(request: Request) {
     .slice(0, MAX_TAGS)
     .map((tag) => tag.trim())
     .filter((tag) => tag.length > 0 && tag.length <= MAX_TAG_LENGTH);
-  const loaded = await loadSearchIndex(
-    path.join(getSilicaRoot(), SEARCH_DATABASE_FILENAME),
-  );
+  const loaded = loadSearchIndex();
   const results = querySearchIndex(loaded, parsed.query, { tags, limit: 10 });
   return NextResponse.json({
     results: results.map(({ slug, title, titleParts, excerptParts }) => ({

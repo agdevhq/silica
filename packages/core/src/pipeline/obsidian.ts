@@ -49,6 +49,7 @@ type HandlerState = {
 export function remarkSilicaObsidian(context: RenderContext) {
   return async (tree: Root, file: VFileLike) => {
     const links = new Set<string>();
+    const embeds = new Set<string>();
     const brokenLinks: Array<{ target: string }> = [];
     const assetBaseUrl = context.assetBaseUrl ?? "/silica";
     const embedPromises: Array<Promise<void>> = [];
@@ -72,13 +73,7 @@ export function remarkSilicaObsidian(context: RenderContext) {
         return;
       }
 
-      const resolved = resolveWikiLink(
-        context.slug,
-        targetPath,
-        context.wikilinkIndex,
-        context.wikilinkStrategy ?? "shortest",
-        context.ordering,
-      );
+      const resolved = resolveWikiTarget(context, targetPath);
 
       node.data = { ...node.data };
       if (!resolved) {
@@ -89,12 +84,33 @@ export function remarkSilicaObsidian(context: RenderContext) {
 
       node.data.silicaResolvedSlug = resolved;
       links.add(resolved);
+      if (node.type === "obsidianWikiEmbed") {
+        embeds.add(resolved);
+      }
     });
 
     await Promise.all(embedPromises);
     file.data.silicaObsidianLinks = [...links];
+    file.data.silicaObsidianEmbeds = [...embeds];
     file.data.silicaObsidianBrokenLinks = brokenLinks;
   };
+}
+
+function resolveWikiTarget(
+  context: RenderContext,
+  targetPath: string,
+): string | undefined {
+  if (context.resolveWikiLink) {
+    return context.resolveWikiLink(context.slug, targetPath);
+  }
+  if (!context.wikilinkIndex) return undefined;
+  return resolveWikiLink(
+    context.slug,
+    targetPath,
+    context.wikilinkIndex,
+    context.wikilinkStrategy ?? "shortest",
+    context.ordering,
+  );
 }
 
 export function createSilicaObsidianHandlers(context: RenderContext) {

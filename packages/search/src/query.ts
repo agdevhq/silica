@@ -52,18 +52,18 @@ export function querySearchIndex(
     .prepare(
       `
       SELECT
-        d.slug,
-        d.title,
+        n.slug,
+        n.title,
         highlight(search_index, 0, char(57344), char(57345)) AS highlighted_title,
-        d.description,
-        d.tags_json,
+        n.description,
+        n.tags_json,
         snippet(search_index, -1, char(57344), char(57345), '…', 24) AS highlighted_excerpt,
         bm25(search_index, 8.0, 1.0, 3.0) AS score
       FROM search_index
-      JOIN documents d ON d.rowid = search_index.rowid
+      JOIN notes n ON n.rowid = search_index.rowid
       WHERE search_index MATCH ?
       ${tagClause.sql}
-      ORDER BY score ASC, d.title COLLATE NOCASE ASC
+      ORDER BY score ASC, n.title COLLATE NOCASE ASC
       LIMIT ?
     `,
     )
@@ -88,17 +88,17 @@ function queryByTags(
     .prepare(
       `
       SELECT
-        d.slug,
-        d.title,
+        n.slug,
+        n.title,
         NULL AS highlighted_title,
-        d.description,
-        d.tags_json,
-        d.excerpt,
+        n.description,
+        n.tags_json,
+        n.search_excerpt AS excerpt,
         0 AS score
-      FROM documents d
+      FROM notes n
       WHERE 1 = 1
       ${tagClause.sql}
-      ORDER BY d.title COLLATE NOCASE ASC
+      ORDER BY n.title COLLATE NOCASE ASC
       LIMIT ?
     `,
     )
@@ -113,9 +113,9 @@ function makeTagClause(tags: string[]): { sql: string; params: string[] } {
     sql: `
       AND EXISTS (
         SELECT 1
-        FROM document_tags dt
-        WHERE dt.document_rowid = d.rowid
-          AND dt.tag IN (${tags.map(() => "?").join(", ")})
+        FROM note_tags nt
+        WHERE nt.slug = n.slug
+          AND nt.tag IN (${tags.map(() => "?").join(", ")})
       )
     `,
     params: tags,
@@ -139,10 +139,7 @@ function toResult(row: SearchRow | TagOnlyRow): SearchResult {
 }
 
 function parseTags(value: string): string[] {
-  const parsed = JSON.parse(value) as unknown;
-  return Array.isArray(parsed)
-    ? parsed.filter((tag): tag is string => typeof tag === "string")
-    : [];
+  return JSON.parse(value) as string[];
 }
 
 function toFtsQuery(query: string): string | undefined {

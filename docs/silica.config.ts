@@ -11,4 +11,10 @@ export default defineConfig({
     strategy: "shortest",
     strict: false,
   },
+  render: {
+    prerender: {
+      strategy: "none",
+      include: ["index", "writing/links"],
+    },
+  },
 });

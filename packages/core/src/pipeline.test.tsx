@@ -281,6 +281,7 @@ describe("renderMarkdown", () => {
     expect(html).not.toContain("<p><figure");
     expect(html).toContain("<p>Embedded note</p>");
     expect(analysis.links).toEqual(["notes/embed-me"]);
+    expect(analysis.embeds).toEqual(["notes/embed-me"]);
   }, 15_000);
 
   it("renders embedded markdown fragments without pre-wrapping headings", async () => {

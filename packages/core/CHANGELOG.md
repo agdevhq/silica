@@ -1,5 +1,11 @@
 # @silicajs/core
 
+## 0.5.1
+
+### Patch Changes
+
+- 1ca6f3e: Fix wikilink resolution for date-prefixed notes when numeric ordering prefixes are enabled.
+
 ## 0.5.0
 
 ### Minor Changes

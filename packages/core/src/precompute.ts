@@ -539,7 +539,9 @@ async function getThemeHash(
   return hashStable(files);
 }
 
-function getThemeName(theme: ResolvedSilicaConfig["theme"]): string | undefined {
+function getThemeName(
+  theme: ResolvedSilicaConfig["theme"],
+): string | undefined {
   if (typeof theme === "string") return theme;
   if (typeof theme === "object" && theme !== null) return theme.name;
   return undefined;

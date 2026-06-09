@@ -39,10 +39,7 @@ const baseNextConfig: NextConfig = {
   ],
   serverExternalPackages: ["better-sqlite3"],
   outputFileTracingIncludes: {
-    "/*": [
-      "../content/**/*",
-      "../vault.db",
-    ],
+    "/*": ["../content/**/*", "../vault.db"],
   },
   experimental: {
     externalDir: true,

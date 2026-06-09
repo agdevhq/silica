@@ -31,6 +31,19 @@ describe("generated templates", () => {
     expect(nextConfigTemplate()).toContain("externalDir: true");
   });
 
+  it("uses the base Next config when there is no user config", () => {
+    expect(nextConfigTemplate()).toContain("const nextConfig = baseNextConfig");
+    expect(nextConfigTemplate()).not.toContain("{{silicaConfig");
+  });
+
+  it("applies user Next config overrides when a user config exists", () => {
+    const rendered = nextConfigTemplate("../../silica.config.ts");
+
+    expect(rendered).toContain('import { createJiti } from "jiti";');
+    expect(rendered).toContain('jiti("../../silica.config.ts")');
+    expect(rendered).toContain("mergeNextConfig(baseNextConfig");
+  });
+
   it("traces only precomputed runtime content", () => {
     expect(nextConfigTemplate()).toContain('"../content/**/*"');
     expect(nextConfigTemplate()).toContain('"../navigation.json"');

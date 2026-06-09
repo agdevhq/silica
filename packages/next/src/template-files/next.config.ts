@@ -1,6 +1,7 @@
 import type { NextConfig } from "next";
+/* __SILICA_CONFIG_IMPORT__ */
 
-const nextConfig: NextConfig = {
+const baseNextConfig: NextConfig = {
   cacheComponents: true,
   output: "standalone",
   transpilePackages: [
@@ -29,5 +30,7 @@ const nextConfig: NextConfig = {
     serverSourceMaps: process.env.NODE_ENV !== "production",
   },
 };
+
+/* __SILICA_CONFIG_OVERRIDE__ */
 
 export default nextConfig;

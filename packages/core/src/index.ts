@@ -82,6 +82,8 @@ export type {
   ResolvedSilicaConfig,
   SilicaAuthConfig,
   SilicaConfig,
+  SilicaNextConfig,
+  SilicaNextConfigOverride,
   ThemeConfig,
   TocItem,
 } from "./types.js";

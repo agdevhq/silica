@@ -23,6 +23,12 @@ export type SilicaAuthConfig = {
   allowedEmails?: string[];
 };
 
+export type SilicaNextConfig = Record<string, unknown>;
+
+export type SilicaNextConfigOverride =
+  | SilicaNextConfig
+  | ((base: SilicaNextConfig) => SilicaNextConfig);
+
 export type SilicaConfig = {
   title?: string;
   description?: string;
@@ -46,6 +52,7 @@ export type SilicaConfig = {
     removeDrafts?: boolean;
     explicitPublish?: boolean;
   };
+  nextConfig?: SilicaNextConfigOverride;
 };
 
 export type ResolvedSilicaConfig = {

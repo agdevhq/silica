@@ -1,7 +1,12 @@
 import { defineConfig } from "tsup";
 
 export default defineConfig({
-  entry: ["src/index.ts", "src/runtime.ts", "src/theme.ts"],
+  entry: [
+    "src/index.ts",
+    "src/precompute-worker.ts",
+    "src/runtime.ts",
+    "src/theme.ts",
+  ],
   format: ["esm"],
   dts: true,
   sourcemap: true,

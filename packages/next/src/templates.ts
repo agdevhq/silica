@@ -16,8 +16,17 @@ export function getSilicaTemplates(): TemplateFile[] {
   return readTemplateDirectory(path.join(templateFilesRoot, "generated-app"));
 }
 
-export function nextConfigTemplate(): string {
-  return readTemplateFile("next.config.ts");
+export function nextConfigTemplate(userConfigImport?: string): string {
+  const template = readTemplateFile("next.config.ts");
+  return template
+    .replace(
+      "/* __SILICA_CONFIG_IMPORT__ */",
+      userConfigImport ? `import { createJiti } from "jiti";` : "",
+    )
+    .replace(
+      "/* __SILICA_CONFIG_OVERRIDE__ */",
+      nextConfigOverride(userConfigImport),
+    );
 }
 
 export function themeModuleTemplate(themeValue: unknown): string {
@@ -66,6 +75,67 @@ export function packageJsonTemplate(): string {
 
 function readTemplateFile(filename: string): string {
   return fs.readFileSync(path.join(templateFilesRoot, filename), "utf8");
+}
+
+function nextConfigOverride(userConfigImport: string | undefined): string {
+  if (!userConfigImport) return "const nextConfig = baseNextConfig;";
+
+  return `type SilicaNextConfigOverride =
+  | NextConfig
+  | ((base: NextConfig) => NextConfig);
+
+type SilicaUserConfig = {
+  default?: { nextConfig?: SilicaNextConfigOverride };
+  nextConfig?: SilicaNextConfigOverride;
+};
+
+const silicaUserConfig = loadSilicaUserConfig();
+const silicaNextConfig = silicaUserConfig.nextConfig;
+
+const nextConfig =
+  typeof silicaNextConfig === "function"
+    ? silicaNextConfig(baseNextConfig)
+    : mergeNextConfig(baseNextConfig, silicaNextConfig);
+
+function loadSilicaUserConfig(): { nextConfig?: SilicaNextConfigOverride } {
+  const jiti = createJiti(import.meta.url, { interopDefault: true });
+  const loaded = jiti(${JSON.stringify(userConfigImport)}) as SilicaUserConfig;
+  return loaded.default ?? loaded;
+}
+
+function mergeNextConfig(
+  base: NextConfig,
+  override: NextConfig | undefined,
+): NextConfig {
+  if (!override) return base;
+  return deepMerge(
+    base as Record<string, unknown>,
+    override as Record<string, unknown>,
+  ) as NextConfig;
+}
+
+function deepMerge(
+  base: Record<string, unknown>,
+  override: Record<string, unknown>,
+): Record<string, unknown> {
+  const merged = { ...base };
+  for (const [key, value] of Object.entries(override)) {
+    const baseValue = merged[key];
+    merged[key] =
+      isPlainObject(baseValue) && isPlainObject(value)
+        ? deepMerge(baseValue, value)
+        : value;
+  }
+  return merged;
+}
+
+function isPlainObject(value: unknown): value is Record<string, unknown> {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    !Array.isArray(value)
+  );
+}`;
 }
 
 function resolveThemeSpecifier(themeValue: unknown): string {

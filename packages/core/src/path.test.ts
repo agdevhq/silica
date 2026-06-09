@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   asFullSlug,
+  createWikiLinkResolutionIndex,
   numericPrefixSortKey,
   resolveWikiLink,
   simplifySlug,
@@ -59,10 +60,23 @@ describe("path helpers", () => {
     const resolved = resolveWikiLink(
       "index",
       "Auth",
-      ["index", "notes/auth"],
+      createWikiLinkResolutionIndex(["index", "notes/auth"]),
       "shortest",
     );
     expect(resolved).toBe("notes/auth");
+  });
+
+  it("does not resolve ambiguous shortest wikilink basenames", () => {
+    const index = createWikiLinkResolutionIndex([
+      "index",
+      "notes/auth",
+      "reference/auth",
+    ]);
+
+    expect(resolveWikiLink("index", "Auth", index, "shortest")).toBeUndefined();
+    expect(resolveWikiLink("index", "notes/auth", index, "shortest")).toBe(
+      "notes/auth",
+    );
   });
 
   it("resolves wikilinks while ignoring heading and block fragments", () => {
@@ -70,7 +84,7 @@ describe("path helpers", () => {
       resolveWikiLink(
         "index",
         "Notes/Auth#Install Guide",
-        ["index", "notes/auth"],
+        createWikiLinkResolutionIndex(["index", "notes/auth"]),
         "shortest",
       ),
     ).toBe("notes/auth");
@@ -78,7 +92,7 @@ describe("path helpers", () => {
       resolveWikiLink(
         "index",
         "Notes/Auth#^intro",
-        ["index", "notes/auth"],
+        createWikiLinkResolutionIndex(["index", "notes/auth"]),
         "shortest",
       ),
     ).toBe("notes/auth");

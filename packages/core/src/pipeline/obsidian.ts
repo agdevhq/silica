@@ -75,7 +75,7 @@ export function remarkSilicaObsidian(context: RenderContext) {
       const resolved = resolveWikiLink(
         context.slug,
         targetPath,
-        context.allSlugs,
+        context.wikilinkIndex,
         context.wikilinkStrategy ?? "shortest",
         context.ordering,
       );

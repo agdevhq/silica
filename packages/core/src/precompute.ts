@@ -1,7 +1,9 @@
 import crypto from "node:crypto";
 import { execFile } from "node:child_process";
+import os from "node:os";
 import path from "node:path";
 import { promisify } from "node:util";
+import { Worker } from "node:worker_threads";
 import fs from "fs-extra";
 import {
   buildSearchDatabase,
@@ -12,14 +14,17 @@ import { loadConfig } from "./config.js";
 import { scanContent, type ContentMarkdownFile } from "./files.js";
 import {
   asFullSlug,
+  createWikiLinkResolutionIndex,
   hasNumericPrefixInPath,
   numericPrefixSortKey,
   stripNumericPrefix,
   slugToHref,
+  type WikiLinkResolutionIndex,
 } from "./path.js";
 import { getMenuLabel } from "./pipeline/frontmatter.js";
 import { analyzeMarkdown } from "./pipeline/index.js";
 import type {
+  AnalyzeResult,
   BrokenLink,
   Graph,
   Manifest,
@@ -30,10 +35,14 @@ import type {
 } from "./types.js";
 
 const execFileAsync = promisify(execFile);
+const MIN_PARALLEL_ANALYSIS_FILES = 64;
+const ANALYSIS_BATCH_SIZE = 16;
+const MAX_ANALYSIS_WORKERS = 12;
 
 export type PrecomputeOptions = {
   projectRoot?: string;
   config?: ResolvedSilicaConfig;
+  analysisConcurrency?: number;
 };
 
 export async function precompute(
@@ -44,6 +53,10 @@ export async function precompute(
   const scan = await scanContent(projectRoot, config);
   const markdownFiles = filterPublished(scan.markdown, config);
   const allSlugs = markdownFiles.map((file) => file.slug);
+  const wikilinkIndex = createWikiLinkResolutionIndex(
+    allSlugs,
+    config.ordering,
+  );
   const entries: ManifestEntry[] = [];
   const graphLinks: Record<string, string[]> = {};
   const brokenLinks: BrokenLink[] = [];
@@ -60,20 +73,17 @@ export async function precompute(
   await fs.ensureDir(path.join(projectRoot, ".silica"));
   await fs.ensureDir(path.join(projectRoot, ".silica/next/public/silica"));
   await writeRuntimeMarkdown(runtimeContentRoot, markdownFiles);
+  const analyses = await analyzeMarkdownFiles(markdownFiles, config, allSlugs, {
+    concurrency: options.analysisConcurrency,
+    wikilinkIndex,
+  });
 
-  for (const file of markdownFiles) {
+  for (const [index, file] of markdownFiles.entries()) {
     const gitDates =
       gitDatesByPath.get(
         normalizeGitPath(path.join(config.contentDir, file.relativePath)),
       ) ?? {};
-    const analysis = await analyzeMarkdown(file.raw, {
-      slug: asFullSlug(file.slug),
-      allSlugs,
-      assetBaseUrl: "/silica",
-      wikilinkStrategy: config.wikilinks.strategy,
-      tags: config.tags,
-      ordering: config.ordering,
-    });
+    const analysis = analyses[index]!;
 
     const title =
       analysis.title ?? titleFromFilePath(file.relativePath, config.ordering);
@@ -162,6 +172,182 @@ export async function precompute(
     buildId,
     brokenLinks,
   };
+}
+
+type AnalyzeMarkdownFilesOptions = {
+  concurrency?: number;
+  wikilinkIndex: WikiLinkResolutionIndex;
+};
+
+type AnalysisWorkerFile = {
+  index: number;
+  slug: string;
+  raw: string;
+};
+
+type AnalysisWorkerMessage = {
+  id: number;
+  files: AnalysisWorkerFile[];
+};
+
+type AnalysisWorkerResult = {
+  id: number;
+  results?: Array<{ index: number; analysis: AnalyzeResult }>;
+  error?: string;
+};
+
+async function analyzeMarkdownFiles(
+  files: ContentMarkdownFile[],
+  config: ResolvedSilicaConfig,
+  allSlugs: string[],
+  options: AnalyzeMarkdownFilesOptions,
+): Promise<AnalyzeResult[]> {
+  const workerCount = getAnalysisWorkerCount(files.length, options.concurrency);
+  if (workerCount <= 1) {
+    return analyzeMarkdownFilesSerial(files, config, options.wikilinkIndex);
+  }
+
+  return analyzeMarkdownFilesParallel(files, config, allSlugs, workerCount);
+}
+
+async function analyzeMarkdownFilesSerial(
+  files: ContentMarkdownFile[],
+  config: ResolvedSilicaConfig,
+  wikilinkIndex: WikiLinkResolutionIndex,
+): Promise<AnalyzeResult[]> {
+  const analyses: AnalyzeResult[] = [];
+  for (const file of files) {
+    analyses.push(
+      await analyzeMarkdown(file.raw, {
+        slug: asFullSlug(file.slug),
+        wikilinkIndex,
+        assetBaseUrl: "/silica",
+        wikilinkStrategy: config.wikilinks.strategy,
+        tags: config.tags,
+        ordering: config.ordering,
+      }),
+    );
+  }
+  return analyses;
+}
+
+function analyzeMarkdownFilesParallel(
+  files: ContentMarkdownFile[],
+  config: ResolvedSilicaConfig,
+  allSlugs: string[],
+  workerCount: number,
+): Promise<AnalyzeResult[]> {
+  return new Promise((resolve, reject) => {
+    const workerUrl = new URL("./precompute-worker.js", import.meta.url);
+    const workers: Worker[] = [];
+    const analyses: AnalyzeResult[] = new Array(files.length);
+    let nextIndex = 0;
+    let completed = 0;
+    let settled = false;
+
+    const rejectOnce = (error: unknown) => {
+      if (settled) return;
+      settled = true;
+      for (const worker of workers) {
+        void worker.terminate();
+      }
+      reject(error);
+    };
+
+    const resolveIfDone = () => {
+      if (completed < files.length || settled) return;
+      settled = true;
+      for (const worker of workers) {
+        void worker.terminate();
+      }
+      resolve(analyses);
+    };
+
+    const sendNext = (worker: Worker) => {
+      if (settled || nextIndex >= files.length) return;
+      const start = nextIndex;
+      const batch = files
+        .slice(start, start + ANALYSIS_BATCH_SIZE)
+        .map((file, offset) => ({
+          index: start + offset,
+          slug: file.slug,
+          raw: file.raw,
+        }));
+      nextIndex += batch.length;
+      worker.postMessage({
+        id: start,
+        files: batch,
+      } satisfies AnalysisWorkerMessage);
+    };
+
+    for (let index = 0; index < workerCount; index += 1) {
+      const worker = new Worker(workerUrl, {
+        workerData: {
+          allSlugs,
+          wikilinkStrategy: config.wikilinks.strategy,
+          tags: config.tags,
+          ordering: config.ordering,
+        },
+      });
+      workers.push(worker);
+      worker.on("message", (message: AnalysisWorkerResult) => {
+        if (message.error) {
+          rejectOnce(new Error(message.error));
+          return;
+        }
+        for (const result of message.results ?? []) {
+          analyses[result.index] = result.analysis;
+        }
+        completed += message.results?.length ?? 0;
+        resolveIfDone();
+        sendNext(worker);
+      });
+      worker.on("error", rejectOnce);
+      worker.on("exit", (code) => {
+        if (!settled && code !== 0) {
+          rejectOnce(
+            new Error(`Precompute analysis worker exited with ${code}`),
+          );
+        }
+      });
+      sendNext(worker);
+    }
+  });
+}
+
+function getAnalysisWorkerCount(
+  fileCount: number,
+  requestedConcurrency: number | undefined,
+): number {
+  if (fileCount === 0) return 1;
+  if (
+    requestedConcurrency === undefined &&
+    fileCount < MIN_PARALLEL_ANALYSIS_FILES
+  ) {
+    return 1;
+  }
+
+  const available = Math.max(
+    1,
+    os.availableParallelism?.() ?? os.cpus().length,
+  );
+  const requested = getRequestedAnalysisConcurrency(
+    requestedConcurrency,
+    available,
+  );
+  const usefulWorkers = Math.ceil(fileCount / ANALYSIS_BATCH_SIZE);
+  return Math.max(1, Math.min(fileCount, requested, usefulWorkers));
+}
+
+function getRequestedAnalysisConcurrency(
+  requestedConcurrency: number | undefined,
+  available: number,
+): number {
+  if (requestedConcurrency === undefined) {
+    return Math.min(available, MAX_ANALYSIS_WORKERS);
+  }
+  if (!Number.isFinite(requestedConcurrency)) return 1;
+  return Math.max(1, Math.floor(requestedConcurrency));
 }
 
 async function writeRuntimeMarkdown(

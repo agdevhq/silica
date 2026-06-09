@@ -6,7 +6,7 @@ import type {
 } from "react";
 import type { SearchRecord } from "@silicajs/search";
 import type { ObsidianLinkTarget } from "@silicajs/remark-obsidian";
-import type { FullSlug } from "./path.js";
+import type { FullSlug, WikiLinkResolutionIndex } from "./path.js";
 
 export type ThemeConfig =
   | "default"
@@ -22,6 +22,12 @@ export type SilicaAuthConfig = {
   allowedDomains?: string[];
   allowedEmails?: string[];
 };
+
+export type SilicaNextConfig = Record<string, unknown>;
+
+export type SilicaNextConfigOverride =
+  | SilicaNextConfig
+  | ((base: SilicaNextConfig) => SilicaNextConfig);
 
 export type SilicaConfig = {
   title?: string;
@@ -46,6 +52,7 @@ export type SilicaConfig = {
     removeDrafts?: boolean;
     explicitPublish?: boolean;
   };
+  nextConfig?: SilicaNextConfigOverride;
 };
 
 export type ResolvedSilicaConfig = {
@@ -128,7 +135,7 @@ export type BrokenLink = {
 
 export type RenderContext = {
   slug: FullSlug | string;
-  allSlugs: string[];
+  wikilinkIndex: WikiLinkResolutionIndex;
   assetBaseUrl?: string;
   resolveEmbed?: (
     target: ObsidianLinkTarget,

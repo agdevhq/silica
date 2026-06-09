@@ -8,16 +8,12 @@ import {
   renderMarkdownHtml,
   resolveWikiLink,
   slugToHref,
+  type Graph,
+  type Manifest,
   type RenderContext,
 } from "@silicajs/core/runtime";
 import { SilicaLink } from "@silicajs/components/routing";
-import {
-  loadBuildId,
-  loadGraph,
-  loadManifest,
-  loadResolvedConfig,
-  normalizeRouteSlug,
-} from "../server-data.js";
+import { loadPageRuntimeData, normalizeRouteSlug } from "../server-data.js";
 import type {
   SilicaTheme,
   ThemeBacklink,
@@ -57,9 +53,9 @@ export async function generateMetadata({ params }: PageProps) {
 async function getPageManifest() {
   "use cache";
   cacheLife("max");
-  const buildId = await loadBuildId();
+  const { buildId, manifest } = await loadPageRuntimeData();
   cacheTag("build", `build:${buildId}`);
-  return loadManifest();
+  return manifest;
 }
 
 export type PageProps = {
@@ -75,14 +71,10 @@ export async function VaultContent({
 }) {
   "use cache";
   cacheLife("max");
-  const buildId = await loadBuildId();
+  const { buildId, manifest, graph, config, wikilinkIndex } =
+    await loadPageRuntimeData();
   cacheTag("build", `build:${buildId}`, `page:${slug}`);
 
-  const [manifest, graph, config] = await Promise.all([
-    loadManifest(),
-    loadGraph(),
-    loadResolvedConfig(),
-  ]);
   const entry = manifest.bySlug[slug];
   if (!entry) notFound();
 
@@ -91,7 +83,7 @@ export async function VaultContent({
     embedDepth = 0,
   ): RenderContext => ({
     slug: currentSlug,
-    allSlugs: manifest.allSlugs,
+    wikilinkIndex,
     assetBaseUrl: "/silica",
     wikilinkStrategy: config.wikilinks.strategy,
     tags: config.tags,
@@ -106,7 +98,7 @@ export async function VaultContent({
       const resolved = resolveWikiLink(
         currentSlug,
         target.path || currentSlug,
-        manifest.allSlugs,
+        wikilinkIndex,
         config.wikilinks.strategy,
         config.ordering,
       );
@@ -144,10 +136,7 @@ export async function VaultContent({
   );
 }
 
-function makeBreadcrumbs(
-  slug: string,
-  manifest: Awaited<ReturnType<typeof loadManifest>>,
-): ThemeBreadcrumb[] {
+function makeBreadcrumbs(slug: string, manifest: Manifest): ThemeBreadcrumb[] {
   if (slug === "index" || !slug.includes("/")) return [];
 
   const breadcrumbs: ThemeBreadcrumb[] = [{ label: "Home", href: "/" }];
@@ -165,7 +154,7 @@ function makeBreadcrumbs(
 
 function breadcrumbSegmentHref(
   segmentPath: string,
-  manifest: Awaited<ReturnType<typeof loadManifest>>,
+  manifest: Manifest,
 ): string | undefined {
   if (manifest.bySlug[segmentPath]) return slugToHref(segmentPath);
   const indexSlug = `${segmentPath}/index`;
@@ -175,8 +164,8 @@ function breadcrumbSegmentHref(
 
 function makeBacklinks(
   slug: string,
-  manifest: Awaited<ReturnType<typeof loadManifest>>,
-  graph: Awaited<ReturnType<typeof loadGraph>>,
+  manifest: Manifest,
+  graph: Graph,
 ): ThemeBacklink[] {
   return (graph.backlinks[slug] ?? []).map((source) => ({
     slug: source,

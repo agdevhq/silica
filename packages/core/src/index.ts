@@ -12,6 +12,7 @@ export {
   asFullSlug,
   asRelativeURL,
   asSimpleSlug,
+  createWikiLinkResolutionIndex,
   hrefToSlug,
   joinSegments,
   normalizePath,
@@ -27,6 +28,7 @@ export {
   type FullSlug,
   type RelativeURL,
   type SimpleSlug,
+  type WikiLinkResolutionIndex,
 } from "./path.js";
 export {
   formatPropertyLabel,
@@ -80,6 +82,8 @@ export type {
   ResolvedSilicaConfig,
   SilicaAuthConfig,
   SilicaConfig,
+  SilicaNextConfig,
+  SilicaNextConfigOverride,
   ThemeConfig,
   TocItem,
 } from "./types.js";

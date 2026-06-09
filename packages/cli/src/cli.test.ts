@@ -85,6 +85,9 @@ describe("silica CLI helpers", () => {
     expect(
       await fs.readFile(path.join(nextRoot, "silica-theme.ts"), "utf8"),
     ).toContain("@silicajs/theme-amethyst");
+    expect(
+      await fs.readFile(path.join(nextRoot, "next.config.ts"), "utf8"),
+    ).toContain('jiti("../../silica.config.ts")');
     expect(await fs.pathExists(path.join(nextRoot, "public/favicon.svg"))).toBe(
       true,
     );

@@ -5,7 +5,21 @@ import type {
   Manifest,
   Navigation,
   ResolvedSilicaConfig,
+  WikiLinkResolutionIndex,
 } from "@silicajs/core/runtime";
+import { createWikiLinkResolutionIndex } from "@silicajs/core/runtime";
+
+export type PageRuntimeData = {
+  buildId: string;
+  manifest: Manifest;
+  graph: Graph;
+  config: ResolvedSilicaConfig;
+  wikilinkIndex: WikiLinkResolutionIndex;
+};
+
+let pageRuntimeDataCache:
+  | { cacheKey: string; promise: Promise<PageRuntimeData> }
+  | undefined;
 
 export function getProjectRoot(): string {
   const projectRoot = process.env.SILICA_PROJECT_ROOT;
@@ -63,6 +77,37 @@ export async function loadResolvedConfig() {
   return fs.readJson(
     path.join(getSilicaRoot(), "config.json"),
   ) as Promise<ResolvedSilicaConfig>;
+}
+
+export async function loadPageRuntimeData(): Promise<PageRuntimeData> {
+  const buildId = await loadBuildId();
+  const cacheKey = `${getProjectRoot()}:${buildId}`;
+  if (pageRuntimeDataCache?.cacheKey === cacheKey) {
+    return pageRuntimeDataCache.promise;
+  }
+
+  const promise = Promise.all([
+    loadManifest(),
+    loadGraph(),
+    loadResolvedConfig(),
+  ]).then(([manifest, graph, config]) => ({
+    buildId,
+    manifest,
+    graph,
+    config,
+    wikilinkIndex: createWikiLinkResolutionIndex(
+      manifest.allSlugs,
+      config.ordering,
+    ),
+  }));
+
+  pageRuntimeDataCache = { cacheKey, promise };
+  promise.catch(() => {
+    if (pageRuntimeDataCache?.cacheKey === cacheKey) {
+      pageRuntimeDataCache = undefined;
+    }
+  });
+  return promise;
 }
 
 export function normalizeRouteSlug(slug?: string[]): string {

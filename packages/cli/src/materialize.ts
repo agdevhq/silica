@@ -21,6 +21,7 @@ export async function materializeNextApp(
   const nextRoot = path.join(projectRoot, ".silica/next");
   const publicRoot = path.join(nextRoot, "public");
   const config = await loadConfig(projectRoot);
+  const configImport = await resolveUserConfigImport(projectRoot, nextRoot);
 
   await fs.ensureDir(nextRoot);
   await fs.remove(path.join(nextRoot, "app"));
@@ -34,7 +35,7 @@ export async function materializeNextApp(
 
   await fs.writeFile(
     path.join(nextRoot, "next.config.ts"),
-    nextConfigTemplate(),
+    nextConfigTemplate(configImport),
   );
   await fs.writeFile(path.join(nextRoot, "proxy.ts"), proxyTemplate(config));
   await fs.writeFile(
@@ -56,6 +57,30 @@ export async function materializeNextApp(
   await syncEnvFiles(projectRoot, nextRoot);
   await overlayPublic(projectRoot, publicRoot);
   return nextRoot;
+}
+
+async function resolveUserConfigImport(
+  projectRoot: string,
+  nextRoot: string,
+): Promise<string | undefined> {
+  const configPath = await findUserConfig(projectRoot);
+  if (!configPath) return undefined;
+
+  const relativePath = path
+    .relative(nextRoot, configPath)
+    .split(path.sep)
+    .join("/");
+  return relativePath.startsWith(".") ? relativePath : `./${relativePath}`;
+}
+
+async function findUserConfig(
+  projectRoot: string,
+): Promise<string | undefined> {
+  for (const filename of ["silica.config.ts", "silica.config.js"]) {
+    const configPath = path.join(projectRoot, filename);
+    if (await fs.pathExists(configPath)) return configPath;
+  }
+  return undefined;
 }
 
 async function syncEnvFiles(

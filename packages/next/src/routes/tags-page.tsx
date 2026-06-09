@@ -2,7 +2,7 @@ import { cacheLife, cacheTag } from "next/cache";
 import { notFound } from "next/navigation";
 import { TagsList } from "@silicajs/components";
 import { getTagHierarchy, tagMatches } from "@silicajs/remark-obsidian";
-import { loadBuildId, loadManifest } from "../server-data.js";
+import { loadPageRuntimeData } from "../server-data.js";
 
 const EMPTY_TAG_STATIC_PARAM = "__silica_empty_tags__";
 
@@ -52,9 +52,9 @@ export default async function TagsPage({ params }: TagsPageProps) {
 async function getTagsManifest() {
   "use cache";
   cacheLife("max");
-  const buildId = await loadBuildId();
+  const { buildId, manifest } = await loadPageRuntimeData();
   cacheTag("build", `build:${buildId}`);
-  return loadManifest();
+  return manifest;
 }
 
 function routeTagToString(tag: string | string[]): string {

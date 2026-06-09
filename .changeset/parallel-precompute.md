@@ -3,4 +3,4 @@
 "@silicajs/next": patch
 ---
 
-Speed up large vault precompute by indexing wikilinks once and parallelizing markdown analysis across worker threads.
+Speed up large vault builds by indexing wikilinks once, parallelizing markdown precompute analysis, and reusing cached Next runtime data during page generation.

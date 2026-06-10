@@ -249,6 +249,9 @@ describe("path helpers", () => {
       resolveAssetPath("index.md", "photo.png", index, "shortest"),
     ).toBeUndefined();
     expect(
+      resolveAssetPath("images/page.md", "./photo.png", index, "shortest"),
+    ).toBe("images/photo.png");
+    expect(
       resolveAssetPath("index.md", "images/photo.png", index, "shortest"),
     ).toBe("images/photo.png");
   });

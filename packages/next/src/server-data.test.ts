@@ -66,6 +66,10 @@ describe("server data", () => {
         path.join(root, "content/attachments/photo.png"),
         "fake",
       );
+      await fs.writeFile(
+        path.join(root, "content/attachments/Local Image.PNG"),
+        "fake",
+      );
       await precompute({
         projectRoot: root,
         config: resolveConfig({ title: "Test" }, root),
@@ -79,6 +83,14 @@ describe("server data", () => {
           "01 Notes/02 Page.md",
           "Local Image.PNG",
           "relative",
+          { numericPrefixes: true },
+        ),
+      ).toBe("notes/local-image.png");
+      expect(
+        resolveAssetFromDb(
+          "01 Notes/02 Page.md",
+          "./Local Image.PNG",
+          "shortest",
           { numericPrefixes: true },
         ),
       ).toBe("notes/local-image.png");

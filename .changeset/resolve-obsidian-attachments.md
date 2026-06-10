@@ -1,5 +1,5 @@
 ---
-"@silicajs/core": patch
+"@silicajs/core": minor
 "@silicajs/next": patch
 "@silicajs/search": patch
 ---

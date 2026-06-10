@@ -273,15 +273,16 @@ export function resolveAssetPath(
   if (/^(?:https?:|#|\/)/.test(target)) return undefined;
   const normalizedTarget = normalizeAssetReference(target, options);
   if (!normalizedTarget) return undefined;
+  const isExplicitRelative = isExplicitRelativeAssetReference(target);
+
+  if (isExplicitRelative || strategy === "relative") {
+    const relative = resolveRelativeAsset(currentSourcePath, target, options);
+    const resolved = uniqueValue(index.assetPathBySourcePath, relative);
+    if (resolved || isExplicitRelative) return resolved;
+  }
 
   if (strategy === "absolute") {
     return uniqueValue(index.assetPathBySourcePath, normalizedTarget);
-  }
-
-  if (strategy === "relative") {
-    const relative = resolveRelativeAsset(currentSourcePath, target, options);
-    const resolved = uniqueValue(index.assetPathBySourcePath, relative);
-    if (resolved) return resolved;
   }
 
   return (
@@ -334,6 +335,10 @@ function stripAssetReferenceSuffix(value: string): string {
   );
   const suffixIndex = Math.min(...suffixIndexes);
   return Number.isFinite(suffixIndex) ? value.slice(0, suffixIndex) : value;
+}
+
+function isExplicitRelativeAssetReference(value: string): boolean {
+  return /^\.{1,2}\//.test(normalizePath(stripAssetReferenceSuffix(value)));
 }
 
 function addUniqueCandidate(

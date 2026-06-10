@@ -311,19 +311,20 @@ export function resolveAssetFromDb(
   const normalizedTarget = normalizeAssetReference(target, assetOptions);
   if (!normalizedTarget) return undefined;
   const db = loadVaultDb().db;
+  const isExplicitRelative = isExplicitRelativeAssetReference(target);
 
-  if (strategy === "absolute") {
-    return lookupAssetAlias(db, "absolute", normalizedTarget);
-  }
-
-  if (strategy === "relative") {
+  if (isExplicitRelative || strategy === "relative") {
     const relative = resolveRelativeAsset(
       currentSourcePath,
       target,
       assetOptions,
     );
     const resolved = lookupAssetAlias(db, "absolute", relative);
-    if (resolved) return resolved;
+    if (resolved || isExplicitRelative) return resolved;
+  }
+
+  if (strategy === "absolute") {
+    return lookupAssetAlias(db, "absolute", normalizedTarget);
   }
 
   return (
@@ -419,6 +420,15 @@ function lookupAssetAlias(
     )
     .all(strategy, alias) as Array<{ asset_path: string }>;
   return row.length === 1 ? row[0]?.asset_path : undefined;
+}
+
+function isExplicitRelativeAssetReference(value: string): boolean {
+  const withoutSuffix = value.split(/[?#]/)[0] ?? "";
+  const normalized = withoutSuffix
+    .replace(/\\/g, "/")
+    .replace(/^\/+/, "")
+    .replace(/\/+$/, "");
+  return /^\.{1,2}\//.test(normalized);
 }
 
 function noteRowToEntry(row: NoteRow): ManifestEntry {

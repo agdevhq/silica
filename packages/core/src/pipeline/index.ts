@@ -26,6 +26,7 @@ import {
   createSilicaObsidianHandlers,
   remarkSilicaObsidian,
 } from "./obsidian.js";
+import { analyzePagePropertyLinks } from "./frontmatter.js";
 import {
   getDataArray,
   rehypeCleanFootnoteHeadings,
@@ -282,17 +283,23 @@ export async function analyzeMarkdown(
   const file = await runRemarkObsidian(parsed.content, context);
   const plainText = extractPlainText(parsed.content);
   const frontmatter = parsed.data;
-  const brokenLinks = getDataArray<{ target: string }>(
+  const contentBrokenLinks = getDataArray<{ target: string }>(
     file.data,
     "silicaObsidianBrokenLinks",
   ).map((link) => ({ source: String(context.slug), target: link.target }));
+  const pagePropertyLinks = analyzePagePropertyLinks(frontmatter, context);
   const description = getDescription(frontmatter);
 
   return {
     frontmatter,
-    links: getDataArray<string>(file.data, "silicaObsidianLinks"),
+    links: [
+      ...new Set([
+        ...getDataArray<string>(file.data, "silicaObsidianLinks"),
+        ...pagePropertyLinks.links,
+      ]),
+    ],
     embeds: getDataArray<string>(file.data, "silicaObsidianEmbeds"),
-    brokenLinks,
+    brokenLinks: [...contentBrokenLinks, ...pagePropertyLinks.brokenLinks],
     plainText,
     title: getTitle(frontmatter),
     description,

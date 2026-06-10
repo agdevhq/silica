@@ -128,6 +128,25 @@ describe("renderMarkdown", () => {
     expect(analysis.brokenLinks).toEqual([]);
   }, 15_000);
 
+  it("records graph links from custom frontmatter properties", async () => {
+    const markdown = [
+      "---",
+      'related: "[[docs/intro|Intro]]"',
+      'missing: "[[missing|Missing]]"',
+      "---",
+      "# Home",
+    ].join("\n");
+    const analysis = await analyzeMarkdown(
+      markdown,
+      testContext("index", ["index", "docs/intro"]),
+    );
+
+    expect(analysis.links).toEqual(["docs/intro"]);
+    expect(analysis.brokenLinks).toEqual([
+      { source: "index", target: "missing" },
+    ]);
+  }, 15_000);
+
   it("resolves a wikilink with an escaped pipe inside a GFM table cell", async () => {
     const markdown = [
       "| Key | What it does |",

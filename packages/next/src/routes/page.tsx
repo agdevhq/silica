@@ -4,6 +4,7 @@ import { cacheLife, cacheTag } from "next/cache";
 import { notFound } from "next/navigation";
 import {
   getMetaDescription,
+  getResolvedPageProperties,
   renderMarkdown,
   renderMarkdownHtml,
   type RenderContext,
@@ -151,10 +152,8 @@ export async function VaultContent({
   });
 
   const raw = await fs.readFile(entry.file, "utf8");
-  const rendered = await renderMarkdown(
-    raw,
-    renderContext(slug, entry.sourcePath),
-  );
+  const pageRenderContext = renderContext(slug, entry.sourcePath);
+  const rendered = await renderMarkdown(raw, pageRenderContext);
 
   return (
     <theme.PageRenderer
@@ -167,6 +166,10 @@ export async function VaultContent({
         description: entry.description,
         content: rendered.content,
         frontmatter: entry.frontmatter,
+        pageProperties: getResolvedPageProperties(
+          entry.frontmatter,
+          pageRenderContext,
+        ),
         toc: rendered.toc,
         tags: entry.tags,
         entry,

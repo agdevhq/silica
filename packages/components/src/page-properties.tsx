@@ -9,22 +9,29 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@silicajs/ui/components/collapsible";
-import { getPageProperties } from "@silicajs/core/runtime";
+import {
+  getPageProperties,
+  type PageProperty,
+  type PagePropertyPart,
+} from "@silicajs/core/runtime";
+import { SilicaLink } from "./routing.js";
 
 const STORAGE_KEY = "silica:page-properties:open";
 
 export type PagePropertiesProps = {
-  frontmatter: Record<string, unknown>;
+  frontmatter?: Record<string, unknown>;
+  properties?: PageProperty[];
   className?: string;
   defaultOpen?: boolean;
 };
 
 export function PageProperties({
   frontmatter,
+  properties: resolvedProperties,
   className,
   defaultOpen = false,
 }: PagePropertiesProps) {
-  const properties = getPageProperties(frontmatter);
+  const properties = resolvedProperties ?? getPageProperties(frontmatter ?? {});
   const [open, setOpen] = useState<boolean>(defaultOpen);
 
   useEffect(() => {
@@ -82,11 +89,44 @@ export function PageProperties({
               <dt className="px-4 py-2 text-muted-foreground">
                 {property.label}
               </dt>
-              <dd className="px-4 py-2 text-foreground">{property.value}</dd>
+              <dd className="px-4 py-2 text-foreground">
+                <PagePropertyValue property={property} />
+              </dd>
             </div>
           ))}
         </dl>
       </CollapsibleContent>
     </Collapsible>
   );
+}
+
+function PagePropertyValue({ property }: { property: PageProperty }) {
+  if (!property.parts) return <>{property.value}</>;
+
+  return (
+    <>
+      {property.parts.map((part, index) => (
+        <PagePropertyPartView key={`${part.type}-${index}`} part={part} />
+      ))}
+    </>
+  );
+}
+
+function PagePropertyPartView({ part }: { part: PagePropertyPart }) {
+  if (part.type === "link") {
+    return (
+      <SilicaLink
+        href={part.href}
+        className="text-primary underline underline-offset-2"
+      >
+        {part.value}
+      </SilicaLink>
+    );
+  }
+
+  if (part.type === "broken-link") {
+    return <span className="silica-broken-link">{part.value}</span>;
+  }
+
+  return <>{part.value}</>;
 }

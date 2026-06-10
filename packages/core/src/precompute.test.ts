@@ -98,6 +98,54 @@ describe("precompute", () => {
     await fs.remove(root);
   });
 
+  it("counts custom frontmatter wikilinks toward backlinks", async () => {
+    const root = path.join(process.cwd(), ".tmp-precompute-frontmatter-links");
+    await fs.emptyDir(path.join(root, "content/notes"));
+    await fs.writeFile(
+      path.join(root, "content/index.md"),
+      [
+        "---",
+        'related: "[[Notes/Auth|Auth]]"',
+        "reviewers:",
+        '  - "[[Notes/Auth]]"',
+        "---",
+        "# Home",
+      ].join("\n"),
+    );
+    await fs.writeFile(
+      path.join(root, "content/notes/auth.md"),
+      "---\ntitle: Auth\n---\n# Auth",
+    );
+
+    const result = await precompute({
+      projectRoot: root,
+      config: resolveConfig({ title: "Test" }, root),
+    });
+
+    expect(result.graph.links.index).toEqual(["notes/auth"]);
+    expect(result.graph.backlinks["notes/auth"]).toEqual(["index"]);
+
+    const db = new Database(path.join(root, ".silica/vault.db"), {
+      readonly: true,
+      fileMustExist: true,
+    });
+    try {
+      expect(
+        db
+          .prepare(
+            "SELECT source_slug, target_slug, kind FROM links ORDER BY source_slug, target_slug, kind",
+          )
+          .all(),
+      ).toEqual([
+        { source_slug: "index", target_slug: "notes/auth", kind: "link" },
+      ]);
+    } finally {
+      db.close();
+    }
+
+    await fs.remove(root);
+  });
+
   it("keeps backlink titles short for large notes without frontmatter titles", async () => {
     const root = path.join(
       process.cwd(),

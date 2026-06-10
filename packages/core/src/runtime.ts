@@ -1,9 +1,14 @@
 export {
+  analyzePagePropertyLinks,
   formatPropertyLabel,
   formatPropertyValue,
   getMenuLabel,
   getPageProperties,
+  getResolvedPageProperties,
+  resolvePagePropertyValue,
   type PageProperty,
+  type PagePropertyPart,
+  type PagePropertyResolution,
 } from "./pipeline/frontmatter.js";
 export {
   analyzeMarkdown,

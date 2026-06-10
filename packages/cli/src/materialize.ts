@@ -1,7 +1,10 @@
 import path from "node:path";
+import { createRequire } from "node:module";
 import fs from "fs-extra";
 import { loadConfig } from "@silicajs/core";
 import {
+  assistantModuleTemplate,
+  assistantRouteTemplate,
   getSilicaTemplates,
   nextConfigTemplate,
   packageJsonTemplate,
@@ -43,6 +46,19 @@ export async function materializeNextApp(
     themeModuleTemplate(config.theme),
   );
   await fs.writeFile(
+    path.join(nextRoot, "silica-assistant.ts"),
+    assistantModuleTemplate(Boolean(config.ai)),
+  );
+  if (config.ai) {
+    assertAssistantInstalled(projectRoot);
+    const assistantRoutePath = path.join(
+      nextRoot,
+      "app/api/assistant/route.ts",
+    );
+    await fs.ensureDir(path.dirname(assistantRoutePath));
+    await fs.writeFile(assistantRoutePath, assistantRouteTemplate(config.ai));
+  }
+  await fs.writeFile(
     path.join(nextRoot, "package.json"),
     packageJsonTemplate(),
   );
@@ -57,6 +73,19 @@ export async function materializeNextApp(
   await syncEnvFiles(projectRoot, nextRoot);
   await overlayPublic(projectRoot, publicRoot);
   return nextRoot;
+}
+
+function assertAssistantInstalled(projectRoot: string): void {
+  const require = createRequire(path.join(projectRoot, "package.json"));
+  try {
+    require.resolve("@silicajs/assistant/package.json");
+  } catch {
+    throw new Error(
+      "AI is enabled in silica.config.ts but @silicajs/assistant is not installed.\n" +
+        "Install it together with the provider package for your configured model, e.g.:\n" +
+        "  npm install @silicajs/assistant @core-ai/openai",
+    );
+  }
 }
 
 async function resolveUserConfigImport(

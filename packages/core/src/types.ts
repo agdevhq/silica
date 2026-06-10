@@ -27,6 +27,28 @@ export type SilicaAuthConfig = {
   allowedEmails?: string[];
 };
 
+export type SilicaAiProvider = "openai" | "anthropic" | "google" | "mistral";
+
+export type SilicaAiConfig = {
+  enabled?: boolean;
+  /** Provider the assistant uses for model calls. */
+  provider: SilicaAiProvider;
+  /** Model identifier passed to the provider (e.g. `gpt-5.2`). */
+  model: string;
+  /**
+   * Environment variable holding the provider API key.
+   * Defaults to the provider's conventional variable
+   * (e.g. `OPENAI_API_KEY`).
+   */
+  apiKeyEnv?: string;
+};
+
+export type ResolvedSilicaAiConfig = {
+  provider: SilicaAiProvider;
+  model: string;
+  apiKeyEnv: string;
+};
+
 export type SilicaNextConfig = Record<string, unknown>;
 
 export type SilicaNextConfigOverride =
@@ -42,6 +64,7 @@ export type SilicaConfig = {
   contentDir?: string;
   theme?: ThemeConfig;
   auth?: SilicaAuthConfig | false;
+  ai?: SilicaAiConfig | false;
   wikilinks?: {
     strategy?: "absolute" | "relative" | "shortest";
     strict?: boolean;
@@ -102,6 +125,7 @@ export type ResolvedSilicaConfig = {
   contentDir: string;
   theme: ThemeConfig;
   auth?: SilicaAuthConfig;
+  ai?: ResolvedSilicaAiConfig;
   wikilinks: {
     strategy: "absolute" | "relative" | "shortest";
     strict: boolean;

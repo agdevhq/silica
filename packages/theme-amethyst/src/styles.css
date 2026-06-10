@@ -4,6 +4,9 @@
 @source "../../ui/src/**/*.{ts,tsx}";
 @source "../../components/src/**/*.{ts,tsx}";
 @source "../../components/dist/**/*.js";
+/* Optional AI assistant UI; matches nothing when not installed. */
+@source "../../assistant/src/**/*.{ts,tsx}";
+@source "../../assistant/dist/**/*.js";
 @source "../src/**/*.{ts,tsx}";
 @source "../dist/**/*.js";
 

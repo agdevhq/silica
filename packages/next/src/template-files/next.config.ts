@@ -37,7 +37,7 @@ const baseNextConfig: NextConfig = {
     "@silicajs/ui",
     "@silicajs/theme-amethyst",
   ],
-  serverExternalPackages: ["better-sqlite3"],
+  serverExternalPackages: ["better-sqlite3", "just-bash"],
   outputFileTracingIncludes: {
     "/*": ["../content/**/*", "../vault.db"],
   },

@@ -3,11 +3,23 @@ import { existsSync } from "node:fs";
 import { createJiti } from "jiti";
 import { resolvePublicAssetPath } from "./logo.js";
 import type {
+  ResolvedSilicaAiConfig,
   ResolvedSilicaConfig,
   ResolvedSilicaPrerenderConfig,
+  SilicaAiConfig,
   SilicaConfig,
   SilicaPrerenderConfig,
 } from "./types.js";
+
+const DEFAULT_API_KEY_ENV_BY_PROVIDER: Record<
+  ResolvedSilicaAiConfig["provider"],
+  string
+> = {
+  openai: "OPENAI_API_KEY",
+  anthropic: "ANTHROPIC_API_KEY",
+  google: "GOOGLE_API_KEY",
+  mistral: "MISTRAL_API_KEY",
+};
 
 export function defineConfig(config: SilicaConfig): SilicaConfig {
   return config;
@@ -76,6 +88,7 @@ export function resolveConfig(
           allowedEmails,
         }
       : undefined,
+    ai: resolveAiConfig(config.ai),
     wikilinks: {
       strategy: config.wikilinks?.strategy ?? "shortest",
       strict: config.wikilinks?.strict ?? false,
@@ -97,6 +110,31 @@ export function resolveConfig(
         directory: config.render?.cache?.directory,
       },
     },
+  };
+}
+
+function resolveAiConfig(
+  ai: SilicaAiConfig | false | undefined,
+): ResolvedSilicaAiConfig | undefined {
+  if (!ai || ai.enabled === false) return undefined;
+
+  const apiKeyEnv = DEFAULT_API_KEY_ENV_BY_PROVIDER[ai.provider];
+  if (!apiKeyEnv) {
+    throw new Error(
+      `Unknown Silica AI provider "${String(ai.provider)}". ` +
+        "Expected one of: openai, anthropic, google, mistral.",
+    );
+  }
+  if (!ai.model) {
+    throw new Error(
+      "Silica AI requires a model (e.g. ai: { provider: 'openai', model: 'gpt-5.2' }).",
+    );
+  }
+
+  return {
+    provider: ai.provider,
+    model: ai.model,
+    apiKeyEnv: ai.apiKeyEnv ?? apiKeyEnv,
   };
 }
 

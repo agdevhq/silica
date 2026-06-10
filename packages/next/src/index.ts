@@ -1,4 +1,6 @@
 export {
+  assistantModuleTemplate,
+  assistantRouteTemplate,
   getSilicaTemplates,
   nextConfigTemplate,
   packageJsonTemplate,

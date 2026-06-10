@@ -1,7 +1,10 @@
 "use client";
 
 import { Suspense } from "react";
-import type { ThemeLayoutConfig } from "@silicajs/core/theme";
+import type {
+  ThemeAssistantSlots,
+  ThemeLayoutConfig,
+} from "@silicajs/core/theme";
 import {
   DarkModeToggle,
   SearchTrigger,
@@ -22,9 +25,14 @@ import {
 export type SidebarProps = {
   navigationEndpoint: string;
   config: ThemeLayoutConfig;
+  assistant?: ThemeAssistantSlots;
 };
 
-export function Sidebar({ navigationEndpoint, config }: SidebarProps) {
+export function Sidebar({
+  navigationEndpoint,
+  config,
+  assistant,
+}: SidebarProps) {
   return (
     <ShadcnSidebar>
       <SidebarHeader className="gap-3 border-b border-sidebar-border">
@@ -37,8 +45,11 @@ export function Sidebar({ navigationEndpoint, config }: SidebarProps) {
           </SilicaLink>
           <DarkModeToggle />
         </div>
-        <div className="px-1 pb-1">
+        <div className="flex flex-col gap-2 px-1 pb-1">
           <SearchTrigger className="w-full justify-start" />
+          {assistant ? (
+            <assistant.Trigger className="w-full justify-start" />
+          ) : null}
         </div>
       </SidebarHeader>
       <SidebarContent>

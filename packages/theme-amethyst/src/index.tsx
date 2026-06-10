@@ -68,10 +68,15 @@ export function SiteLayout({
   navigationEndpoint,
   config,
   children,
+  assistant,
 }: ThemeSiteLayoutProps) {
-  return (
+  const layout = (
     <SidebarProvider>
-      <Sidebar navigationEndpoint={navigationEndpoint} config={config} />
+      <Sidebar
+        navigationEndpoint={navigationEndpoint}
+        config={config}
+        assistant={assistant}
+      />
       <SidebarInset>
         <header className="sticky top-0 z-10 flex h-12 shrink-0 items-center gap-2 border-b border-border bg-background px-3 md:hidden">
           <SidebarTrigger />
@@ -84,8 +89,11 @@ export function SiteLayout({
         </header>
         {children}
       </SidebarInset>
+      {assistant ? <assistant.Sidebar /> : null}
     </SidebarProvider>
   );
+
+  return assistant ? <assistant.Provider>{layout}</assistant.Provider> : layout;
 }
 
 export function PageRenderer({ page, breadcrumbs, backlinks }: ThemePageProps) {

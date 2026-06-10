@@ -31,6 +31,22 @@ export type ThemeLayoutConfig = {
   logo?: string;
   baseUrl?: string;
   authEnabled: boolean;
+  assistantEnabled: boolean;
+};
+
+/**
+ * Pre-wired AI assistant components handed to themes when the maintainer
+ * enabled AI and `@silicajs/assistant` is installed. Themes that support
+ * the assistant decide where to render them; themes that don't simply
+ * ignore the prop.
+ */
+export type ThemeAssistantSlots = {
+  /** Client-side conversation state; must wrap Trigger and Sidebar. */
+  Provider: (props: { children: React.ReactNode }) => React.ReactNode;
+  /** Button that opens the assistant (also binds the keyboard shortcut). */
+  Trigger: (props: { className?: string; label?: string }) => React.ReactNode;
+  /** Conditional conversation sidebar; renders nothing while closed. */
+  Sidebar: (props: { className?: string }) => React.ReactNode;
 };
 
 export type ThemeProviderComponent = (props: {
@@ -47,6 +63,8 @@ export type ThemeSiteLayoutProps = {
   navigationEndpoint: string;
   config: ThemeLayoutConfig;
   children: React.ReactNode;
+  /** Present only when AI is enabled for the site. */
+  assistant?: ThemeAssistantSlots;
 };
 
 export type ThemePage = {

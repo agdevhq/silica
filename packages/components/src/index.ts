@@ -1,4 +1,10 @@
 export {
+  SilicaAssistantProvider,
+  useSilicaAssistant,
+  type SilicaAssistantContextValue,
+  type SilicaAssistantProviderProps,
+} from "./assistant-context.js";
+export {
   Backlinks,
   type BacklinkItem,
   type BacklinksProps,

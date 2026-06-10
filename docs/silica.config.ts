@@ -7,6 +7,10 @@ export default defineConfig({
   baseUrl: "http://localhost:3000",
   contentDir: process.env.SILICA_CONTENT_DIR ?? "content",
   theme: "default",
+  ai: {
+    provider: "openai",
+    model: "gpt-5-mini",
+  },
   wikilinks: {
     strategy: "shortest",
     strict: false,

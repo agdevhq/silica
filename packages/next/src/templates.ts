@@ -1,7 +1,10 @@
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import type { ResolvedSilicaConfig } from "@silicajs/core/runtime";
+import type {
+  ResolvedSilicaAiConfig,
+  ResolvedSilicaConfig,
+} from "@silicajs/core/runtime";
 
 export type TemplateFile = {
   path: string;
@@ -34,6 +37,54 @@ export function themeModuleTemplate(themeValue: unknown): string {
     '"{{themeSpecifier}}"',
     JSON.stringify(resolveThemeSpecifier(themeValue)),
   );
+}
+
+export function assistantModuleTemplate(aiEnabled: boolean): string {
+  if (!aiEnabled) {
+    return `import type { ThemeAssistantSlots } from "@silicajs/core/theme";
+
+export const assistant: ThemeAssistantSlots | undefined = undefined;
+`;
+  }
+
+  return `import {
+  AssistantProvider,
+  AssistantSidebar,
+  AssistantTrigger,
+} from "@silicajs/assistant/ui";
+import type { ThemeAssistantSlots } from "@silicajs/core/theme";
+
+export const assistant: ThemeAssistantSlots | undefined = {
+  Provider: AssistantProvider,
+  Trigger: AssistantTrigger,
+  Sidebar: AssistantSidebar,
+};
+`;
+}
+
+const ASSISTANT_PROVIDER_IMPORTS: Record<
+  ResolvedSilicaAiConfig["provider"],
+  { packageName: string; factory: string }
+> = {
+  openai: { packageName: "@core-ai/openai", factory: "createOpenAI" },
+  anthropic: { packageName: "@core-ai/anthropic", factory: "createAnthropic" },
+  google: {
+    packageName: "@core-ai/google-genai",
+    factory: "createGoogleGenAI",
+  },
+  mistral: { packageName: "@core-ai/mistral", factory: "createMistral" },
+};
+
+export function assistantRouteTemplate(ai: ResolvedSilicaAiConfig): string {
+  const provider = ASSISTANT_PROVIDER_IMPORTS[ai.provider];
+  return `import { ${provider.factory} } from "${provider.packageName}";
+import { createAssistantRouteHandler } from "@silicajs/assistant/next";
+
+export const POST = createAssistantRouteHandler({
+  createChatModel: ({ apiKey, model }) =>
+    ${provider.factory}({ apiKey }).chatModel(model),
+});
+`;
 }
 
 export function proxyTemplate(config: ResolvedSilicaConfig): string {

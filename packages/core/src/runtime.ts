@@ -45,6 +45,7 @@ export type {
   SilicaCodeBlockProps,
   SilicaEmbedProps,
   SilicaMermaidProps,
+  ThemeAssistantSlots,
   ThemeBacklink,
   ThemeBreadcrumb,
   ThemeLayoutConfig,
@@ -66,6 +67,7 @@ export type {
   RenderContext,
   RenderCacheState,
   RenderResult,
+  ResolvedSilicaAiConfig,
   ResolvedSilicaConfig,
   TocItem,
 } from "./types.js";

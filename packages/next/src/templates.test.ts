@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
+  assistantModuleTemplate,
+  assistantRouteTemplate,
   getSilicaTemplates,
   nextConfigTemplate,
   proxyTemplate,
@@ -113,6 +115,36 @@ describe("generated templates", () => {
         },
       }),
     ).toContain('"publicPaths": [\n    "/logo.svg"\n  ]');
+  });
+
+  it("generates an inert assistant module when AI is disabled", () => {
+    const rendered = assistantModuleTemplate(false);
+    expect(rendered).toContain("export const assistant");
+    expect(rendered).toContain("undefined");
+    expect(rendered).not.toContain("@silicajs/assistant");
+  });
+
+  it("wires assistant slots when AI is enabled", () => {
+    const rendered = assistantModuleTemplate(true);
+    expect(rendered).toContain('from "@silicajs/assistant/ui"');
+    expect(rendered).toContain("Provider: AssistantProvider");
+    expect(rendered).toContain("Trigger: AssistantTrigger");
+    expect(rendered).toContain("Sidebar: AssistantSidebar");
+  });
+
+  it("generates the assistant route for the configured provider", () => {
+    const rendered = assistantRouteTemplate({
+      provider: "anthropic",
+      model: "claude-sonnet-4-5",
+      apiKeyEnv: "ANTHROPIC_API_KEY",
+    });
+    expect(rendered).toContain(
+      'import { createAnthropic } from "@core-ai/anthropic"',
+    );
+    expect(rendered).toContain(
+      'import { createAssistantRouteHandler } from "@silicajs/assistant/next"',
+    );
+    expect(rendered).toContain("createAnthropic({ apiKey }).chatModel(model)");
   });
 
   it("renders the tsconfig extends placeholder when a user config exists", () => {

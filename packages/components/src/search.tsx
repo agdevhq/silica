@@ -17,8 +17,9 @@ import {
   DialogTitle,
 } from "@silicajs/ui/components/dialog";
 import { Button } from "@silicajs/ui/components/button";
-import { SearchIcon } from "lucide-react";
+import { SearchIcon, SparklesIcon } from "lucide-react";
 
+import { useSilicaAssistant } from "./assistant-context.js";
 import { useSilicaRouting } from "./routing.js";
 import { slugToHref } from "./slug.js";
 
@@ -91,6 +92,7 @@ export type SearchPaletteProps = {
 
 export function SearchPalette({ open, onOpenChange }: SearchPaletteProps) {
   const { navigate } = useSilicaRouting();
+  const assistant = useSilicaAssistant();
   const [query, setQuery] = React.useState("");
   const [results, setResults] = React.useState<SearchResult[]>([]);
   const [isLoading, setIsLoading] = React.useState(false);
@@ -156,13 +158,36 @@ export function SearchPalette({ open, onOpenChange }: SearchPaletteProps) {
           />
           {query.trim() ? (
             <CommandList>
+              {assistant ? (
+                <CommandItem
+                  value={`silica-assistant-handoff ${query}`}
+                  onSelect={() => {
+                    assistant.openAssistant(query.trim());
+                    close();
+                  }}
+                >
+                  <SparklesIcon className="shrink-0 text-primary" />
+                  <span className="min-w-0 truncate text-sm">
+                    Ask AI assistant:{" "}
+                    <span className="font-medium text-foreground">
+                      {query.trim()}
+                    </span>
+                  </span>
+                </CommandItem>
+              ) : null}
               {isLoading ? (
                 <div className="py-12 text-center text-sm text-muted-foreground">
                   Searching…
                 </div>
               ) : null}
               {!isLoading && results.length === 0 ? (
-                <CommandEmpty>No results found</CommandEmpty>
+                assistant ? (
+                  <div className="px-4 pt-2 pb-4 text-center text-sm text-muted-foreground">
+                    No matching pages
+                  </div>
+                ) : (
+                  <CommandEmpty>No results found</CommandEmpty>
+                )
               ) : null}
               {results.map((result) => (
                 <CommandItem

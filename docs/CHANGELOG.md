@@ -1,5 +1,16 @@
 # docs
 
+## 0.1.7
+
+### Patch Changes
+
+- Updated dependencies [3ae2fe0]
+- Updated dependencies [4461778]
+  - @silicajs/core@0.7.0
+  - @silicajs/next@0.4.0
+  - @silicajs/theme-amethyst@0.3.0
+  - @silicajs/cli@0.2.2
+
 ## 0.1.6
 
 ### Patch Changes

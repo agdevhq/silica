@@ -1,5 +1,17 @@
 # @silicajs/components
 
+## 0.3.0
+
+### Minor Changes
+
+- 3ae2fe0: Resolve wikilinks in frontmatter page properties and include them in page backlink graphs.
+
+### Patch Changes
+
+- Updated dependencies [3ae2fe0]
+- Updated dependencies [4461778]
+  - @silicajs/core@0.7.0
+
 ## 0.2.4
 
 ### Patch Changes

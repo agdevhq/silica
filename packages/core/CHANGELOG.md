@@ -1,5 +1,15 @@
 # @silicajs/core
 
+## 0.7.0
+
+### Minor Changes
+
+- 3ae2fe0: Resolve wikilinks in frontmatter page properties and include them in page backlink graphs.
+
+### Patch Changes
+
+- 4461778: Resolve ambiguous shortest wikilinks deterministically instead of treating repeated note basenames as broken links.
+
 ## 0.6.1
 
 ### Patch Changes

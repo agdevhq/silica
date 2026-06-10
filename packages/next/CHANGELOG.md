@@ -1,5 +1,16 @@
 # @silicajs/next
 
+## 0.3.2
+
+### Patch Changes
+
+- 843fc24: Bump better-auth to 1.6.16.
+- Updated dependencies [843fc24]
+- Updated dependencies [61624c5]
+- Updated dependencies [f5d4578]
+  - @silicajs/auth@0.1.2
+  - @silicajs/core@0.6.1
+
 ## 0.3.1
 
 ### Patch Changes

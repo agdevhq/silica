@@ -1,5 +1,12 @@
 # @silicajs/core
 
+## 0.6.1
+
+### Patch Changes
+
+- 61624c5: Bump shiki to 4.2.0.
+- f5d4578: Bump @shikijs/rehype to 4.2.0.
+
 ## 0.6.0
 
 ### Minor Changes

@@ -144,47 +144,74 @@ export function SearchPalette({ open, onOpenChange }: SearchPaletteProps) {
         <DialogDescription>Search your vault.</DialogDescription>
       </DialogHeader>
       <DialogContent
-        className="top-1/3 translate-y-0 overflow-hidden rounded-xl! p-0"
+        className="top-[12vh] translate-y-0 overflow-hidden rounded-xl! p-0 sm:max-w-xl"
         showCloseButton={false}
       >
         <Command shouldFilter={false}>
           <CommandInput
             autoFocus
-            placeholder="Search your vault…"
+            placeholder="Type to search…"
             value={query}
             onValueChange={setQuery}
           />
-          <CommandList>
-            {isLoading ? (
-              <div className="px-4 py-6 text-center text-sm text-muted-foreground">
-                Searching…
-              </div>
-            ) : null}
-            {!isLoading && query.trim() && results.length === 0 ? (
-              <CommandEmpty>No results</CommandEmpty>
-            ) : null}
-            {results.map((result) => (
-              <CommandItem
-                key={result.slug}
-                value={`${result.title} ${result.slug}`}
-                onSelect={() => {
-                  navigate(slugToHref(result.slug));
-                  close();
-                }}
-              >
-                <div className="flex min-w-0 flex-col gap-0.5">
-                  <span className="truncate font-medium text-foreground">
-                    <HighlightedText parts={result.titleParts} />
-                  </span>
-                  {result.excerptParts.length > 0 ? (
-                    <span className="truncate text-xs text-muted-foreground">
-                      <HighlightedText parts={result.excerptParts} />
-                    </span>
-                  ) : null}
+          {query.trim() ? (
+            <CommandList>
+              {isLoading ? (
+                <div className="py-12 text-center text-sm text-muted-foreground">
+                  Searching…
                 </div>
-              </CommandItem>
-            ))}
-          </CommandList>
+              ) : null}
+              {!isLoading && results.length === 0 ? (
+                <CommandEmpty>No results found</CommandEmpty>
+              ) : null}
+              {results.map((result) => (
+                <CommandItem
+                  key={result.slug}
+                  value={`${result.title} ${result.slug}`}
+                  onSelect={() => {
+                    navigate(slugToHref(result.slug));
+                    close();
+                  }}
+                >
+                  <div className="flex min-w-0 flex-col gap-1">
+                    <span className="truncate text-sm font-medium text-foreground">
+                      <HighlightedText parts={result.titleParts} />
+                    </span>
+                    {result.excerptParts.length > 0 ? (
+                      <span className="truncate text-xs leading-relaxed text-muted-foreground">
+                        <HighlightedText parts={result.excerptParts} />
+                      </span>
+                    ) : null}
+                  </div>
+                </CommandItem>
+              ))}
+            </CommandList>
+          ) : null}
+          {results.length > 0 ? (
+            <div className="flex items-center gap-4 border-t border-border px-4 py-2.5 text-xs text-muted-foreground">
+              <span className="flex items-center gap-1.5">
+                <kbd className="inline-flex h-5 min-w-5 items-center justify-center rounded border border-border bg-muted px-1 font-sans">
+                  ↵
+                </kbd>
+                to select
+              </span>
+              <span className="flex items-center gap-1.5">
+                <kbd className="inline-flex h-5 min-w-5 items-center justify-center rounded border border-border bg-muted px-1 font-sans">
+                  ↑
+                </kbd>
+                <kbd className="inline-flex h-5 min-w-5 items-center justify-center rounded border border-border bg-muted px-1 font-sans">
+                  ↓
+                </kbd>
+                to navigate
+              </span>
+              <span className="flex items-center gap-1.5">
+                <kbd className="inline-flex h-5 items-center justify-center rounded border border-border bg-muted px-1.5 font-sans">
+                  esc
+                </kbd>
+                to close
+              </span>
+            </div>
+          ) : null}
         </Command>
       </DialogContent>
     </Dialog>

@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { tagToHref } from "@silicajs/core/runtime";
+import { getPageProperties, tagToHref } from "@silicajs/core/runtime";
 import type {
   ThemePageProps,
   ThemeRootLayoutProps,
@@ -90,27 +90,40 @@ export function SiteLayout({
 
 export function PageRenderer({ page, breadcrumbs, backlinks }: ThemePageProps) {
   const hasBreadcrumbs = breadcrumbs.length > 0;
+  const properties = page.pageProperties ?? getPageProperties(page.frontmatter);
+  const hasProperties = properties.length > 0;
+  const hasTags = page.tags.length > 0;
   return (
     <div className="mx-auto w-full max-w-6xl px-8 py-12 lg:grid lg:grid-cols-[minmax(0,1fr)_14rem] lg:gap-12">
       <article className="min-w-0">
-        <header className="mb-10 flex flex-col gap-3">
-          {hasBreadcrumbs ? (
-            <Breadcrumbs items={breadcrumbs} className="text-xs" />
-          ) : null}
-          <h1 className="text-4xl font-bold tracking-tight text-foreground">
-            {page.title}
-          </h1>
-          {page.description ? (
-            <p className="text-lg leading-relaxed text-muted-foreground">
-              {page.description}
+        <header className="mb-6 flex flex-col gap-6">
+          <div className="flex flex-col gap-2">
+            {hasBreadcrumbs ? (
+              <Breadcrumbs items={breadcrumbs} className="text-xs" />
+            ) : null}
+            <h1 className="text-4xl font-bold tracking-tight text-foreground">
+              {page.title}
+            </h1>
+            {page.description ? (
+              <p className="text-lg leading-relaxed text-muted-foreground">
+                {page.description}
+              </p>
+            ) : null}
+          </div>
+          {hasProperties ? <PageProperties properties={properties} /> : null}
+        </header>
+        <div className="prose max-w-none">{page.content}</div>
+        <div className="mt-16">
+          <Backlinks backlinks={backlinks} />
+        </div>
+      </article>
+      <aside className="mt-12 hidden flex-col gap-8 lg:sticky lg:top-12 lg:mt-0 lg:flex lg:self-start">
+        {hasTags ? (
+          <div>
+            <p className="mb-2 text-xs font-medium tracking-wider text-muted-foreground uppercase">
+              Tags
             </p>
-          ) : null}
-          <PageProperties
-            frontmatter={page.frontmatter}
-            properties={page.pageProperties}
-          />
-          {page.tags.length > 0 ? (
-            <div className="flex flex-wrap gap-2 pt-1">
+            <div className="flex flex-wrap gap-2">
               {page.tags.map((tag) => (
                 <SilicaLink
                   key={tag}
@@ -122,14 +135,8 @@ export function PageRenderer({ page, breadcrumbs, backlinks }: ThemePageProps) {
                 </SilicaLink>
               ))}
             </div>
-          ) : null}
-        </header>
-        <div className="prose max-w-none">{page.content}</div>
-        <div className="mt-16">
-          <Backlinks backlinks={backlinks} />
-        </div>
-      </article>
-      <aside className="mt-12 hidden lg:sticky lg:top-12 lg:mt-0 lg:block lg:self-start">
+          </div>
+        ) : null}
         <TableOfContents toc={page.toc} />
       </aside>
     </div>

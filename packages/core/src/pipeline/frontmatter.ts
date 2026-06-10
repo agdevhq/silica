@@ -76,6 +76,16 @@ const RESERVED_FRONTMATTER_KEYS = new Set([
   "title",
 ]);
 
+const ISO_DATE_STRING_PATTERN =
+  /^(\d{4})-(\d{2})-(\d{2})(?:T\d{2}:\d{2}(?::\d{2}(?:\.\d+)?)?(?:Z|[+-]\d{2}:?\d{2})?)?$/;
+
+const PAGE_PROPERTY_DATE_FORMATTER = new Intl.DateTimeFormat("en-US", {
+  day: "numeric",
+  month: "long",
+  timeZone: "UTC",
+  year: "numeric",
+});
+
 export function getMenuLabel(
   frontmatter: Record<string, unknown>,
   title: string,
@@ -203,12 +213,13 @@ export function formatPropertyValue(value: unknown): string | undefined {
   if (value === null || value === undefined) return undefined;
 
   if (value instanceof Date) {
-    return value.toISOString().slice(0, 10);
+    return formatPagePropertyDate(value);
   }
 
   if (typeof value === "string") {
     const trimmed = value.trim();
-    return trimmed || undefined;
+    if (!trimmed) return undefined;
+    return formatIsoDateString(trimmed) ?? trimmed;
   }
 
   if (typeof value === "number" || typeof value === "boolean") {
@@ -227,6 +238,31 @@ export function formatPropertyValue(value: unknown): string | undefined {
   }
 
   return String(value);
+}
+
+function formatPagePropertyDate(date: Date): string | undefined {
+  if (Number.isNaN(date.getTime())) return undefined;
+  return PAGE_PROPERTY_DATE_FORMATTER.format(date);
+}
+
+function formatIsoDateString(value: string): string | undefined {
+  const match = ISO_DATE_STRING_PATTERN.exec(value);
+  if (!match) return undefined;
+
+  const year = Number(match[1]);
+  const month = Number(match[2]);
+  const day = Number(match[3]);
+  const date = new Date(Date.UTC(year, month - 1, day));
+
+  if (
+    date.getUTCFullYear() !== year ||
+    date.getUTCMonth() !== month - 1 ||
+    date.getUTCDate() !== day
+  ) {
+    return undefined;
+  }
+
+  return formatPagePropertyDate(date);
 }
 
 function collectPropertyWikiNodes(

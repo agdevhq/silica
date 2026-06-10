@@ -76,7 +76,7 @@ describe("getPageProperties", () => {
       { key: "featured", label: "featured", value: "true" },
       { key: "latencyTargetMs", label: "latency target ms", value: "100" },
       { key: "relatedTopics", label: "related topics", value: "search, auth" },
-      { key: "reviewedOn", label: "reviewed on", value: "2026-05-25" },
+      { key: "reviewedOn", label: "reviewed on", value: "May 25, 2026" },
     ]);
   });
 });
@@ -93,6 +93,17 @@ describe("formatPropertyValue", () => {
     expect(formatPropertyValue("")).toBeUndefined();
     expect(formatPropertyValue("   ")).toBeUndefined();
     expect(formatPropertyValue(null)).toBeUndefined();
+  });
+
+  it("formats date objects and ISO date strings", () => {
+    expect(formatPropertyValue(new Date("2026-05-25T00:00:00.000Z"))).toBe(
+      "May 25, 2026",
+    );
+    expect(formatPropertyValue("2026-05-25")).toBe("May 25, 2026");
+    expect(formatPropertyValue("2026-05-25T16:30:00.000Z")).toBe(
+      "May 25, 2026",
+    );
+    expect(formatPropertyValue("2026-02-31")).toBe("2026-02-31");
   });
 });
 

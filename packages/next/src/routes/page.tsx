@@ -16,6 +16,7 @@ import {
   getPageRuntimeData,
   getPrerenderSlugs,
   getRenderKey,
+  resolveAssetFromDb,
   resolveWikiLinkFromDb,
   normalizeRouteSlug,
 } from "../server-data.js";
@@ -101,12 +102,21 @@ export async function VaultContent({
 
   const renderContext = (
     currentSlug: string,
+    currentSourcePath: string,
     embedDepth = 0,
   ): RenderContext => ({
     slug: currentSlug,
+    sourcePath: currentSourcePath,
     resolveWikiLink: (_currentSlug, target) =>
       resolveWikiLinkFromDb(
         currentSlug,
+        target,
+        config.wikilinks.strategy,
+        config.ordering,
+      ),
+    resolveAsset: (_currentSourcePath, target) =>
+      resolveAssetFromDb(
+        currentSourcePath,
         target,
         config.wikilinks.strategy,
         config.ordering,
@@ -135,13 +145,16 @@ export async function VaultContent({
       const scopedRaw = scopeEmbedMarkdown(embeddedRaw, target);
       return renderMarkdownHtml(
         scopedRaw,
-        renderContext(resolved, embedDepth + 1),
+        renderContext(resolved, embeddedEntry.sourcePath, embedDepth + 1),
       );
     },
   });
 
   const raw = await fs.readFile(entry.file, "utf8");
-  const rendered = await renderMarkdown(raw, renderContext(slug));
+  const rendered = await renderMarkdown(
+    raw,
+    renderContext(slug, entry.sourcePath),
+  );
 
   return (
     <theme.PageRenderer

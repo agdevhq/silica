@@ -170,7 +170,7 @@ describe("precompute", () => {
       "Advanced",
       "Reference",
     ]);
-    expect(result.manifest.entries.map((entry) => entry.relativeFile)).toEqual([
+    expect(result.manifest.entries.map((entry) => entry.sourcePath)).toEqual([
       "01_Home.md",
       "02_Guides/01_Setup.md",
       "02_Guides/02_Advanced.md",
@@ -280,6 +280,55 @@ describe("precompute", () => {
         "utf8",
       ),
     ).not.toContain("notes/embed-helper");
+
+    await fs.remove(root);
+  });
+
+  it("copies assets to slugified asset paths", async () => {
+    const root = path.join(process.cwd(), ".tmp-precompute-assets");
+    await fs.emptyDir(path.join(root, "content/01 Notes"));
+    await fs.writeFile(
+      path.join(root, "content/01 Notes/02 Page.md"),
+      "![[Local Image.PNG]]",
+    );
+    await fs.writeFile(
+      path.join(root, "content/01 Notes/Local Image.PNG"),
+      "fake",
+    );
+
+    await precompute({
+      projectRoot: root,
+      config: resolveConfig({ title: "Test" }, root),
+    });
+
+    expect(
+      await fs.pathExists(
+        path.join(root, ".silica/next/public/silica/notes/local-image.png"),
+      ),
+    ).toBe(true);
+    expect(
+      await fs.pathExists(
+        path.join(root, ".silica/next/public/silica/01 Notes/Local Image.PNG"),
+      ),
+    ).toBe(false);
+
+    await fs.remove(root);
+  });
+
+  it("rejects colliding asset paths", async () => {
+    const root = path.join(process.cwd(), ".tmp-precompute-asset-collision");
+    await fs.emptyDir(path.join(root, "content/Notes"));
+    await fs.emptyDir(path.join(root, "content/notes"));
+    await fs.writeFile(path.join(root, "content/index.md"), "# Home");
+    await fs.writeFile(path.join(root, "content/Notes/My Photo.png"), "a");
+    await fs.writeFile(path.join(root, "content/notes/my-photo.png"), "b");
+
+    await expect(
+      precompute({
+        projectRoot: root,
+        config: resolveConfig({ title: "Test" }, root),
+      }),
+    ).rejects.toThrow("Asset path collision");
 
     await fs.remove(root);
   });

@@ -1,11 +1,15 @@
 import { describe, expect, it } from "vitest";
 import {
   asFullSlug,
+  createAssetResolutionIndex,
   createWikiLinkResolutionIndex,
+  normalizeAssetReference,
   normalizeSlug,
   numericPrefixSortKey,
+  resolveAssetPath,
   resolveWikiLink,
   simplifySlug,
+  slugifyAssetPath,
   slugifyFilePath,
   slugifySegment,
   slugToHref,
@@ -173,5 +177,79 @@ describe("path helpers", () => {
         "shortest",
       ),
     ).toBe("notes/auth");
+  });
+
+  it("resolves asset references by path, relative path, and basename", () => {
+    const options = { numericPrefixes: true };
+    const index = createAssetResolutionIndex(
+      [
+        {
+          sourcePath: "attachments/Pasted Image.png",
+          assetPath: slugifyAssetPath("attachments/Pasted Image.png", options),
+        },
+        {
+          sourcePath: "01 Notes/local.pdf",
+          assetPath: slugifyAssetPath("01 Notes/local.pdf", options),
+        },
+      ],
+      options,
+    );
+
+    expect(normalizeAssetReference("Pasted Image.png")).toBe(
+      "pasted-image.png",
+    );
+    expect(
+      resolveAssetPath(
+        "notes/page",
+        "attachments/Pasted Image.png",
+        index,
+        "shortest",
+      ),
+    ).toBe("attachments/pasted-image.png");
+    expect(
+      resolveAssetPath(
+        "01 Notes/02 Page.md",
+        "local.pdf",
+        index,
+        "relative",
+        options,
+      ),
+    ).toBe("notes/local.pdf");
+    expect(
+      resolveAssetPath(
+        "01 Notes/02 Page.md",
+        "Pasted Image.png",
+        index,
+        "shortest",
+      ),
+    ).toBe("attachments/pasted-image.png");
+  });
+
+  it("slugifies asset paths without dropping extensions", () => {
+    expect(
+      slugifyAssetPath("01 Notes/Pasted Image.PNG", {
+        numericPrefixes: true,
+      }),
+    ).toBe("notes/pasted-image.png");
+  });
+
+  it("does not resolve ambiguous shortest asset basenames", () => {
+    const index = createAssetResolutionIndex([
+      {
+        sourcePath: "attachments/photo.png",
+        assetPath: "attachments/photo.png",
+      },
+      {
+        sourcePath: "images/photo.png",
+        assetPath: "images/photo.png",
+      },
+    ]);
+
+    expect(
+      resolveAssetPath("index.md", "photo.png", index, "shortest"),
+    ).toBeUndefined();
+    expect(
+      resolveAssetPath("index.md", "images/photo.png", index, "shortest"),
+    ).toBe("images/photo.png");
   });
 });

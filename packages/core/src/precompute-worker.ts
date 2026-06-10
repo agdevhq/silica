@@ -1,10 +1,15 @@
 import { parentPort, workerData } from "node:worker_threads";
-import { asFullSlug, createWikiLinkResolutionIndex } from "./path.js";
+import {
+  asFullSlug,
+  createAssetResolutionIndex,
+  createWikiLinkResolutionIndex,
+} from "./path.js";
 import { analyzeMarkdown } from "./pipeline/index.js";
 import type { AnalyzeResult, ResolvedSilicaConfig } from "./types.js";
 
 type WorkerData = {
   allSlugs: string[];
+  assetEntries: Array<{ sourcePath: string; assetPath: string }>;
   wikilinkStrategy: ResolvedSilicaConfig["wikilinks"]["strategy"];
   tags: ResolvedSilicaConfig["tags"];
   ordering: ResolvedSilicaConfig["ordering"];
@@ -13,6 +18,7 @@ type WorkerData = {
 type AnalysisWorkerFile = {
   index: number;
   slug: string;
+  sourcePath: string;
   raw: string;
 };
 
@@ -32,6 +38,7 @@ const wikilinkIndex = createWikiLinkResolutionIndex(
   data.allSlugs,
   data.ordering,
 );
+const assetIndex = createAssetResolutionIndex(data.assetEntries, data.ordering);
 
 parentPort?.on("message", async (message: AnalysisWorkerMessage) => {
   try {
@@ -41,7 +48,9 @@ parentPort?.on("message", async (message: AnalysisWorkerMessage) => {
         index: file.index,
         analysis: await analyzeMarkdown(file.raw, {
           slug: asFullSlug(file.slug),
+          sourcePath: file.sourcePath,
           wikilinkIndex,
+          assetIndex,
           assetBaseUrl: "/silica",
           wikilinkStrategy: data.wikilinkStrategy,
           tags: data.tags,

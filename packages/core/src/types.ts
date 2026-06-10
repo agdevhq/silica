@@ -6,7 +6,11 @@ import type {
 } from "react";
 import type { SearchRecord } from "@silicajs/search";
 import type { ObsidianLinkTarget } from "@silicajs/remark-obsidian";
-import type { FullSlug, WikiLinkResolutionIndex } from "./path.js";
+import type {
+  AssetResolutionIndex,
+  FullSlug,
+  WikiLinkResolutionIndex,
+} from "./path.js";
 
 export type ThemeConfig =
   | "default"
@@ -149,7 +153,7 @@ export type ManifestEntry = {
   generatedDescription?: string;
   tags: string[];
   file: string;
-  relativeFile: string;
+  sourcePath: string;
   sortKey?: string;
   created?: string;
   modified?: string;
@@ -192,9 +196,15 @@ export type BrokenLink = {
 
 export type RenderContext = {
   slug: FullSlug | string;
+  sourcePath?: string;
   wikilinkIndex?: WikiLinkResolutionIndex;
   resolveWikiLink?: (
     currentSlug: FullSlug | string,
+    target: string,
+  ) => string | undefined;
+  assetIndex?: AssetResolutionIndex;
+  resolveAsset?: (
+    currentSourcePath: string,
     target: string,
   ) => string | undefined;
   assetBaseUrl?: string;

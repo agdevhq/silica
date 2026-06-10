@@ -6,6 +6,7 @@ import {
   makeExcerpt,
   type SearchRecord,
 } from "@silicajs/search";
+import type { ContentAssetFile } from "./files.js";
 import type {
   Graph,
   Manifest,
@@ -14,9 +15,10 @@ import type {
   RenderCacheState,
   ResolvedSilicaConfig,
 } from "./types.js";
+import { normalizeAssetReference } from "./path.js";
 
 export const VAULT_DATABASE_FILENAME = "vault.db";
-export const VAULT_DATABASE_VERSION = "1";
+export const VAULT_DATABASE_VERSION = "2";
 
 export type VaultDbBuildInput = {
   config: ResolvedSilicaConfig;
@@ -26,12 +28,13 @@ export type VaultDbBuildInput = {
   cacheState: RenderCacheState;
   prerender: PrerenderManifest;
   searchRecords: SearchRecord[];
+  assets: Array<Pick<ContentAssetFile, "sourcePath" | "assetPath">>;
 };
 
 export type VaultDbNote = {
   slug: string;
   file: string;
-  relativeFile: string;
+  sourcePath: string;
   title: string;
   menuLabel: string;
   description?: string;
@@ -86,7 +89,7 @@ export function createVaultDatabaseSchema(db: Database.Database): void {
     CREATE TABLE notes (
       slug TEXT PRIMARY KEY,
       file TEXT NOT NULL,
-      relative_file TEXT NOT NULL,
+      source_path TEXT NOT NULL,
       title TEXT NOT NULL,
       menu_label TEXT NOT NULL,
       description TEXT,
@@ -130,6 +133,14 @@ export function createVaultDatabaseSchema(db: Database.Database): void {
       PRIMARY KEY (strategy_key, alias, slug)
     );
 
+    CREATE TABLE asset_aliases (
+      strategy_key TEXT NOT NULL,
+      alias TEXT NOT NULL,
+      asset_path TEXT NOT NULL,
+      sort_key TEXT,
+      PRIMARY KEY (strategy_key, alias, asset_path)
+    );
+
     CREATE INDEX notes_prerender_idx ON notes(prerender, slug);
     CREATE INDEX notes_listed_sort_idx ON notes(listed, sort_key, slug);
     CREATE INDEX links_target_idx ON links(target_slug, kind, source_slug);
@@ -137,6 +148,8 @@ export function createVaultDatabaseSchema(db: Database.Database): void {
     CREATE INDEX note_tags_tag_idx ON note_tags(tag, slug);
     CREATE INDEX slug_aliases_lookup_idx
       ON slug_aliases(strategy_key, alias, sort_key, slug);
+    CREATE INDEX asset_aliases_lookup_idx
+      ON asset_aliases(strategy_key, alias, sort_key, asset_path);
   `);
 }
 
@@ -156,7 +169,7 @@ export function populateVaultDatabase(
     INSERT INTO notes (
       slug,
       file,
-      relative_file,
+      source_path,
       title,
       menu_label,
       description,
@@ -175,7 +188,7 @@ export function populateVaultDatabase(
     VALUES (
       @slug,
       @file,
-      @relativeFile,
+      @sourcePath,
       @title,
       @menuLabel,
       @description,
@@ -206,6 +219,15 @@ export function populateVaultDatabase(
     INSERT OR IGNORE INTO slug_aliases (strategy_key, alias, slug, sort_key)
     VALUES (?, ?, ?, ?)
   `);
+  const insertAssetAlias = db.prepare(`
+    INSERT OR IGNORE INTO asset_aliases (
+      strategy_key,
+      alias,
+      asset_path,
+      sort_key
+    )
+    VALUES (?, ?, ?, ?)
+  `);
 
   const insertAll = db.transaction(() => {
     insertMetadata.run("version", VAULT_DATABASE_VERSION);
@@ -227,7 +249,7 @@ export function populateVaultDatabase(
       insertNote.run({
         slug: entry.slug,
         file: entry.file,
-        relativeFile: entry.relativeFile,
+        sourcePath: entry.sourcePath,
         title: entry.title,
         menuLabel: entry.menuLabel,
         description: entry.description,
@@ -279,6 +301,14 @@ export function populateVaultDatabase(
         );
       }
     }
+    for (const asset of input.assets) {
+      for (const [strategy, alias] of makeAssetAliases(
+        asset.sourcePath,
+        input.config.ordering,
+      )) {
+        insertAssetAlias.run(strategy, alias, asset.assetPath, asset.assetPath);
+      }
+    }
   });
 
   insertAll();
@@ -301,6 +331,24 @@ function makeSlugAliases(slug: string): Array<[string, string]> {
   const basename = simplified.split("/").at(-1) ?? "";
   aliases.set(`absolute:${slug}`, slug);
   if (simplified) aliases.set(`absolute:${simplified}`, simplified);
+  if (basename) aliases.set(`shortest:${basename}`, basename);
+  return [...aliases.entries()].map(([key, alias]) => [
+    key.split(":")[0] ?? "shortest",
+    alias,
+  ]);
+}
+
+function makeAssetAliases(
+  sourcePath: string,
+  ordering: ResolvedSilicaConfig["ordering"],
+): Array<[string, string]> {
+  const aliases = new Map<string, string>();
+  const normalized = normalizeAssetReference(sourcePath, ordering);
+  const basename = normalizeAssetReference(
+    path.posix.basename(sourcePath),
+    ordering,
+  );
+  if (normalized) aliases.set(`absolute:${normalized}`, normalized);
   if (basename) aliases.set(`shortest:${basename}`, basename);
   return [...aliases.entries()].map(([key, alias]) => [
     key.split(":")[0] ?? "shortest",

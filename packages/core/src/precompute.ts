@@ -10,10 +10,12 @@ import { loadConfig } from "./config.js";
 import { scanContent, type ContentMarkdownFile } from "./files.js";
 import {
   asFullSlug,
+  createAssetResolutionIndex,
   createWikiLinkResolutionIndex,
   hasNumericPrefixInPath,
   numericPrefixSortKey,
   stripNumericPrefix,
+  type AssetResolutionIndex,
   slugToHref,
   type WikiLinkResolutionIndex,
 } from "./path.js";
@@ -51,18 +53,23 @@ export async function precompute(
   const config = options.config ?? (await loadConfig(projectRoot));
   const scan = await scanContent(projectRoot, config);
   const markdownFiles = filterPublished(scan.markdown, config);
+  const assetEntries = scan.assets.map(({ sourcePath, assetPath }) => ({
+    sourcePath,
+    assetPath,
+  }));
   const allSlugs = markdownFiles.map((file) => file.slug);
   const wikilinkIndex = createWikiLinkResolutionIndex(
     allSlugs,
     config.ordering,
   );
+  const assetIndex = createAssetResolutionIndex(assetEntries, config.ordering);
   const entries: ManifestEntry[] = [];
   const graphLinks: Record<string, string[]> = {};
   const brokenLinks: BrokenLink[] = [];
   const searchRecords: SearchRecord[] = [];
   const runtimeContentRoot = path.join(projectRoot, ".silica/content");
   const relativeGitPaths = markdownFiles.map((file) =>
-    normalizeGitPath(path.join(config.contentDir, file.relativePath)),
+    normalizeGitPath(path.join(config.contentDir, file.sourcePath)),
   );
   const gitDatesByPath = await getGitDatesForFiles(
     projectRoot,
@@ -75,22 +82,23 @@ export async function precompute(
   const analyses = await analyzeMarkdownFiles(markdownFiles, config, allSlugs, {
     concurrency: options.analysisConcurrency,
     wikilinkIndex,
+    assetIndex,
+    assetEntries,
   });
 
   for (const [index, file] of markdownFiles.entries()) {
     const gitDates =
       gitDatesByPath.get(
-        normalizeGitPath(path.join(config.contentDir, file.relativePath)),
+        normalizeGitPath(path.join(config.contentDir, file.sourcePath)),
       ) ?? {};
     const analysis = analyses[index]!;
 
     const title =
-      analysis.title ?? titleFromFilePath(file.relativePath, config.ordering);
+      analysis.title ?? titleFromFilePath(file.sourcePath, config.ordering);
     const menuLabel = getMenuLabel(file.frontmatter, title);
     const sortKey =
-      config.ordering.numericPrefixes &&
-      hasNumericPrefixInPath(file.relativePath)
-        ? numericPrefixSortKey(file.relativePath)
+      config.ordering.numericPrefixes && hasNumericPrefixInPath(file.sourcePath)
+        ? numericPrefixSortKey(file.sourcePath)
         : undefined;
     const entry: ManifestEntry = {
       slug: file.slug,
@@ -99,8 +107,8 @@ export async function precompute(
       description: analysis.description,
       generatedDescription: analysis.generatedDescription,
       tags: analysis.tags,
-      file: normalizeGitPath(path.join(".silica/content", file.relativePath)),
-      relativeFile: file.relativePath,
+      file: normalizeGitPath(path.join(".silica/content", file.sourcePath)),
+      sourcePath: file.sourcePath,
       sortKey,
       created: stringifyDate(
         getDate(file.frontmatter.created) ??
@@ -147,6 +155,7 @@ export async function precompute(
     cacheState,
     prerender,
     searchRecords,
+    assets: assetEntries,
   });
   await writeSitemapAndRobots(projectRoot, config, manifest);
 
@@ -170,11 +179,14 @@ export async function precompute(
 type AnalyzeMarkdownFilesOptions = {
   concurrency?: number;
   wikilinkIndex: WikiLinkResolutionIndex;
+  assetIndex: AssetResolutionIndex;
+  assetEntries: Array<{ sourcePath: string; assetPath: string }>;
 };
 
 type AnalysisWorkerFile = {
   index: number;
   slug: string;
+  sourcePath: string;
   raw: string;
 };
 
@@ -197,23 +209,37 @@ async function analyzeMarkdownFiles(
 ): Promise<AnalyzeResult[]> {
   const workerCount = getAnalysisWorkerCount(files.length, options.concurrency);
   if (workerCount <= 1) {
-    return analyzeMarkdownFilesSerial(files, config, options.wikilinkIndex);
+    return analyzeMarkdownFilesSerial(
+      files,
+      config,
+      options.wikilinkIndex,
+      options.assetIndex,
+    );
   }
 
-  return analyzeMarkdownFilesParallel(files, config, allSlugs, workerCount);
+  return analyzeMarkdownFilesParallel(
+    files,
+    config,
+    allSlugs,
+    options.assetEntries,
+    workerCount,
+  );
 }
 
 async function analyzeMarkdownFilesSerial(
   files: ContentMarkdownFile[],
   config: ResolvedSilicaConfig,
   wikilinkIndex: WikiLinkResolutionIndex,
+  assetIndex: AssetResolutionIndex,
 ): Promise<AnalyzeResult[]> {
   const analyses: AnalyzeResult[] = [];
   for (const file of files) {
     analyses.push(
       await analyzeMarkdown(file.raw, {
         slug: asFullSlug(file.slug),
+        sourcePath: file.sourcePath,
         wikilinkIndex,
+        assetIndex,
         assetBaseUrl: "/silica",
         wikilinkStrategy: config.wikilinks.strategy,
         tags: config.tags,
@@ -228,6 +254,7 @@ function analyzeMarkdownFilesParallel(
   files: ContentMarkdownFile[],
   config: ResolvedSilicaConfig,
   allSlugs: string[],
+  assetEntries: Array<{ sourcePath: string; assetPath: string }>,
   workerCount: number,
 ): Promise<AnalyzeResult[]> {
   return new Promise((resolve, reject) => {
@@ -264,6 +291,7 @@ function analyzeMarkdownFilesParallel(
         .map((file, offset) => ({
           index: start + offset,
           slug: file.slug,
+          sourcePath: file.sourcePath,
           raw: file.raw,
         }));
       nextIndex += batch.length;
@@ -277,6 +305,7 @@ function analyzeMarkdownFilesParallel(
       const worker = new Worker(workerUrl, {
         workerData: {
           allSlugs,
+          assetEntries,
           wikilinkStrategy: config.wikilinks.strategy,
           tags: config.tags,
           ordering: config.ordering,
@@ -349,7 +378,7 @@ async function writeRuntimeMarkdown(
 ): Promise<void> {
   await fs.emptyDir(runtimeContentRoot);
   for (const file of files) {
-    const destination = path.join(runtimeContentRoot, file.relativePath);
+    const destination = path.join(runtimeContentRoot, file.sourcePath);
     await fs.ensureDir(path.dirname(destination));
     await fs.writeFile(destination, file.raw);
   }
@@ -438,7 +467,7 @@ function makeRenderHashes(
         description: entry.description,
         generatedDescription: entry.generatedDescription,
         tags: entry.tags,
-        relativeFile: entry.relativeFile,
+        sourcePath: entry.sourcePath,
         sortKey: entry.sortKey,
         created: entry.created,
         modified: entry.modified,
@@ -726,17 +755,17 @@ function makeGraph(
 async function copyAssets(
   projectRoot: string,
   config: ResolvedSilicaConfig,
-  assets: Array<{ absolutePath: string; relativePath: string }>,
+  assets: Array<{ absolutePath: string; assetPath: string }>,
 ): Promise<void> {
   const destinationRoot = path.join(projectRoot, ".silica/next/public/silica");
   await fs.emptyDir(destinationRoot);
   for (const asset of assets) {
     await fs.ensureDir(
-      path.dirname(path.join(destinationRoot, asset.relativePath)),
+      path.dirname(path.join(destinationRoot, asset.assetPath)),
     );
     await fs.copyFile(
       asset.absolutePath,
-      path.join(destinationRoot, asset.relativePath),
+      path.join(destinationRoot, asset.assetPath),
     );
   }
 

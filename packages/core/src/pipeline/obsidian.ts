@@ -14,7 +14,7 @@ import type { Nodes, PhrasingContent, Root, RootContent } from "mdast";
 import type { Properties } from "hast";
 import { slug as slugifyHeading } from "github-slugger";
 import { tagToHref } from "../tags.js";
-import { resolveWikiLink, slugToHref } from "../path.js";
+import { resolveAssetPath, resolveWikiLink, slugToHref } from "../path.js";
 import type { RenderContext } from "../types.js";
 
 declare module "mdast" {
@@ -58,7 +58,10 @@ export function remarkSilicaObsidian(context: RenderContext) {
 
     visit(tree, (node: SilicaMdastNode) => {
       if (node.type === "image" && typeof node.url === "string") {
-        node.url = rewriteAssetUrl(node.url, assetBaseUrl);
+        node.url = rewriteAssetUrl(
+          resolveAssetTarget(context, node.url) ?? node.url,
+          assetBaseUrl,
+        );
         applyImageSize(node);
         return;
       }
@@ -70,6 +73,13 @@ export function remarkSilicaObsidian(context: RenderContext) {
 
       const targetPath = node.linkTarget.path || String(context.slug);
       if (node.type === "obsidianWikiEmbed" && isAssetTarget(node.rawTarget)) {
+        const resolvedAsset = resolveAssetTarget(context, node.rawTarget);
+        if (resolvedAsset) {
+          node.data = {
+            ...node.data,
+            silicaResolvedAssetPath: resolvedAsset,
+          };
+        }
         return;
       }
 
@@ -298,7 +308,9 @@ function assetEmbedToHast(
   node: ObsidianWikiEmbed,
 ): HastNode {
   const kind = assetKind(node.rawTarget);
-  const src = assetUrl(context.assetBaseUrl ?? "/silica", node.rawTarget);
+  const target =
+    getStringData(node, "silicaResolvedAssetPath") ?? node.rawTarget;
+  const src = assetUrl(context.assetBaseUrl ?? "/silica", target);
   const label =
     node.alias || node.rawTarget.split("/").at(-1) || node.rawTarget;
   const dimensions = sizeProperties(
@@ -388,6 +400,26 @@ function rewriteAssetUrl(url: string, assetBaseUrl: string): string {
   return `${assetBaseUrl}/${url.replace(/^\.?\//, "")}`;
 }
 
+function resolveAssetTarget(
+  context: RenderContext,
+  target: string,
+): string | undefined {
+  if (/^(?:https?:|#|\/)/.test(target)) return undefined;
+  const sourcePath = context.sourcePath ?? String(context.slug);
+  const resolved =
+    context.resolveAsset?.(sourcePath, target) ??
+    (context.assetIndex
+      ? resolveAssetPath(
+          sourcePath,
+          target,
+          context.assetIndex,
+          context.wikilinkStrategy ?? "shortest",
+          context.ordering,
+        )
+      : undefined);
+  return resolved ? `${resolved}${assetReferenceSuffix(target)}` : undefined;
+}
+
 function isAssetTarget(target: string): boolean {
   return /\.(png|jpe?g|gif|webp|svg|pdf|mp4|mov|mp3|wav|ogg|canvas)(?:[?#].*)?$/i.test(
     target,
@@ -425,6 +457,14 @@ function stripEmbedOnlyParams(target: string): string {
   params.delete("height");
   const remaining = params.toString();
   return remaining ? `${before}#${remaining}` : before;
+}
+
+function assetReferenceSuffix(target: string): string {
+  const suffixIndexes = [target.indexOf("?"), target.indexOf("#")].filter(
+    (index) => index >= 0,
+  );
+  const suffixIndex = Math.min(...suffixIndexes);
+  return Number.isFinite(suffixIndex) ? target.slice(suffixIndex) : "";
 }
 
 function titleCase(value: string): string {

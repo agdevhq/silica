@@ -28,6 +28,7 @@ export {
   loadRenderEnvironmentHash,
   loadVaultDb,
   normalizeRouteSlug,
+  resolveAssetFromDb,
   resolveWikiLinkFromDb,
   type LoadedVaultDb,
 } from "./server-data.js";

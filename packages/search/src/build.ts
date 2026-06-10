@@ -56,7 +56,7 @@ export function buildSearchTables(
     INSERT INTO notes (
       slug,
       file,
-      relative_file,
+      source_path,
       title,
       menu_label,
       description,
@@ -72,7 +72,7 @@ export function buildSearchTables(
     VALUES (
       @slug,
       @file,
-      @relativeFile,
+      @sourcePath,
       @title,
       @menuLabel,
       @description,
@@ -114,7 +114,7 @@ export function buildSearchTables(
       insertNote.run({
         slug: record.slug,
         file: "",
-        relativeFile: "",
+        sourcePath: "",
         title: record.title,
         menuLabel: record.title,
         description: record.description,
@@ -171,7 +171,7 @@ function createStandaloneNotesSchema(db: Database.Database): void {
     CREATE TABLE notes (
       slug TEXT PRIMARY KEY,
       file TEXT NOT NULL,
-      relative_file TEXT NOT NULL,
+      source_path TEXT NOT NULL,
       title TEXT NOT NULL,
       menu_label TEXT NOT NULL,
       description TEXT,

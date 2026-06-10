@@ -31,7 +31,7 @@
     "lint": "tsc --noEmit"
   },
   "dependencies": {
-    "@shikijs/rehype": "^4.1.0",
+    "@shikijs/rehype": "^4.2.0",
     "@silicajs/remark-obsidian": "^0.1.0",
     "@silicajs/search": "^0.3.1",
     "better-sqlite3": "^12.10.0",

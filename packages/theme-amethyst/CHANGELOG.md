@@ -1,5 +1,19 @@
 # @silicajs/theme-amethyst
 
+## 0.4.0
+
+### Minor Changes
+
+- d1bf8ea: Balance the page header spacing and move tags into the sidebar. The page properties panel now sits in its own metadata group with even spacing from the title and the body content, instead of hugging the headline. Tags move from the header into the right sidebar above the table of contents (visible on `lg`+ screens, like the table of contents).
+
+### Patch Changes
+
+- Updated dependencies [cca76fb]
+- Updated dependencies [d896c1f]
+  - @silicajs/core@0.7.1
+  - @silicajs/ui@0.1.3
+  - @silicajs/components@0.3.1
+
 ## 0.3.0
 
 ### Minor Changes

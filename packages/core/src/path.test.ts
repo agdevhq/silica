@@ -155,9 +155,9 @@ describe("path helpers", () => {
       "reference/auth",
     ]);
 
-    expect(resolveWikiLink("notes/guides/index", "Auth", index, "shortest")).toBe(
-      "notes/guides/auth",
-    );
+    expect(
+      resolveWikiLink("notes/guides/index", "Auth", index, "shortest"),
+    ).toBe("notes/guides/auth");
     expect(resolveWikiLink("reference/index", "Auth", index, "shortest")).toBe(
       "reference/auth",
     );

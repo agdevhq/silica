@@ -47,11 +47,11 @@ wikilinks: {
 }
 ```
 
-| Strategy   | Behavior                                 |
-| ---------- | ---------------------------------------- |
+| Strategy   | Behavior                                                                   |
+| ---------- | -------------------------------------------------------------------------- |
 | `shortest` | Match by filename, preferring the nearest page when names repeat (default) |
-| `absolute` | Resolve from the vault root              |
-| `relative` | Resolve relative to the current page     |
+| `absolute` | Resolve from the vault root                                                |
+| `relative` | Resolve relative to the current page                                       |
 
 With `strict: true`, unresolved links fail the build so you can fix them before publishing.
 

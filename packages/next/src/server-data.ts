@@ -423,7 +423,10 @@ function lookupClosestAlias(
     )
     .all(alias) as Array<{ slug: string }>;
 
-  return closestWikiLinkCandidate(currentSlug, rows.map((row) => row.slug));
+  return closestWikiLinkCandidate(
+    currentSlug,
+    rows.map((row) => row.slug),
+  );
 }
 
 function lookupAssetAlias(

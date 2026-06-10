@@ -1,5 +1,15 @@
 # @silicajs/next
 
+## 0.3.1
+
+### Patch Changes
+
+- 63d14e0: Resolve Obsidian-style asset embeds by filename when an attachment path is unambiguous.
+- Updated dependencies [63d14e0]
+  - @silicajs/core@0.6.0
+  - @silicajs/search@0.3.1
+  - @silicajs/components@0.2.4
+
 ## 0.3.0
 
 ### Minor Changes

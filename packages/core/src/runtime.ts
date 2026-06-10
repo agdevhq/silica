@@ -16,13 +16,20 @@ export {
 } from "./pipeline/index.js";
 export {
   asFullSlug,
+  createAssetResolutionIndex,
   createWikiLinkResolutionIndex,
   hrefToSlug,
+  normalizeAssetReference,
   normalizeSlug,
+  resolveAssetPath,
+  resolveRelativeAsset,
   resolveRelative,
   resolveWikiLink,
   simplifySlug,
+  slugifyAssetPath,
   slugToHref,
+  type AssetResolutionEntry,
+  type AssetResolutionIndex,
   type WikiLinkResolutionIndex,
 } from "./path.js";
 export { tagToHref } from "./tags.js";

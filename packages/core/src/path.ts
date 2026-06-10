@@ -21,6 +21,16 @@ export type WikiLinkResolutionIndex = {
   uniqueSlugByBasename: ReadonlyMap<string, string | null>;
 };
 
+export type AssetResolutionIndex = {
+  assetPathBySourcePath: ReadonlyMap<string, string | null>;
+  assetPathByBasename: ReadonlyMap<string, string | null>;
+};
+
+export type AssetResolutionEntry = {
+  sourcePath: string;
+  assetPath: string;
+};
+
 const NUMERIC_PREFIX_RE =
   /^(\d{1,2}|0\d+|\d{3,}(?=[._]))(?:[\s._]+|-(?!\d{1,2}(?:\D|$)))(.+)$/;
 const DOCUMENT_EXTENSION_RE = /\.(md|markdown|mdx)$/i;
@@ -84,6 +94,29 @@ export function normalizeSlug(
     .filter(Boolean)
     .map((part) => slugifySegment(part, options));
   return (parts.join("/") || "index").replace(/\/index\/index$/, "/index");
+}
+
+export function normalizeAssetReference(
+  value: string,
+  options: SlugifyOptions = {},
+): string {
+  const cleaned = normalizePath(stripAssetReferenceSuffix(value)).replace(
+    /^\.\//,
+    "",
+  );
+  const parts = cleaned
+    .split("/")
+    .filter(Boolean)
+    .map((part) => normalizeAssetSegment(part, options))
+    .filter(Boolean);
+  return parts.join("/");
+}
+
+export function slugifyAssetPath(
+  sourcePath: string,
+  options: SlugifyOptions = {},
+): string {
+  return normalizeAssetReference(sourcePath, options);
 }
 
 export function slugifyFilePath(
@@ -176,6 +209,31 @@ export function createWikiLinkResolutionIndex(
   return { candidates, uniqueSlugByBasename };
 }
 
+export function createAssetResolutionIndex(
+  assets: readonly AssetResolutionEntry[],
+  options: SlugifyOptions = {},
+): AssetResolutionIndex {
+  const assetPathBySourcePath = new Map<string, string | null>();
+  const assetPathByBasename = new Map<string, string | null>();
+
+  for (const asset of assets) {
+    const sourcePath = normalizePath(asset.sourcePath);
+    const assetPath = normalizePath(asset.assetPath);
+    addUniqueCandidate(
+      assetPathBySourcePath,
+      normalizeAssetReference(sourcePath, options),
+      assetPath,
+    );
+    addUniqueCandidate(
+      assetPathByBasename,
+      normalizeAssetReference(path.posix.basename(sourcePath), options),
+      assetPath,
+    );
+  }
+
+  return { assetPathBySourcePath, assetPathByBasename };
+}
+
 export function resolveWikiLink(
   currentSlug: FullSlug | string,
   target: string,
@@ -205,6 +263,52 @@ export function resolveWikiLink(
   return byBasename ? asFullSlug(byBasename) : undefined;
 }
 
+export function resolveAssetPath(
+  currentSourcePath: string,
+  target: string,
+  index: AssetResolutionIndex,
+  strategy: "absolute" | "relative" | "shortest" = "shortest",
+  options: SlugifyOptions = {},
+): string | undefined {
+  if (/^(?:https?:|#|\/)/.test(target)) return undefined;
+  const normalizedTarget = normalizeAssetReference(target, options);
+  if (!normalizedTarget) return undefined;
+  const isExplicitRelative = isExplicitRelativeAssetReference(target);
+
+  if (isExplicitRelative || strategy === "relative") {
+    const relative = resolveRelativeAsset(currentSourcePath, target, options);
+    const resolved = uniqueValue(index.assetPathBySourcePath, relative);
+    if (resolved || isExplicitRelative) return resolved;
+  }
+
+  if (strategy === "absolute") {
+    return uniqueValue(index.assetPathBySourcePath, normalizedTarget);
+  }
+
+  return (
+    uniqueValue(index.assetPathBySourcePath, normalizedTarget) ??
+    uniqueValue(
+      index.assetPathByBasename,
+      normalizedTarget.split("/").at(-1) ?? "",
+    )
+  );
+}
+
+export function resolveRelativeAsset(
+  currentSourcePath: string,
+  target: string,
+  options: SlugifyOptions = {},
+): string {
+  const currentDir = normalizePath(currentSourcePath)
+    .split("/")
+    .slice(0, -1)
+    .join("/");
+  return normalizeAssetReference(
+    path.posix.join(currentDir, stripAssetReferenceSuffix(target)),
+    options,
+  );
+}
+
 export function joinSegments(...segments: string[]): string {
   return normalizePath(segments.filter(Boolean).join("/"));
 }
@@ -212,6 +316,52 @@ export function joinSegments(...segments: string[]): string {
 function basenameForNormalizedSlug(slug: string): string {
   const simplified = slug === "index" ? "" : slug.replace(/\/index$/, "");
   return simplified.split("/").at(-1) ?? "";
+}
+
+function normalizeAssetSegment(
+  segment: string,
+  options: SlugifyOptions = {},
+): string {
+  const extension = path.posix.extname(segment);
+  if (!extension) return slugifySegment(segment, options);
+  const stem = segment.slice(0, -extension.length);
+  const normalizedStem = slugifySegment(stem, options);
+  return normalizedStem ? `${normalizedStem}${extension.toLowerCase()}` : "";
+}
+
+function stripAssetReferenceSuffix(value: string): string {
+  const suffixIndexes = [value.indexOf("?"), value.indexOf("#")].filter(
+    (index) => index >= 0,
+  );
+  const suffixIndex = Math.min(...suffixIndexes);
+  return Number.isFinite(suffixIndex) ? value.slice(0, suffixIndex) : value;
+}
+
+function isExplicitRelativeAssetReference(value: string): boolean {
+  return /^\.{1,2}\//.test(normalizePath(stripAssetReferenceSuffix(value)));
+}
+
+function addUniqueCandidate(
+  candidates: Map<string, string | null>,
+  key: string,
+  value: string,
+) {
+  if (!key) return;
+  const existing = candidates.get(key);
+  if (existing === undefined) {
+    candidates.set(key, value);
+    return;
+  }
+  if (existing !== value) {
+    candidates.set(key, null);
+  }
+}
+
+function uniqueValue(
+  candidates: ReadonlyMap<string, string | null>,
+  key: string,
+): string | undefined {
+  return candidates.get(key) ?? undefined;
 }
 
 function numericPrefixSortSegment(segment: string): string {

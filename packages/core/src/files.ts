@@ -3,11 +3,11 @@ import fg from "fast-glob";
 import fs from "fs-extra";
 import matter from "gray-matter";
 import type { ResolvedSilicaConfig } from "./types.js";
-import { asFilePath, slugifyFilePath } from "./path.js";
+import { asFilePath, slugifyAssetPath, slugifyFilePath } from "./path.js";
 
 export type ContentMarkdownFile = {
   absolutePath: string;
-  relativePath: string;
+  sourcePath: string;
   slug: string;
   raw: string;
   body: string;
@@ -20,7 +20,8 @@ export type ContentMarkdownFile = {
 
 export type ContentAssetFile = {
   absolutePath: string;
-  relativePath: string;
+  sourcePath: string;
+  assetPath: string;
 };
 
 export type ContentScan = {
@@ -46,6 +47,7 @@ export async function scanContent(
   const assets: ContentAssetFile[] = [];
 
   for (const relativePath of entries.sort()) {
+    const sourcePath = relativePath.replace(/\\/g, "/");
     const absolutePath = path.join(contentRoot, relativePath);
     const stats = await fs.lstat(absolutePath);
     if (!stats.isFile()) continue;
@@ -56,7 +58,7 @@ export async function scanContent(
       const parsed = matter(raw);
       markdown.push({
         absolutePath,
-        relativePath: relativePath.replace(/\\/g, "/"),
+        sourcePath,
         slug: slugifyFilePath(
           asFilePath(relativePath),
           config.contentDir,
@@ -73,12 +75,28 @@ export async function scanContent(
     } else {
       assets.push({
         absolutePath,
-        relativePath: relativePath.replace(/\\/g, "/"),
+        sourcePath,
+        assetPath: slugifyAssetPath(sourcePath, config.ordering),
       });
     }
   }
 
+  assertUniqueAssetPaths(assets);
+
   return { markdown, assets };
+}
+
+function assertUniqueAssetPaths(assets: ContentAssetFile[]) {
+  const sourcePathByAssetPath = new Map<string, string>();
+  for (const asset of assets) {
+    const existing = sourcePathByAssetPath.get(asset.assetPath);
+    if (existing && existing !== asset.sourcePath) {
+      throw new Error(
+        `Asset path collision: ${existing} and ${asset.sourcePath} both map to ${asset.assetPath}`,
+      );
+    }
+    sourcePathByAssetPath.set(asset.assetPath, asset.sourcePath);
+  }
 }
 
 async function isWithinRoot(

@@ -10,7 +10,9 @@ import type {
 } from "@silicajs/core/runtime";
 import {
   asFullSlug,
+  normalizeAssetReference,
   normalizeSlug,
+  resolveRelativeAsset,
   resolveRelative,
   slugToHref,
 } from "@silicajs/core/runtime";
@@ -44,7 +46,7 @@ type MetadataRows = {
 type NoteRow = {
   slug: string;
   file: string;
-  relative_file: string;
+  source_path: string;
   title: string;
   menu_label: string;
   description: string | null;
@@ -299,6 +301,38 @@ export function resolveWikiLinkFromDb(
   );
 }
 
+export function resolveAssetFromDb(
+  currentSourcePath: string,
+  target: string,
+  strategy: "absolute" | "relative" | "shortest",
+  ordering?: { numericPrefixes?: boolean },
+): string | undefined {
+  const assetOptions = ordering ?? getConfig().ordering;
+  const normalizedTarget = normalizeAssetReference(target, assetOptions);
+  if (!normalizedTarget) return undefined;
+  const db = loadVaultDb().db;
+  const isExplicitRelative = isExplicitRelativeAssetReference(target);
+
+  if (isExplicitRelative || strategy === "relative") {
+    const relative = resolveRelativeAsset(
+      currentSourcePath,
+      target,
+      assetOptions,
+    );
+    const resolved = lookupAssetAlias(db, "absolute", relative);
+    if (resolved || isExplicitRelative) return resolved;
+  }
+
+  if (strategy === "absolute") {
+    return lookupAssetAlias(db, "absolute", normalizedTarget);
+  }
+
+  return (
+    lookupAssetAlias(db, "absolute", normalizedTarget) ??
+    lookupAssetAlias(db, "shortest", normalizedTarget.split("/").at(-1) ?? "")
+  );
+}
+
 export function getBreadcrumbs(slug: string) {
   if (slug === "index" || !slug.includes("/")) return [];
 
@@ -368,6 +402,35 @@ function lookupAlias(
   return row.length === 1 ? row[0]?.slug : undefined;
 }
 
+function lookupAssetAlias(
+  db: Database.Database,
+  strategy: string,
+  alias: string,
+): string | undefined {
+  const row = db
+    .prepare(
+      `
+      SELECT asset_path
+      FROM asset_aliases
+      WHERE strategy_key = ?
+        AND alias = ?
+      ORDER BY sort_key, asset_path
+      LIMIT 2
+    `,
+    )
+    .all(strategy, alias) as Array<{ asset_path: string }>;
+  return row.length === 1 ? row[0]?.asset_path : undefined;
+}
+
+function isExplicitRelativeAssetReference(value: string): boolean {
+  const withoutSuffix = value.split(/[?#]/)[0] ?? "";
+  const normalized = withoutSuffix
+    .replace(/\\/g, "/")
+    .replace(/^\/+/, "")
+    .replace(/\/+$/, "");
+  return /^\.{1,2}\//.test(normalized);
+}
+
 function noteRowToEntry(row: NoteRow): ManifestEntry {
   return {
     slug: row.slug,
@@ -379,7 +442,7 @@ function noteRowToEntry(row: NoteRow): ManifestEntry {
     file: path.isAbsolute(row.file)
       ? row.file
       : path.join(getProjectRoot(), row.file),
-    relativeFile: row.relative_file,
+    sourcePath: row.source_path,
     sortKey: row.sort_key ?? undefined,
     created: row.created ?? undefined,
     modified: row.modified ?? undefined,

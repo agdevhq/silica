@@ -6,7 +6,10 @@ import {
   renderMarkdown,
   renderMarkdownHtml,
 } from "./pipeline/index.js";
-import { createWikiLinkResolutionIndex } from "./path.js";
+import {
+  createAssetResolutionIndex,
+  createWikiLinkResolutionIndex,
+} from "./path.js";
 import type { RenderContext } from "./types.js";
 
 function testContext(
@@ -192,6 +195,30 @@ describe("renderMarkdown", () => {
     const html = renderToStaticMarkup(<>{result.content}</>);
 
     expect(html).toContain('<img src="/assets/images/photo.png" alt="Photo"/>');
+    expect(analysis.links).toEqual([]);
+    expect(analysis.brokenLinks).toEqual([]);
+  }, 15_000);
+
+  it("resolves wiki asset embeds through the asset index", async () => {
+    const markdown = "![[photo.png|Photo]]";
+    const context = testContext("index", ["index"], {
+      assetBaseUrl: "/assets",
+      sourcePath: "index.md",
+      assetIndex: createAssetResolutionIndex([
+        {
+          sourcePath: "attachments/photo.png",
+          assetPath: "attachments/photo.png",
+        },
+      ]),
+    });
+    const result = await renderMarkdown(markdown, context);
+    const analysis = await analyzeMarkdown(markdown, context);
+
+    const html = renderToStaticMarkup(<>{result.content}</>);
+
+    expect(html).toContain(
+      '<img src="/assets/attachments/photo.png" alt="Photo"/>',
+    );
     expect(analysis.links).toEqual([]);
     expect(analysis.brokenLinks).toEqual([]);
   }, 15_000);

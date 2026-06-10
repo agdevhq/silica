@@ -297,7 +297,11 @@ export function resolveWikiLinkFromDb(
   return (
     lookupAlias(db, "absolute", normalizedTarget) ??
     lookupAlias(db, "absolute", `${normalizedTarget}/index`) ??
-    lookupAlias(db, "shortest", normalizedTarget.split("/").at(-1) ?? "")
+    lookupClosestAlias(
+      db,
+      currentSlug,
+      normalizedTarget.split("/").at(-1) ?? "",
+    )
   );
 }
 
@@ -402,6 +406,29 @@ function lookupAlias(
   return row.length === 1 ? row[0]?.slug : undefined;
 }
 
+function lookupClosestAlias(
+  db: Database.Database,
+  currentSlug: string,
+  alias: string,
+): string | undefined {
+  const rows = db
+    .prepare(
+      `
+      SELECT slug
+      FROM slug_aliases
+      WHERE strategy_key = 'shortest'
+        AND alias = ?
+      ORDER BY slug
+    `,
+    )
+    .all(alias) as Array<{ slug: string }>;
+
+  return closestWikiLinkCandidate(
+    currentSlug,
+    rows.map((row) => row.slug),
+  );
+}
+
 function lookupAssetAlias(
   db: Database.Database,
   strategy: string,
@@ -420,6 +447,58 @@ function lookupAssetAlias(
     )
     .all(strategy, alias) as Array<{ asset_path: string }>;
   return row.length === 1 ? row[0]?.asset_path : undefined;
+}
+
+function closestWikiLinkCandidate(
+  currentSlug: string,
+  candidates: readonly string[],
+): string | undefined {
+  if (candidates.length === 0) return undefined;
+
+  const currentDirectory = normalizeSlug(currentSlug, {
+    numericPrefixes: false,
+  })
+    .split("/")
+    .slice(0, -1);
+  const [bestCandidate] = [...candidates].sort((left, right) => {
+    const leftScore = wikiLinkCandidateScore(currentDirectory, left);
+    const rightScore = wikiLinkCandidateScore(currentDirectory, right);
+
+    return (
+      rightScore.sharedPrefixLength - leftScore.sharedPrefixLength ||
+      leftScore.depth - rightScore.depth ||
+      compareSlugs(left, right)
+    );
+  });
+
+  return bestCandidate;
+}
+
+function wikiLinkCandidateScore(currentDirectory: string[], slug: string) {
+  const simplified = slug === "index" ? "" : slug.replace(/\/index$/, "");
+  const segments = simplified ? simplified.split("/") : [];
+
+  return {
+    sharedPrefixLength: sharedPrefixLength(
+      currentDirectory,
+      segments.slice(0, -1),
+    ),
+    depth: segments.length,
+  };
+}
+
+function sharedPrefixLength(left: readonly string[], right: readonly string[]) {
+  let length = 0;
+  while (left[length] !== undefined && left[length] === right[length]) {
+    length += 1;
+  }
+  return length;
+}
+
+function compareSlugs(left: string, right: string) {
+  if (left < right) return -1;
+  if (left > right) return 1;
+  return 0;
 }
 
 function isExplicitRelativeAssetReference(value: string): boolean {

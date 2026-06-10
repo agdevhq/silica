@@ -19,6 +19,7 @@ export type SlugifyOptions = {
 export type WikiLinkResolutionIndex = {
   candidates: ReadonlySet<string>;
   uniqueSlugByBasename: ReadonlyMap<string, string | null>;
+  slugsByBasename?: ReadonlyMap<string, readonly string[]>;
 };
 
 export type AssetResolutionIndex = {
@@ -195,10 +196,17 @@ export function createWikiLinkResolutionIndex(
     ),
   );
   const uniqueSlugByBasename = new Map<string, string | null>();
+  const slugsByBasename = new Map<string, string[]>();
 
   for (const slug of candidates) {
     const basename = basenameForNormalizedSlug(slug);
     if (!basename) continue;
+    const basenameCandidates = slugsByBasename.get(basename);
+    if (basenameCandidates) {
+      basenameCandidates.push(slug);
+    } else {
+      slugsByBasename.set(basename, [slug]);
+    }
     if (uniqueSlugByBasename.has(basename)) {
       uniqueSlugByBasename.set(basename, null);
       continue;
@@ -206,7 +214,11 @@ export function createWikiLinkResolutionIndex(
     uniqueSlugByBasename.set(basename, slug);
   }
 
-  return { candidates, uniqueSlugByBasename };
+  for (const basenameCandidates of slugsByBasename.values()) {
+    basenameCandidates.sort(compareSlugs);
+  }
+
+  return { candidates, uniqueSlugByBasename, slugsByBasename };
 }
 
 export function createAssetResolutionIndex(
@@ -260,7 +272,12 @@ export function resolveWikiLink(
   const targetBasename = normalizedTarget.split("/").at(-1) ?? "";
   const byBasename = index.uniqueSlugByBasename.get(targetBasename);
 
-  return byBasename ? asFullSlug(byBasename) : undefined;
+  if (byBasename) return asFullSlug(byBasename);
+
+  return closestWikiLinkCandidate(
+    currentSlug,
+    candidatesForBasename(index, targetBasename),
+  );
 }
 
 export function resolveAssetPath(
@@ -316,6 +333,74 @@ export function joinSegments(...segments: string[]): string {
 function basenameForNormalizedSlug(slug: string): string {
   const simplified = slug === "index" ? "" : slug.replace(/\/index$/, "");
   return simplified.split("/").at(-1) ?? "";
+}
+
+function candidatesForBasename(
+  index: WikiLinkResolutionIndex,
+  basename: string,
+): readonly string[] {
+  const indexedCandidates = index.slugsByBasename?.get(basename);
+  if (indexedCandidates) return indexedCandidates;
+
+  return [...index.candidates]
+    .filter((slug) => basenameForNormalizedSlug(slug) === basename)
+    .sort(compareSlugs);
+}
+
+function closestWikiLinkCandidate(
+  currentSlug: FullSlug | string,
+  candidates: readonly string[],
+): FullSlug | undefined {
+  if (candidates.length === 0) return undefined;
+
+  const currentDirectory = normalizeSlug(currentSlug, {
+    numericPrefixes: false,
+  })
+    .split("/")
+    .slice(0, -1);
+  const [bestCandidate] = [...candidates].sort((left, right) => {
+    const leftScore = wikiLinkCandidateScore(currentDirectory, left);
+    const rightScore = wikiLinkCandidateScore(currentDirectory, right);
+
+    return (
+      rightScore.sharedPrefixLength - leftScore.sharedPrefixLength ||
+      leftScore.depth - rightScore.depth ||
+      compareSlugs(left, right)
+    );
+  });
+
+  return bestCandidate ? asFullSlug(bestCandidate) : undefined;
+}
+
+function wikiLinkCandidateScore(currentDirectory: string[], slug: string) {
+  const simplified = simplifyCandidateSlug(slug);
+  const segments = simplified ? simplified.split("/") : [];
+
+  return {
+    sharedPrefixLength: sharedPrefixLength(
+      currentDirectory,
+      segments.slice(0, -1),
+    ),
+    depth: segments.length,
+  };
+}
+
+function simplifyCandidateSlug(slug: string): string {
+  return slug === "index" ? "" : slug.replace(/\/index$/, "");
+}
+
+function sharedPrefixLength(left: readonly string[], right: readonly string[]) {
+  let length = 0;
+  while (left[length] !== undefined && left[length] === right[length]) {
+    length += 1;
+  }
+  return length;
+}
+
+function compareSlugs(left: string, right: string) {
+  if (left < right) return -1;
+  if (left > right) return 1;
+  return 0;
 }
 
 function normalizeAssetSegment(

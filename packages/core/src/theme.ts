@@ -1,4 +1,5 @@
 import type React from "react";
+import type { PageProperty } from "./pipeline/frontmatter.js";
 import type {
   ManifestEntry,
   MarkdownComponents,
@@ -54,6 +55,7 @@ export type ThemePage = {
   description?: string;
   content: React.ReactNode;
   frontmatter: Record<string, unknown>;
+  pageProperties?: PageProperty[];
   toc: TocItem[];
   tags: string[];
   entry: ManifestEntry;

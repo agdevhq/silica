@@ -3,6 +3,7 @@ title: Frontmatter
 description: The metadata block at the top of each page.
 date: 2026-05-25
 featured: true
+related: "[[writing/links|Links]]"
 ---
 
 Every page can start with a block of YAML between `---` fences. This is the same frontmatter you already use in Obsidian, and it controls the page title, navigation label, and more.
@@ -48,11 +49,12 @@ Any other key you add becomes a **page property**, shown in a small panel under 
 title: API reference
 description: Endpoint documentation
 author: Platform team
+owner: "[[teams/platform|Platform team]]"
 version: 2.1
 status: stable
 ---
 ```
 
-That example shows `author`, `version`, and `status` beside the title. The built-in keys above are handled by Silica and never duplicated in the panel.
+That example shows `author`, `owner`, `version`, and `status` beside the title. Wikilinks in page properties are resolved just like body links, so they render as links and count toward backlinks. Quote wikilink values in YAML so the brackets stay part of the string. The built-in keys above are handled by Silica and never duplicated in the panel.
 
 This page is a live example: it sets `featured: true` as a custom property, so you can see it rendered in the properties panel above. The built-in `date` key is not repeated there.

@@ -1,8 +1,61 @@
+import { slug as slugifyHeading } from "github-slugger";
+import { unified } from "unified";
+import remarkParse from "remark-parse";
+import {
+  remarkObsidian,
+  type ObsidianWikiEmbed,
+  type ObsidianWikilink,
+} from "@silicajs/remark-obsidian";
+import { resolveWikiLink, slugToHref } from "../path.js";
+import type { BrokenLink, RenderContext } from "../types.js";
+
+type PagePropertyTextPart = {
+  type: "text";
+  value: string;
+};
+
+type PagePropertyLinkPart = {
+  type: "link";
+  value: string;
+  target: string;
+  slug: string;
+  href: string;
+};
+
+type PagePropertyBrokenLinkPart = {
+  type: "broken-link";
+  value: string;
+  target: string;
+};
+
+export type PagePropertyPart =
+  | PagePropertyTextPart
+  | PagePropertyLinkPart
+  | PagePropertyBrokenLinkPart;
+
 export type PageProperty = {
   key: string;
   label: string;
   value: string;
+  parts?: PagePropertyPart[];
 };
+
+export type PagePropertyResolution = {
+  parts: PagePropertyPart[];
+  links: string[];
+  brokenLinks: BrokenLink[];
+};
+
+type PositionedNode = {
+  type: string;
+  position?: {
+    start?: { offset?: number };
+    end?: { offset?: number };
+  };
+  children?: PositionedNode[];
+};
+
+type PropertyWikiNode = (ObsidianWikilink | ObsidianWikiEmbed) & PositionedNode;
 
 const RESERVED_FRONTMATTER_KEYS = new Set([
   "aliases",
@@ -54,6 +107,91 @@ export function getPageProperties(
     .sort((a, b) => a.key.localeCompare(b.key));
 }
 
+export function getResolvedPageProperties(
+  frontmatter: Record<string, unknown>,
+  context: RenderContext,
+): PageProperty[] {
+  return getPageProperties(frontmatter).map((property) => ({
+    ...property,
+    parts: resolvePagePropertyValue(property.value, context).parts,
+  }));
+}
+
+export function analyzePagePropertyLinks(
+  frontmatter: Record<string, unknown>,
+  context: RenderContext,
+): { links: string[]; brokenLinks: BrokenLink[] } {
+  const links = new Set<string>();
+  const brokenLinks: BrokenLink[] = [];
+
+  for (const property of getPageProperties(frontmatter)) {
+    const resolution = resolvePagePropertyValue(property.value, context);
+    for (const link of resolution.links) links.add(link);
+    brokenLinks.push(...resolution.brokenLinks);
+  }
+
+  return { links: [...links], brokenLinks };
+}
+
+export function resolvePagePropertyValue(
+  value: string,
+  context: RenderContext,
+): PagePropertyResolution {
+  const nodes = collectPropertyWikiNodes(value, context);
+  if (nodes.length === 0) {
+    return {
+      parts: [{ type: "text", value }],
+      links: [],
+      brokenLinks: [],
+    };
+  }
+
+  const parts: PagePropertyPart[] = [];
+  const links = new Set<string>();
+  const brokenLinks: BrokenLink[] = [];
+  let cursor = 0;
+
+  for (const node of nodes) {
+    const range = nodeRange(node);
+    if (!range || range.start < cursor) continue;
+    if (range.start > cursor) {
+      parts.push({ type: "text", value: value.slice(cursor, range.start) });
+    }
+
+    const label = node.alias || node.target || "";
+    const targetPath = node.linkTarget.path || String(context.slug);
+    const resolved = resolvePagePropertyWikiTarget(context, targetPath);
+    if (resolved) {
+      links.add(resolved);
+      parts.push({
+        type: "link",
+        value: label,
+        target: node.rawTarget,
+        slug: resolved,
+        href: `${slugToHref(resolved)}${targetFragment(node)}`,
+      });
+    } else {
+      brokenLinks.push({
+        source: String(context.slug),
+        target: node.rawTarget,
+      });
+      parts.push({
+        type: "broken-link",
+        value: label,
+        target: node.rawTarget,
+      });
+    }
+
+    cursor = range.end;
+  }
+
+  if (cursor < value.length) {
+    parts.push({ type: "text", value: value.slice(cursor) });
+  }
+
+  return { parts, links: [...links], brokenLinks };
+}
+
 export function formatPropertyLabel(key: string): string {
   return key
     .replace(/[_-]+/g, " ")
@@ -89,4 +227,83 @@ export function formatPropertyValue(value: unknown): string | undefined {
   }
 
   return String(value);
+}
+
+function collectPropertyWikiNodes(
+  value: string,
+  context: RenderContext,
+): PropertyWikiNode[] {
+  const processor = unified()
+    .use(remarkParse)
+    .use(remarkObsidian, { inlineTags: context.tags?.inline ?? true });
+  const tree = processor.parse(value) as PositionedNode;
+  const nodes: PropertyWikiNode[] = [];
+  visitPropertyNodes(tree, (node) => {
+    if (!isPropertyWikiNode(node)) return;
+    if (node.type === "obsidianWikiEmbed" && isAssetTarget(node.rawTarget)) {
+      return;
+    }
+    nodes.push(node);
+  });
+  return nodes.sort(
+    (a, b) => (nodeRange(a)?.start ?? 0) - (nodeRange(b)?.start ?? 0),
+  );
+}
+
+function visitPropertyNodes(
+  node: PositionedNode,
+  visitor: (node: PositionedNode) => void,
+): void {
+  visitor(node);
+  for (const child of node.children ?? []) {
+    visitPropertyNodes(child, visitor);
+  }
+}
+
+function isPropertyWikiNode(node: PositionedNode): node is PropertyWikiNode {
+  return node.type === "obsidianWikilink" || node.type === "obsidianWikiEmbed";
+}
+
+function resolvePagePropertyWikiTarget(
+  context: RenderContext,
+  targetPath: string,
+): string | undefined {
+  if (context.resolveWikiLink) {
+    return context.resolveWikiLink(context.slug, targetPath);
+  }
+  if (!context.wikilinkIndex) return undefined;
+  return resolveWikiLink(
+    context.slug,
+    targetPath,
+    context.wikilinkIndex,
+    context.wikilinkStrategy ?? "shortest",
+    context.ordering,
+  );
+}
+
+function nodeRange(
+  node: PositionedNode,
+): { start: number; end: number } | undefined {
+  const start = node.position?.start?.offset;
+  const end = node.position?.end?.offset;
+  if (typeof start !== "number" || typeof end !== "number" || end < start) {
+    return undefined;
+  }
+  return { start, end };
+}
+
+function targetFragment(node: ObsidianWikilink | ObsidianWikiEmbed): string {
+  if (node.linkTarget.blockId) {
+    return `#^${encodeURIComponent(node.linkTarget.blockId)}`;
+  }
+  if (node.linkTarget.heading) {
+    return `#${slugifyHeading(node.linkTarget.heading)}`;
+  }
+  return "";
+}
+
+function isAssetTarget(target: string): boolean {
+  return /\.(png|jpe?g|gif|webp|svg|pdf|mp4|mov|mp3|wav|ogg|canvas)(?:[?#].*)?$/i.test(
+    target,
+  );
 }

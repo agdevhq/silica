@@ -105,7 +105,10 @@ export function PageRenderer({ page, breadcrumbs, backlinks }: ThemePageProps) {
               {page.description}
             </p>
           ) : null}
-          <PageProperties frontmatter={page.frontmatter} />
+          <PageProperties
+            frontmatter={page.frontmatter}
+            properties={page.pageProperties}
+          />
           {page.tags.length > 0 ? (
             <div className="flex flex-wrap gap-2 pt-1">
               {page.tags.map((tag) => (

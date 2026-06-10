@@ -1,5 +1,14 @@
 # @silicajs/theme-amethyst
 
+## 0.2.5
+
+### Patch Changes
+
+- 38a0acb: Bump @tailwindcss/typography to 0.5.20.
+- Updated dependencies [61624c5]
+- Updated dependencies [f5d4578]
+  - @silicajs/core@0.6.1
+
 ## 0.2.4
 
 ### Patch Changes

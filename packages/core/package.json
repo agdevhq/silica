@@ -1,6 +1,6 @@
 {
   "name": "@silicajs/core",
-  "version": "0.6.0",
+  "version": "0.6.1",
   "description": "Markdown pipeline, slug system, and precompute artifacts for Silica.",
   "type": "module",
   "license": "MIT",

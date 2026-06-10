@@ -6,6 +6,7 @@ import {
   getPageRuntimeData,
   loadVaultDb,
   resolveAssetFromDb,
+  resolveWikiLinkFromDb,
 } from "./server-data.js";
 
 describe("server data", () => {
@@ -94,6 +95,51 @@ describe("server data", () => {
           { numericPrefixes: true },
         ),
       ).toBe("notes/local-image.png");
+    } finally {
+      if (await fs.pathExists(path.join(root, ".silica/vault.db"))) {
+        loadVaultDb().close();
+      }
+      if (previousProjectRoot === undefined) {
+        delete process.env.SILICA_PROJECT_ROOT;
+      } else {
+        process.env.SILICA_PROJECT_ROOT = previousProjectRoot;
+      }
+      await fs.remove(root);
+    }
+  });
+
+  it("resolves ambiguous shortest wikilinks from vault.db by proximity", async () => {
+    const root = path.join(process.cwd(), ".tmp-server-data-wikilinks");
+    const previousProjectRoot = process.env.SILICA_PROJECT_ROOT;
+    process.env.SILICA_PROJECT_ROOT = root;
+    await fs.emptyDir(path.join(root, "content/notes"));
+    await fs.emptyDir(path.join(root, "content/archive"));
+
+    try {
+      await fs.writeFile(path.join(root, "content/index.md"), "# Home");
+      await fs.writeFile(
+        path.join(root, "content/notes/index.md"),
+        "# Notes\n\n[[Overview]]",
+      );
+      await fs.writeFile(
+        path.join(root, "content/notes/Overview.md"),
+        "# Notes Overview",
+      );
+      await fs.writeFile(
+        path.join(root, "content/archive/Overview.md"),
+        "# Archive Overview",
+      );
+      await precompute({
+        projectRoot: root,
+        config: resolveConfig({ title: "Test" }, root),
+      });
+
+      expect(resolveWikiLinkFromDb("notes/index", "Overview", "shortest")).toBe(
+        "notes/overview",
+      );
+      expect(resolveWikiLinkFromDb("index", "Overview", "shortest")).toBe(
+        "archive/overview",
+      );
     } finally {
       if (await fs.pathExists(path.join(root, ".silica/vault.db"))) {
         loadVaultDb().close();

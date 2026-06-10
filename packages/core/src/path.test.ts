@@ -147,14 +147,23 @@ describe("path helpers", () => {
     expect(resolved).toBe("notes/auth");
   });
 
-  it("does not resolve ambiguous shortest wikilink basenames", () => {
+  it("resolves ambiguous shortest wikilink basenames by proximity", () => {
     const index = createWikiLinkResolutionIndex([
       "index",
       "notes/auth",
+      "notes/guides/auth",
       "reference/auth",
     ]);
 
-    expect(resolveWikiLink("index", "Auth", index, "shortest")).toBeUndefined();
+    expect(resolveWikiLink("notes/guides/index", "Auth", index, "shortest")).toBe(
+      "notes/guides/auth",
+    );
+    expect(resolveWikiLink("reference/index", "Auth", index, "shortest")).toBe(
+      "reference/auth",
+    );
+    expect(resolveWikiLink("index", "Auth", index, "shortest")).toBe(
+      "notes/auth",
+    );
     expect(resolveWikiLink("index", "notes/auth", index, "shortest")).toBe(
       "notes/auth",
     );

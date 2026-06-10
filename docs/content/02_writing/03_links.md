@@ -49,11 +49,11 @@ wikilinks: {
 
 | Strategy   | Behavior                                 |
 | ---------- | ---------------------------------------- |
-| `shortest` | Match the shortest unique page (default) |
+| `shortest` | Match by filename, preferring the nearest page when names repeat (default) |
 | `absolute` | Resolve from the vault root              |
 | `relative` | Resolve relative to the current page     |
 
-With `strict: true`, a link that could match more than one page is treated as broken so you can fix it.
+With `strict: true`, unresolved links fail the build so you can fix them before publishing.
 
 ## Broken links
 

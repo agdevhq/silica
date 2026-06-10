@@ -32,7 +32,7 @@ export default defineConfig({
 | Option               | Default      | What it does                                |
 | -------------------- | ------------ | ------------------------------------------- |
 | `wikilinks.strategy` | `"shortest"` | `"shortest"`, `"absolute"`, or `"relative"` |
-| `wikilinks.strict`   | `false`      | Treat ambiguous links as broken             |
+| `wikilinks.strict`   | `false`      | Fail the build when links cannot resolve    |
 
 See [[writing/links|Links]].
 

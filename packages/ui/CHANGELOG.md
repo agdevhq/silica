@@ -1,5 +1,11 @@
 # @silicajs/ui
 
+## 0.1.3
+
+### Patch Changes
+
+- d896c1f: Polish the search palette layout with a larger input, roomier results, and keyboard hints.
+
 ## 0.1.2
 
 ### Patch Changes

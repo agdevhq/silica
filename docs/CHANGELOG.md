@@ -1,5 +1,14 @@
 # docs
 
+## 0.1.8
+
+### Patch Changes
+
+- Updated dependencies [cca76fb]
+- Updated dependencies [d1bf8ea]
+  - @silicajs/core@0.7.1
+  - @silicajs/theme-amethyst@0.4.0
+
 ## 0.1.7
 
 ### Patch Changes

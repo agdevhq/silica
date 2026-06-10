@@ -1,5 +1,15 @@
 # @silicajs/components
 
+## 0.3.1
+
+### Patch Changes
+
+- d896c1f: Polish the search palette layout with a larger input, roomier results, and keyboard hints.
+- Updated dependencies [cca76fb]
+- Updated dependencies [d896c1f]
+  - @silicajs/core@0.7.1
+  - @silicajs/ui@0.1.3
+
 ## 0.3.0
 
 ### Minor Changes

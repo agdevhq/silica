@@ -1,5 +1,11 @@
 # @silicajs/core
 
+## 0.7.1
+
+### Patch Changes
+
+- cca76fb: Format page property dates with a readable display string.
+
 ## 0.7.0
 
 ### Minor Changes

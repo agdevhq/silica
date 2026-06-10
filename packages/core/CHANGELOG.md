@@ -1,5 +1,16 @@
 # @silicajs/core
 
+## 0.6.0
+
+### Minor Changes
+
+- 63d14e0: Resolve Obsidian-style asset embeds by filename when an attachment path is unambiguous.
+
+### Patch Changes
+
+- Updated dependencies [63d14e0]
+  - @silicajs/search@0.3.1
+
 ## 0.5.1
 
 ### Patch Changes

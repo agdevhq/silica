@@ -1,6 +1,6 @@
 {
   "name": "@silicajs/cli",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Silica command-line interface.",
   "type": "module",
   "license": "MIT",
@@ -26,8 +26,8 @@
     "lint": "tsc --noEmit"
   },
   "dependencies": {
-    "@silicajs/core": "^0.5.0",
-    "@silicajs/next": "^0.3.0",
+    "@silicajs/core": "^0.6.0",
+    "@silicajs/next": "^0.3.1",
     "better-sqlite3": "^12.10.0",
     "chokidar": "^5.0.0",
     "commander": "^15.0.0",

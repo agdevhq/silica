@@ -33,7 +33,12 @@ export function AssistantPanel({ className }: AssistantPanelProps) {
   React.useEffect(() => {
     const node = scrollRef.current;
     if (node) node.scrollTop = node.scrollHeight;
-  }, [messageCount, lastMessage?.content, lastMessage?.state]);
+  }, [
+    messageCount,
+    lastMessage?.content,
+    lastMessage?.state,
+    lastMessage?.commands.length,
+  ]);
 
   if (!assistant) return null;
 

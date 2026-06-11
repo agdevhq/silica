@@ -14,8 +14,8 @@ export type AssistantChatMessage = {
   content: string;
   citations: AssistantCitation[];
   state: "streaming" | "complete" | "error";
-  /** Last shell command while the assistant is searching site pages. */
-  activity?: string;
+  /** Shell commands the assistant ran while searching site pages, in order. */
+  commands: string[];
   error?: string;
 };
 
@@ -100,6 +100,7 @@ export function AssistantProvider({
           content: trimmed,
           citations: [],
           state: "complete",
+          commands: [],
         },
         {
           id: answerId,
@@ -107,6 +108,7 @@ export function AssistantProvider({
           content: "",
           citations: [],
           state: "streaming",
+          commands: [],
         },
       ]);
       setIsStreaming(true);
@@ -120,12 +122,11 @@ export function AssistantProvider({
             updateMessage(answerId, (message) => ({
               ...message,
               content: message.content + event.text,
-              activity: undefined,
             }));
           } else if (event.type === "tool-status") {
             updateMessage(answerId, (message) => ({
               ...message,
-              activity: event.command,
+              commands: [...message.commands, event.command],
             }));
           } else if (event.type === "citations") {
             updateMessage(answerId, (message) => ({
@@ -136,7 +137,6 @@ export function AssistantProvider({
             updateMessage(answerId, (message) => ({
               ...message,
               state: "error",
-              activity: undefined,
               error: event.message,
             }));
           }
@@ -147,22 +147,20 @@ export function AssistantProvider({
             if (message.state === "error") return message;
             if (outcome === "aborted") {
               return message.content
-                ? { ...message, state: "complete", activity: undefined }
+                ? { ...message, state: "complete" }
                 : {
                     ...message,
                     state: "error",
-                    activity: undefined,
                     error: "Answer stopped.",
                   };
             }
-            return { ...message, state: "complete", activity: undefined };
+            return { ...message, state: "complete" };
           });
         })
         .catch((error: unknown) => {
           updateMessage(answerId, (message) => ({
             ...message,
             state: "error",
-            activity: undefined,
             error:
               error instanceof AssistantRequestError
                 ? error.message

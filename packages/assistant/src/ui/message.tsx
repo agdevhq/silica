@@ -6,7 +6,13 @@ import remarkGfm from "remark-gfm";
 import { SilicaLink } from "@silicajs/components";
 import { cn } from "@silicajs/ui/lib/utils";
 import { Button } from "@silicajs/ui/components/button";
-import { FileTextIcon, LoaderCircleIcon } from "lucide-react";
+import {
+  ChevronDownIcon,
+  FileTextIcon,
+  LoaderCircleIcon,
+  SearchIcon,
+  TerminalIcon,
+} from "lucide-react";
 import type { AssistantChatMessage } from "./provider.js";
 
 export type AssistantMessageProps = {
@@ -27,6 +33,13 @@ export function AssistantMessage({ message, onRetry }: AssistantMessageProps) {
 
   return (
     <div className="flex flex-col gap-2">
+      {message.commands.length > 0 ||
+      (message.state === "streaming" && !message.content) ? (
+        <AssistantActivity
+          commands={message.commands}
+          searching={message.state === "streaming" && !message.content}
+        />
+      ) : null}
       {message.content ? (
         <div className="prose prose-sm dark:prose-invert max-w-none text-sm">
           <ReactMarkdown
@@ -36,12 +49,6 @@ export function AssistantMessage({ message, onRetry }: AssistantMessageProps) {
             {message.content}
           </ReactMarkdown>
         </div>
-      ) : null}
-      {message.state === "streaming" ? (
-        <AssistantActivity
-          activity={message.activity}
-          hasContent={Boolean(message.content)}
-        />
       ) : null}
       {message.state === "error" ? (
         <div className="flex flex-col items-start gap-2 rounded-lg border border-destructive/30 bg-destructive/5 px-3 py-2">
@@ -72,27 +79,63 @@ export function AssistantMessage({ message, onRetry }: AssistantMessageProps) {
 }
 
 function AssistantActivity({
-  activity,
-  hasContent,
+  commands,
+  searching,
 }: {
-  activity?: string;
-  hasContent: boolean;
+  commands: string[];
+  /** True only while still gathering pages (before the answer streams). */
+  searching: boolean;
 }) {
+  const [expanded, setExpanded] = React.useState(false);
+
+  // Searching has begun but no command has run yet: a plain progress line.
+  // Keep the row markup identical to the toggle below so swapping between the
+  // two states does not shift anything vertically.
+  if (commands.length === 0) {
+    return (
+      <div className="flex flex-col gap-1.5 text-xs text-muted-foreground">
+        <div className="flex items-center gap-2 self-start">
+          <LoaderCircleIcon className="size-3.5 shrink-0 animate-spin" />
+          <span>Thinking…</span>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div
-      className={cn(
-        "flex items-center gap-2 text-xs text-muted-foreground",
-        !hasContent && "py-1",
-      )}
-    >
-      <LoaderCircleIcon className="size-3.5 animate-spin" />
-      {activity ? (
-        <span className="truncate">
-          Searching pages… <code className="font-mono">{activity}</code>
-        </span>
-      ) : (
-        <span>Thinking…</span>
-      )}
+    <div className="flex flex-col gap-1.5 text-xs text-muted-foreground">
+      <button
+        type="button"
+        onClick={() => setExpanded((value) => !value)}
+        aria-expanded={expanded}
+        className="group flex items-center gap-2 self-start rounded-md text-left transition-colors hover:text-foreground"
+      >
+        {searching ? (
+          <LoaderCircleIcon className="size-3.5 shrink-0 animate-spin" />
+        ) : (
+          <SearchIcon className="size-3.5 shrink-0" />
+        )}
+        <span>{searching ? "Searching the site…" : "Searched the site"}</span>
+        <ChevronDownIcon
+          className={cn(
+            "size-3.5 shrink-0 transition-transform",
+            expanded && "rotate-180",
+          )}
+        />
+      </button>
+      {expanded ? (
+        <ul className="flex flex-col gap-1 pl-[1.375rem]">
+          {commands.map((command, index) => (
+            <li
+              key={`${index}-${command}`}
+              className="flex items-center gap-2 overflow-hidden"
+            >
+              <TerminalIcon className="size-3 shrink-0" />
+              <code className="truncate font-mono">{command}</code>
+            </li>
+          ))}
+        </ul>
+      ) : null}
     </div>
   );
 }

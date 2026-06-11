@@ -45,10 +45,10 @@ export function Sidebar({
           </SilicaLink>
           <DarkModeToggle />
         </div>
-        <div className="flex flex-col gap-2 px-1 pb-1">
-          <SearchTrigger className="w-full justify-start" />
+        <div className="flex items-center gap-2 px-1 pb-1">
+          <SearchTrigger className="min-w-0 flex-1 justify-start" />
           {assistant ? (
-            <assistant.Trigger className="w-full justify-start" />
+            <assistant.Trigger className="shrink-0" iconOnly />
           ) : null}
         </div>
       </SidebarHeader>

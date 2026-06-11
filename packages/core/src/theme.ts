@@ -44,7 +44,11 @@ export type ThemeAssistantSlots = {
   /** Client-side conversation state; must wrap Trigger and Panel. */
   Provider: (props: { children: React.ReactNode }) => React.ReactNode;
   /** Button that opens the assistant (also binds the keyboard shortcut). */
-  Trigger: (props: { className?: string; label?: string }) => React.ReactNode;
+  Trigger: (props: {
+    className?: string;
+    label?: string;
+    iconOnly?: boolean;
+  }) => React.ReactNode;
   /**
    * The assistant chat window (conversation + composer). Fills its
    * container; the theme owns placement and sizing — e.g. a docked,

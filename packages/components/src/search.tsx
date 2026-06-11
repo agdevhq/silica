@@ -17,6 +17,7 @@ import {
   DialogTitle,
 } from "@silicajs/ui/components/dialog";
 import { Button } from "@silicajs/ui/components/button";
+import { KeyboardShortcut } from "@silicajs/ui/components/kbd";
 import { SearchIcon, SparklesIcon } from "lucide-react";
 
 import { useSilicaAssistant } from "./assistant-context.js";
@@ -73,12 +74,7 @@ export function SearchTrigger({
         <span className="flex-1 text-left text-muted-foreground">
           {placeholder}
         </span>
-        <kbd
-          data-icon="inline-end"
-          className="pointer-events-none ml-2 inline-flex h-5 select-none items-center gap-1 rounded border border-border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground"
-        >
-          <span className="text-xs">⌘</span>K
-        </kbd>
+        <KeyboardShortcut keys="K" inlineEnd />
       </Button>
       <SearchPalette open={open} onOpenChange={setOpen} />
     </>

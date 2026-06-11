@@ -2,17 +2,25 @@
 
 import * as React from "react";
 import { Button } from "@silicajs/ui/components/button";
+import { KeyboardShortcut } from "@silicajs/ui/components/kbd";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@silicajs/ui/components/tooltip";
 import { SparklesIcon } from "lucide-react";
 import { useAssistant } from "./provider.js";
 
 export type AssistantTriggerProps = {
   className?: string;
   label?: string;
+  iconOnly?: boolean;
 };
 
 export function AssistantTrigger({
   className,
   label = "Ask AI",
+  iconOnly = false,
 }: AssistantTriggerProps) {
   const assistant = useAssistant();
 
@@ -30,6 +38,31 @@ export function AssistantTrigger({
 
   if (!assistant) return null;
 
+  if (iconOnly) {
+    return (
+      <Tooltip>
+        <TooltipTrigger
+          render={
+            <Button
+              type="button"
+              variant="outline"
+              size="icon-sm"
+              onClick={() => assistant.setOpen(true)}
+              className={className}
+            >
+              <SparklesIcon className="text-muted-foreground" />
+              <span className="sr-only">{label}</span>
+            </Button>
+          }
+        />
+        <TooltipContent side="right">
+          <span>Open the assistant panel</span>
+          <KeyboardShortcut keys="I" />
+        </TooltipContent>
+      </Tooltip>
+    );
+  }
+
   return (
     <Button
       type="button"
@@ -43,12 +76,7 @@ export function AssistantTrigger({
         className="text-muted-foreground"
       />
       <span className="flex-1 text-left text-muted-foreground">{label}</span>
-      <kbd
-        data-icon="inline-end"
-        className="pointer-events-none ml-2 inline-flex h-5 items-center gap-1 rounded border border-border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground select-none"
-      >
-        <span className="text-xs">⌘</span>I
-      </kbd>
+      <KeyboardShortcut keys="I" inlineEnd />
     </Button>
   );
 }

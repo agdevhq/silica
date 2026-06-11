@@ -59,7 +59,7 @@ const finish = (finishReason: "stop" | "tool-calls"): StreamEvent => ({
 
 async function collectEvents(
   model: ChatModel,
-  options?: { maxToolTurns?: number; commands?: string[] },
+  options?: { maxToolTurns?: number; commands?: string[]; question?: string },
 ): Promise<{ events: AssistantStreamEvent[]; answer: string }> {
   const events: AssistantStreamEvent[] = [];
   const result = await runAssistant({
@@ -70,7 +70,7 @@ async function collectEvents(
         id: "00000000-0000-4000-8000-000000000001",
         previousMessageId: null,
         role: "user",
-        content: "How do I install?",
+        content: options?.question ?? "How do I install?",
       },
     ],
     emit: (event) => events.push(event),
@@ -86,6 +86,29 @@ async function collectEvents(
 }
 
 describe("runAssistant", () => {
+  it("allows simple requests to complete without tool calls", async () => {
+    const { model, calls } = createScriptedModel([
+      [
+        { type: "text-delta", text: "Hello! How can I help with Docs?" },
+        finish("stop"),
+      ],
+    ]);
+
+    const commands: string[] = [];
+    const { events, answer } = await collectEvents(model, {
+      commands,
+      question: "Hello",
+    });
+
+    expect(calls).toHaveLength(1);
+    expect(commands).toEqual([]);
+    expect(events).not.toContainEqual({
+      type: "tool-status",
+      command: expect.any(String),
+    });
+    expect(answer).toBe("Hello! How can I help with Docs?");
+  });
+
   it("executes tool calls and streams the cited answer", async () => {
     const { model, calls } = createScriptedModel([
       [

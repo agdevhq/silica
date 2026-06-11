@@ -60,6 +60,11 @@ export type AssistantCitationResolver = (
 export type AssistantSiteContext = {
   siteTitle: string;
   siteDescription?: string;
+  homePage?: {
+    title: string;
+    sourcePath: string;
+    excerpt: string;
+  };
   /** Filesystem directory mounted read-only as `/content` for shell tools. */
   contentRoot: string;
   resolveCitation: AssistantCitationResolver;

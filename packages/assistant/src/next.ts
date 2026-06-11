@@ -1,3 +1,4 @@
+import fs from "node:fs";
 import path from "node:path";
 import type { ChatModel } from "@core-ai/core-ai";
 import {
@@ -6,6 +7,7 @@ import {
 } from "@silicajs/core/runtime";
 import {
   getConfig,
+  getPage,
   getPageBySourcePath,
   getProjectRoot,
 } from "@silicajs/next/server-data";
@@ -20,6 +22,7 @@ const ASSISTANT_SECRET_ENV = "SILICA_ASSISTANT_SECRET";
 const DEFAULT_RATE_LIMIT_MAX_REQUESTS = 10;
 const DEFAULT_RATE_LIMIT_WINDOW_MS = 60_000;
 const MAX_RATE_LIMIT_BUCKETS = 10_000;
+const MAX_HOME_PAGE_EXCERPT_CHARS = 2_000;
 
 const rateLimitBuckets = new Map<string, { count: number; resetAt: number }>();
 
@@ -156,10 +159,12 @@ function loadSiteContext(
   siteTitle: string,
   siteDescription: string | undefined,
 ): AssistantSiteContext {
+  const contentRoot = path.join(getProjectRoot(), ".silica/content");
   return {
     siteTitle,
     siteDescription,
-    contentRoot: path.join(getProjectRoot(), ".silica/content"),
+    homePage: loadHomePageContext(contentRoot),
+    contentRoot,
     resolveCitation: (sourcePath) => {
       const entry = getPageBySourcePath(sourcePath);
       if (!entry) return undefined;
@@ -171,4 +176,36 @@ function loadSiteContext(
       };
     },
   };
+}
+
+function loadHomePageContext(
+  contentRoot: string,
+): AssistantSiteContext["homePage"] {
+  const homePage = getPage("index");
+  if (!homePage) return undefined;
+
+  try {
+    const raw = fs.readFileSync(path.join(contentRoot, homePage.sourcePath), {
+      encoding: "utf8",
+    });
+    const excerpt = truncateHomePageExcerpt(stripFrontmatter(raw).trim());
+    if (!excerpt) return undefined;
+    return {
+      title: homePage.title,
+      sourcePath: homePage.sourcePath,
+      excerpt,
+    };
+  } catch {
+    return undefined;
+  }
+}
+
+function stripFrontmatter(markdown: string): string {
+  return markdown.replace(/^---\r?\n[\s\S]*?\r?\n---\r?\n?/, "");
+}
+
+function truncateHomePageExcerpt(markdown: string): string {
+  const normalized = markdown.replace(/\s+/g, " ").trim();
+  if (normalized.length <= MAX_HOME_PAGE_EXCERPT_CHARS) return normalized;
+  return `${normalized.slice(0, MAX_HOME_PAGE_EXCERPT_CHARS).trimEnd()}...`;
 }

@@ -14,7 +14,7 @@ export type AssistantChatMessage = {
   content: string;
   citations: AssistantCitation[];
   state: "streaming" | "complete" | "error";
-  /** Last shell command while the assistant is exploring the docs. */
+  /** Last shell command while the assistant is searching site pages. */
   activity?: string;
   error?: string;
 };

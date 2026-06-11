@@ -87,9 +87,7 @@ export function AssistantPanel({ className }: AssistantPanelProps) {
         {assistant.messages.length === 0 ? (
           <div className="flex h-full flex-col items-center justify-center gap-2 px-8 text-center">
             <SparklesIcon className="size-6 text-muted-foreground/60" />
-            <p className="text-sm font-medium text-foreground">
-              Ask the docs anything
-            </p>
+            <p className="text-sm font-medium text-foreground">Ask anything</p>
             <p className="text-xs leading-relaxed text-muted-foreground">
               Answers come from this site&apos;s pages and include links to the
               sources used.

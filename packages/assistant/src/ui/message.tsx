@@ -88,7 +88,7 @@ function AssistantActivity({
       <LoaderCircleIcon className="size-3.5 animate-spin" />
       {activity ? (
         <span className="truncate">
-          Searching the docs… <code className="font-mono">{activity}</code>
+          Searching pages… <code className="font-mono">{activity}</code>
         </span>
       ) : (
         <span>Thinking…</span>

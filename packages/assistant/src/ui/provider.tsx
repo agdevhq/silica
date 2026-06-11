@@ -75,8 +75,8 @@ export function AssistantProvider({
     [],
   );
 
-  const ask = React.useCallback(
-    (question: string) => {
+  const sendQuestion = React.useCallback(
+    (question: string, history: AssistantChatMessage[]) => {
       const trimmed = question.trim();
       if (!trimmed) return;
 
@@ -85,15 +85,15 @@ export function AssistantProvider({
       controllerRef.current = controller;
 
       const transcript: AssistantTranscriptMessage[] = [
-        ...messagesRef.current
+        ...history
           .filter((message) => message.state === "complete" && message.content)
           .map((message) => ({ role: message.role, content: message.content })),
         { role: "user" as const, content: trimmed },
       ];
 
       const answerId = createMessageId();
-      setMessages((current) => [
-        ...current.filter((message) => message.state !== "error"),
+      setMessages([
+        ...history.filter((message) => message.state !== "error"),
         {
           id: createMessageId(),
           role: "user",
@@ -177,23 +177,28 @@ export function AssistantProvider({
     [endpoint, updateMessage],
   );
 
+  const ask = React.useCallback(
+    (question: string) => {
+      sendQuestion(question, messagesRef.current);
+    },
+    [sendQuestion],
+  );
+
   const stop = React.useCallback(() => {
     controllerRef.current?.abort();
   }, []);
 
   const retry = React.useCallback(() => {
-    const lastQuestion = [...messagesRef.current]
-      .reverse()
-      .find((message) => message.role === "user")?.content;
-    if (!lastQuestion || controllerRef.current) return;
-    setMessages((current) => {
-      for (let index = current.length - 1; index >= 0; index -= 1) {
-        if (current[index]?.role === "user") return current.slice(0, index);
+    if (controllerRef.current) return;
+    const current = messagesRef.current;
+    for (let index = current.length - 1; index >= 0; index -= 1) {
+      const message = current[index];
+      if (message?.role === "user") {
+        sendQuestion(message.content, current.slice(0, index));
+        return;
       }
-      return current;
-    });
-    ask(lastQuestion);
-  }, [ask]);
+    }
+  }, [sendQuestion]);
 
   const reset = React.useCallback(() => {
     controllerRef.current?.abort();

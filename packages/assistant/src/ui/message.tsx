@@ -23,8 +23,8 @@ export type AssistantMessageProps = {
 export function AssistantMessage({ message, onRetry }: AssistantMessageProps) {
   if (message.role === "user") {
     return (
-      <div className="flex justify-end">
-        <div className="max-w-[85%] rounded-xl rounded-br-sm bg-muted px-3 py-2 text-sm whitespace-pre-wrap text-foreground">
+      <div className="flex min-w-0 justify-end">
+        <div className="min-w-0 max-w-[85%] rounded-xl rounded-br-sm bg-muted px-3 py-2 text-sm whitespace-pre-wrap break-words text-foreground">
           {message.content}
         </div>
       </div>
@@ -32,7 +32,7 @@ export function AssistantMessage({ message, onRetry }: AssistantMessageProps) {
   }
 
   return (
-    <div className="flex flex-col gap-2">
+    <div className="flex min-w-0 max-w-full flex-col gap-2 overflow-hidden">
       {message.commands.length > 0 ||
       (message.state === "streaming" && !message.content) ? (
         <AssistantActivity
@@ -41,7 +41,7 @@ export function AssistantMessage({ message, onRetry }: AssistantMessageProps) {
         />
       ) : null}
       {message.content ? (
-        <div className="prose prose-sm dark:prose-invert max-w-none text-sm">
+        <div className="prose prose-sm dark:prose-invert min-w-0 max-w-none break-words text-sm">
           <ReactMarkdown
             remarkPlugins={[remarkGfm]}
             components={{ a: MarkdownLink }}
@@ -93,7 +93,7 @@ function AssistantActivity({
   // two states does not shift anything vertically.
   if (commands.length === 0) {
     return (
-      <div className="flex flex-col gap-1.5 text-xs text-muted-foreground">
+      <div className="flex min-w-0 max-w-full flex-col gap-1.5 overflow-hidden text-xs text-muted-foreground">
         <div className="flex items-center gap-2 self-start">
           <LoaderCircleIcon className="size-3.5 shrink-0 animate-spin" />
           <span>Thinking…</span>
@@ -103,7 +103,7 @@ function AssistantActivity({
   }
 
   return (
-    <div className="flex flex-col gap-1.5 text-xs text-muted-foreground">
+    <div className="flex min-w-0 max-w-full flex-col gap-1.5 overflow-hidden text-xs text-muted-foreground">
       <button
         type="button"
         onClick={() => setExpanded((value) => !value)}
@@ -124,14 +124,16 @@ function AssistantActivity({
         />
       </button>
       {expanded ? (
-        <ul className="flex flex-col gap-1 pl-[1.375rem]">
+        <ul className="flex min-w-0 max-w-full flex-col gap-1 overflow-hidden pl-[1.375rem]">
           {commands.map((command, index) => (
             <li
               key={`${index}-${command}`}
-              className="flex items-center gap-2 overflow-hidden"
+              className="flex min-w-0 max-w-full items-center gap-2 overflow-hidden"
             >
               <TerminalIcon className="size-3 shrink-0" />
-              <code className="truncate font-mono">{command}</code>
+              <span className="min-w-0 flex-1 overflow-hidden">
+                <code className="block truncate font-mono">{command}</code>
+              </span>
             </li>
           ))}
         </ul>

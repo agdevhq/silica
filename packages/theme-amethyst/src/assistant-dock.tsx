@@ -7,6 +7,13 @@ import {
   ResizablePanel,
   ResizablePanelGroup,
 } from "@silicajs/ui/components/resizable";
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+} from "@silicajs/ui/components/sheet";
 import { useIsMobile } from "@silicajs/ui/hooks/use-mobile";
 
 export type AssistantDockProps = {
@@ -23,25 +30,41 @@ export type AssistantDockProps = {
  * the library's height/overflow defaults (it assumes a fixed-height shell).
  */
 export function AssistantDock({ panel, children }: AssistantDockProps) {
-  const open = useSilicaAssistant()?.open ?? false;
+  const assistant = useSilicaAssistant();
+  const open = assistant?.open ?? false;
   const isMobile = useIsMobile();
 
   if (isMobile) {
     return (
       <>
         {children}
-        {open ? (
-          <div className="fixed inset-y-0 right-0 z-40 w-full shadow-xl">
+        <Sheet
+          open={open}
+          onOpenChange={(nextOpen) => {
+            if (!nextOpen) assistant?.closeAssistant?.();
+          }}
+        >
+          <SheetContent
+            side="right"
+            showCloseButton={false}
+            className="inset-0 h-dvh w-full max-w-none border-0 p-0 sm:max-w-none"
+          >
+            <SheetHeader className="sr-only">
+              <SheetTitle>AI assistant</SheetTitle>
+              <SheetDescription>
+                Ask questions about this Silica site.
+              </SheetDescription>
+            </SheetHeader>
             {panel}
-          </div>
-        ) : null}
+          </SheetContent>
+        </Sheet>
       </>
     );
   }
 
   return (
     <ResizablePanelGroup
-      className="min-h-svh flex-1"
+      className="min-h-svh min-w-0 flex-1"
       style={{ height: "auto", overflow: "visible" }}
     >
       <ResizablePanel
@@ -62,7 +85,7 @@ export function AssistantDock({ panel, children }: AssistantDockProps) {
             groupResizeBehavior="preserve-pixel-size"
             style={{ maxHeight: "none", overflow: "visible" }}
           >
-            <div className="sticky top-0 h-svh">{panel}</div>
+            <div className="sticky top-0 h-svh min-w-0">{panel}</div>
           </ResizablePanel>
         </>
       ) : null}

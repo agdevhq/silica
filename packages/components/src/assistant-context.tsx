@@ -13,6 +13,8 @@ export type SilicaAssistantContextValue = {
   open: boolean;
   /** Open the assistant, optionally submitting a question right away. */
   openAssistant: (query?: string) => void;
+  /** Close the assistant when a theme-owned shell, such as a mobile sheet, dismisses. */
+  closeAssistant?: () => void;
 };
 
 const SilicaAssistantContext =

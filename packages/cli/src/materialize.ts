@@ -4,6 +4,7 @@ import fs from "fs-extra";
 import { loadConfig } from "@silicajs/core";
 import {
   assistantModuleTemplate,
+  assistantProviderPackageName,
   assistantRouteTemplate,
   getSilicaTemplates,
   nextConfigTemplate,
@@ -50,13 +51,16 @@ export async function materializeNextApp(
     assistantModuleTemplate(Boolean(config.ai)),
   );
   if (config.ai) {
-    assertAssistantInstalled(projectRoot);
+    assertAssistantDependenciesInstalled(projectRoot, config.ai.provider);
     const assistantRoutePath = path.join(
       nextRoot,
       "app/api/assistant/route.ts",
     );
     await fs.ensureDir(path.dirname(assistantRoutePath));
-    await fs.writeFile(assistantRoutePath, assistantRouteTemplate(config.ai));
+    await fs.writeFile(
+      assistantRoutePath,
+      assistantRouteTemplate(config.ai, { authEnabled: Boolean(config.auth) }),
+    );
   }
   await fs.writeFile(
     path.join(nextRoot, "package.json"),
@@ -75,17 +79,36 @@ export async function materializeNextApp(
   return nextRoot;
 }
 
-function assertAssistantInstalled(projectRoot: string): void {
-  const require = createRequire(path.join(projectRoot, "package.json"));
-  try {
-    require.resolve("@silicajs/assistant/package.json");
-  } catch {
+function assertAssistantDependenciesInstalled(
+  projectRoot: string,
+  provider: Parameters<typeof assistantProviderPackageName>[0],
+): void {
+  const providerPackage = assistantProviderPackageName(provider);
+  if (!isPackageInstalled(projectRoot, "@silicajs/assistant")) {
     throw new Error(
       "AI is enabled in silica.config.ts but @silicajs/assistant is not installed.\n" +
         "Install it together with the provider package for your configured model, e.g.:\n" +
         "  npm install @silicajs/assistant @core-ai/openai",
     );
   }
+
+  if (!isPackageInstalled(projectRoot, providerPackage)) {
+    throw new Error(
+      `AI is enabled in silica.config.ts but ${providerPackage} is not installed.\n` +
+        "Install it together with @silicajs/assistant for your configured model, e.g.:\n" +
+        `  npm install @silicajs/assistant ${providerPackage}`,
+    );
+  }
+}
+
+function isPackageInstalled(projectRoot: string, packageName: string): boolean {
+  const require = createRequire(path.join(projectRoot, "package.json"));
+  for (const searchPath of require.resolve.paths(packageName) ?? []) {
+    if (fs.existsSync(path.join(searchPath, packageName, "package.json"))) {
+      return true;
+    }
+  }
+  return false;
 }
 
 async function resolveUserConfigImport(

@@ -23,7 +23,7 @@ export type AssistantChatMessage = {
 
 export type AssistantContextValue = {
   open: boolean;
-  setOpen: (next: boolean) => void;
+  setOpen: React.Dispatch<React.SetStateAction<boolean>>;
   messages: AssistantChatMessage[];
   isStreaming: boolean;
   ask: (question: string) => void;
@@ -35,6 +35,8 @@ export type AssistantContextValue = {
 const AssistantContext = React.createContext<AssistantContextValue | null>(
   null,
 );
+const INVALID_STREAM_MESSAGE =
+  "The assistant returned an invalid stream response.";
 
 export function useAssistant(): AssistantContextValue | null {
   return React.useContext(AssistantContext);
@@ -293,6 +295,7 @@ export function AssistantProvider({
         setOpen(true);
         if (query?.trim()) ask(query);
       },
+      closeAssistant: () => setOpen(false),
     }),
     [open, ask],
   );
@@ -308,7 +311,7 @@ export function AssistantProvider({
 
 class AssistantRequestError extends Error {}
 
-async function streamAnswer(options: {
+export async function streamAnswer(options: {
   endpoint: string;
   transcript: AssistantTranscriptMessage[];
   responseMessageId: string;
@@ -357,13 +360,30 @@ async function streamAnswer(options: {
       while (newlineIndex !== -1) {
         const line = buffer.slice(0, newlineIndex).trim();
         buffer = buffer.slice(newlineIndex + 1);
-        if (line) options.onEvent(JSON.parse(line) as AssistantStreamEvent);
+        if (line) emitStreamEvent(line, options.onEvent);
         newlineIndex = buffer.indexOf("\n");
       }
     }
+    buffer += decoder.decode();
+    const leftover = buffer.trim();
+    if (leftover) emitStreamEvent(leftover, options.onEvent);
   } catch (error) {
     if (options.signal.aborted) return "aborted";
     throw error;
   }
   return "done";
+}
+
+function emitStreamEvent(
+  line: string,
+  onEvent: (event: AssistantStreamEvent) => void,
+): void {
+  let event: AssistantStreamEvent;
+  try {
+    event = JSON.parse(line) as AssistantStreamEvent;
+  } catch {
+    onEvent({ type: "error", message: INVALID_STREAM_MESSAGE });
+    throw new AssistantRequestError(INVALID_STREAM_MESSAGE);
+  }
+  onEvent(event);
 }

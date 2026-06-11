@@ -126,6 +126,58 @@ describe("createAssistantHandler", () => {
     ).toBe(400);
   });
 
+  it("rejects request bodies that exceed the byte limit", async () => {
+    const response = await handler()(
+      new Request("http://localhost/api/assistant", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          messages: [
+            {
+              id: ids.firstUser,
+              previousMessageId: null,
+              role: "user",
+              content: "x".repeat(600_000),
+            },
+          ],
+          responseMessageId: ids.firstAssistant,
+        }),
+      }),
+    );
+
+    expect(response.status).toBe(413);
+    expect(await response.json()).toEqual({
+      error: "Assistant request body is too large.",
+    });
+  });
+
+  it("runs request authorization before resolving the runtime", async () => {
+    const response = await createAssistantHandler({
+      authorizeRequest: () =>
+        Response.json({ error: "Assistant request denied." }, { status: 429 }),
+      resolve: () => {
+        throw new Error("runtime should not resolve");
+      },
+    })(
+      request({
+        messages: [
+          {
+            id: ids.firstUser,
+            previousMessageId: null,
+            role: "user",
+            content: "Hello?",
+          },
+        ],
+        responseMessageId: ids.firstAssistant,
+      }),
+    );
+
+    expect(response.status).toBe(429);
+    expect(await response.json()).toEqual({
+      error: "Assistant request denied.",
+    });
+  });
+
   it("accepts signed assistant turns in follow-up requests", async () => {
     const firstResponse = await handler()(
       request({

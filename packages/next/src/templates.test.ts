@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   assistantModuleTemplate,
+  assistantProviderPackageName,
   assistantRouteTemplate,
   getSilicaTemplates,
   nextConfigTemplate,
@@ -144,7 +145,29 @@ describe("generated templates", () => {
     expect(rendered).toContain(
       'import { createAssistantRouteHandler } from "@silicajs/assistant/next"',
     );
+    expect(rendered).toContain(
+      "rateLimit: { maxRequests: 10, windowMs: 60_000 }",
+    );
     expect(rendered).toContain("createAnthropic({ apiKey }).chatModel(model)");
+  });
+
+  it("disables assistant route rate limiting when auth protects the site", () => {
+    const rendered = assistantRouteTemplate(
+      {
+        provider: "openai",
+        model: "gpt-5.2",
+        apiKeyEnv: "OPENAI_API_KEY",
+      },
+      { authEnabled: true },
+    );
+
+    expect(rendered).toContain("rateLimit: false");
+  });
+
+  it("resolves assistant provider package names", () => {
+    expect(assistantProviderPackageName("google")).toBe(
+      "@core-ai/google-genai",
+    );
   });
 
   it("renders the tsconfig extends placeholder when a user config exists", () => {

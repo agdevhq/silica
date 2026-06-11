@@ -51,7 +51,7 @@ export function AssistantPanel({ className }: AssistantPanelProps) {
     <aside
       aria-label="AI assistant"
       className={cn(
-        "flex h-full min-h-0 w-full flex-col bg-background",
+        "flex h-full min-h-0 w-full min-w-0 flex-col bg-background",
         className,
       )}
     >
@@ -96,7 +96,10 @@ export function AssistantPanel({ className }: AssistantPanelProps) {
         </Tooltip>
       </header>
 
-      <div ref={scrollRef} className="flex-1 overflow-y-auto">
+      <div
+        ref={scrollRef}
+        className="min-w-0 flex-1 overflow-x-hidden overflow-y-auto"
+      >
         {assistant.messages.length === 0 ? (
           <div className="flex h-full flex-col items-center justify-center gap-2 px-8 text-center">
             <SparklesIcon className="size-6 text-muted-foreground/60" />
@@ -107,7 +110,7 @@ export function AssistantPanel({ className }: AssistantPanelProps) {
             </p>
           </div>
         ) : (
-          <div className="flex flex-col gap-5 px-4 py-4">
+          <div className="flex min-w-0 flex-col gap-5 px-4 py-4">
             {assistant.messages.map((message) => (
               <AssistantMessage
                 key={message.id}

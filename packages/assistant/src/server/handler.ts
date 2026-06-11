@@ -11,6 +11,7 @@ import { runAssistant, type RunAssistantOptions } from "./runtime.js";
 const MAX_MESSAGES = 40;
 const MAX_MESSAGE_LENGTH = 8_000;
 const MAX_SIGNATURE_LENGTH = 256;
+const MAX_REQUEST_BODY_BYTES = 512 * 1024;
 const SIGNATURE_VERSION = "v1.";
 const SIGNATURE_CONTEXT = "silica.assistant.transcript.v1\n";
 const messageIdSchema = z.string().uuid();
@@ -57,6 +58,13 @@ export type AssistantRuntime = {
 };
 
 export type AssistantHandlerOptions = {
+  /**
+   * Optional request gate for auth, quotas, or rate limits. Return a Response to
+   * reject before the body is parsed or runtime dependencies are resolved.
+   */
+  authorizeRequest?: (
+    request: Request,
+  ) => Response | undefined | Promise<Response | undefined>;
   /** Resolves the model and site context for the current request. */
   resolve: () => AssistantRuntime | Promise<AssistantRuntime>;
 };
@@ -69,6 +77,29 @@ export function createAssistantHandler(
   options: AssistantHandlerOptions,
 ): (request: Request) => Promise<Response> {
   return async function POST(request: Request): Promise<Response> {
+    const authorizationResponse = await options.authorizeRequest?.(request);
+    if (authorizationResponse) return authorizationResponse;
+
+    const requestBody = await readRequestBody(request);
+    if (!requestBody.success) {
+      return jsonError("Assistant request body is too large.", 413);
+    }
+
+    const parsedJson = parseJson(requestBody.body);
+    const parsed = requestSchema.safeParse(parsedJson);
+    if (!parsed.success) {
+      return jsonError("Invalid assistant request.", 400);
+    }
+    const transcript = parsed.data.messages as AssistantTranscriptMessage[];
+    if (transcript.at(-1)?.role !== "user") {
+      return jsonError("The last message must be a user message.", 400);
+    }
+    if (
+      transcript.some((message) => message.id === parsed.data.responseMessageId)
+    ) {
+      return jsonError("Invalid assistant transcript.", 400);
+    }
+
     let runtime: AssistantRuntime;
     try {
       runtime = await options.resolve();
@@ -84,21 +115,7 @@ export function createAssistantHandler(
         503,
       );
     }
-
-    const parsed = requestSchema.safeParse(await readJson(request));
-    if (!parsed.success) {
-      return jsonError("Invalid assistant request.", 400);
-    }
-    const transcript = parsed.data.messages as AssistantTranscriptMessage[];
-    if (transcript.at(-1)?.role !== "user") {
-      return jsonError("The last message must be a user message.", 400);
-    }
     if (!verifyTranscript(transcript, runtime.transcriptSigningSecret)) {
-      return jsonError("Invalid assistant transcript.", 400);
-    }
-    if (
-      transcript.some((message) => message.id === parsed.data.responseMessageId)
-    ) {
       return jsonError("Invalid assistant transcript.", 400);
     }
     const assistantMessage = {
@@ -163,9 +180,45 @@ export function createAssistantHandler(
   };
 }
 
-async function readJson(request: Request): Promise<unknown> {
+async function readRequestBody(
+  request: Request,
+): Promise<{ success: true; body: string } | { success: false }> {
+  const contentLength = Number(request.headers.get("content-length"));
+  if (
+    Number.isFinite(contentLength) &&
+    contentLength > MAX_REQUEST_BODY_BYTES
+  ) {
+    return { success: false };
+  }
+
+  if (!request.body) return { success: true, body: "" };
+
+  const reader = request.body.getReader();
+  const decoder = new TextDecoder();
+  let bytesRead = 0;
+  let body = "";
+
   try {
-    return await request.json();
+    for (;;) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      bytesRead += value.byteLength;
+      if (bytesRead > MAX_REQUEST_BODY_BYTES) {
+        await reader.cancel().catch(() => undefined);
+        return { success: false };
+      }
+      body += decoder.decode(value, { stream: true });
+    }
+    body += decoder.decode();
+    return { success: true, body };
+  } catch {
+    return { success: true, body: "" };
+  }
+}
+
+function parseJson(body: string): unknown {
+  try {
+    return JSON.parse(body);
   } catch {
     return undefined;
   }

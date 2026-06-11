@@ -1,19 +1,21 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import type { AssistantChatMessage } from "./provider.js";
-import { buildReplayableHistory } from "./provider.js";
+import { buildReplayableHistory, streamAnswer } from "./provider.js";
+import type { AssistantStreamEvent } from "../types.js";
 
 function message(
   overrides: Partial<AssistantChatMessage> & Pick<AssistantChatMessage, "id">,
 ): AssistantChatMessage {
+  const { id, ...rest } = overrides;
   return {
-    id: overrides.id,
+    id,
     previousMessageId: null,
     role: "user",
     content: "Question?",
     citations: [],
     state: "complete",
     commands: [],
-    ...overrides,
+    ...rest,
   };
 }
 
@@ -94,5 +96,56 @@ describe("buildReplayableHistory", () => {
 
     expect(history.messages).toEqual([]);
     expect(history.transcript).toEqual([]);
+  });
+});
+
+describe("streamAnswer", () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it("surfaces malformed stream events as assistant errors", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => new Response('{"type":')),
+    );
+    const events: AssistantStreamEvent[] = [];
+
+    await expect(
+      streamAnswer({
+        endpoint: "/api/assistant",
+        transcript: [],
+        responseMessageId: "assistant-1",
+        signal: new AbortController().signal,
+        onEvent: (event) => events.push(event),
+      }),
+    ).rejects.toThrow("The assistant returned an invalid stream response.");
+
+    expect(events).toEqual([
+      {
+        type: "error",
+        message: "The assistant returned an invalid stream response.",
+      },
+    ]);
+  });
+
+  it("handles a final stream event without a trailing newline", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => new Response('{"type":"done"}')),
+    );
+    const events: AssistantStreamEvent[] = [];
+
+    await expect(
+      streamAnswer({
+        endpoint: "/api/assistant",
+        transcript: [],
+        responseMessageId: "assistant-1",
+        signal: new AbortController().signal,
+        onEvent: (event) => events.push(event),
+      }),
+    ).resolves.toBe("done");
+
+    expect(events).toEqual([{ type: "done" }]);
   });
 });

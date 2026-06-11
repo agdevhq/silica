@@ -75,12 +75,29 @@ const ASSISTANT_PROVIDER_IMPORTS: Record<
   mistral: { packageName: "@core-ai/mistral", factory: "createMistral" },
 };
 
-export function assistantRouteTemplate(ai: ResolvedSilicaAiConfig): string {
+export type AssistantRouteTemplateOptions = {
+  authEnabled?: boolean;
+};
+
+export function assistantProviderPackageName(
+  provider: ResolvedSilicaAiConfig["provider"],
+): string {
+  return ASSISTANT_PROVIDER_IMPORTS[provider].packageName;
+}
+
+export function assistantRouteTemplate(
+  ai: ResolvedSilicaAiConfig,
+  options: AssistantRouteTemplateOptions = {},
+): string {
   const provider = ASSISTANT_PROVIDER_IMPORTS[ai.provider];
+  const rateLimit = options.authEnabled
+    ? "false"
+    : "{ maxRequests: 10, windowMs: 60_000 }";
   return `import { ${provider.factory} } from "${provider.packageName}";
 import { createAssistantRouteHandler } from "@silicajs/assistant/next";
 
 export const POST = createAssistantRouteHandler({
+  rateLimit: ${rateLimit},
   createChatModel: ({ apiKey, model }) =>
     ${provider.factory}({ apiKey }).chatModel(model),
 });

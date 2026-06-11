@@ -18,6 +18,7 @@ export {
   getEntriesForTag,
   getNavigation,
   getPage,
+  getPageBySourcePath,
   getPageRuntimeData,
   getProjectRoot,
   getPrerenderSlugs,

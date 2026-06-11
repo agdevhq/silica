@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { createChatStream, type ChatModel } from "@core-ai/core-ai";
-import type { AssistantStreamEvent } from "../types.js";
+import type { AssistantSiteContext, AssistantStreamEvent } from "../types.js";
 import {
   AssistantUnavailableError,
   createAssistantHandler,
@@ -31,6 +31,12 @@ const fakeModel: ChatModel = {
   streamObject: () => Promise.reject(new Error("not implemented")),
 };
 
+const site: AssistantSiteContext = {
+  siteTitle: "Docs",
+  contentRoot: process.cwd(),
+  resolveCitation: () => undefined,
+};
+
 function request(body: unknown): Request {
   return new Request("http://localhost/api/assistant", {
     method: "POST",
@@ -44,7 +50,7 @@ describe("createAssistantHandler", () => {
     const handler = createAssistantHandler({
       resolve: () => ({
         model: fakeModel,
-        site: { siteTitle: "Docs", pages: [] },
+        site,
       }),
     });
 
@@ -66,7 +72,7 @@ describe("createAssistantHandler", () => {
     const handler = createAssistantHandler({
       resolve: () => ({
         model: fakeModel,
-        site: { siteTitle: "Docs", pages: [] },
+        site,
       }),
     });
 

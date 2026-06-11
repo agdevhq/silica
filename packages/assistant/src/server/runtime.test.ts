@@ -10,14 +10,16 @@ import { runAssistant } from "./runtime.js";
 
 const site: AssistantSiteContext = {
   siteTitle: "Docs",
-  pages: [
-    {
-      slug: "guides/install",
-      title: "Install",
-      sourcePath: "guides/install.md",
-      file: "/project/.silica/content/guides/install.md",
-    },
-  ],
+  contentRoot: "/project/.silica/content",
+  resolveCitation: (sourcePath) =>
+    sourcePath === "guides/install.md"
+      ? {
+          slug: "guides/install",
+          title: "Install",
+          href: "/guides/install",
+          sourcePath: "guides/install.md",
+        }
+      : undefined,
 };
 
 function createScriptedModel(script: StreamEvent[][]): {

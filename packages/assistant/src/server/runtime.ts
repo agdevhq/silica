@@ -35,7 +35,7 @@ export type RunAssistantOptions = {
   emit: (event: AssistantStreamEvent) => void;
   signal?: AbortSignal;
   maxToolTurns?: number;
-  /** Test seam; defaults to a just-bash sandbox over the site's pages. */
+  /** Test seam; defaults to a just-bash sandbox over the site's content root. */
   sandbox?: ContentSandbox;
 };
 
@@ -119,7 +119,7 @@ export async function runAssistant(
     }
   }
 
-  emit({ type: "citations", citations: resolveCitations(site, sources) });
+  emit({ type: "citations", citations: await resolveCitations(site, sources) });
   emit({ type: "done" });
 }
 

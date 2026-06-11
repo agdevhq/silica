@@ -19,7 +19,7 @@ export {
 export { buildSystemPrompt } from "./prompt.js";
 export type {
   AssistantCitation,
-  AssistantPage,
+  AssistantCitationResolver,
   AssistantRequest,
   AssistantSiteContext,
   AssistantStreamEvent,

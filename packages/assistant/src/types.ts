@@ -28,19 +28,16 @@ export type AssistantStreamEvent =
   | { type: "done" }
   | { type: "error"; message: string };
 
-/** A published page the assistant may explore and cite. */
-export type AssistantPage = {
-  slug: string;
-  title: string;
-  /** Path relative to the content root (e.g. `guides/install.md`). */
-  sourcePath: string;
-  /** Absolute path of the markdown file on disk. */
-  file: string;
-};
+/** Resolves a model-reported source path to a published page citation. */
+export type AssistantCitationResolver = (
+  sourcePath: string,
+) => AssistantCitation | undefined | Promise<AssistantCitation | undefined>;
 
 /** Knowledge-site context the server runtime operates on. */
 export type AssistantSiteContext = {
   siteTitle: string;
   siteDescription?: string;
-  pages: AssistantPage[];
+  /** Filesystem directory mounted read-only as `/content` for shell tools. */
+  contentRoot: string;
+  resolveCitation: AssistantCitationResolver;
 };

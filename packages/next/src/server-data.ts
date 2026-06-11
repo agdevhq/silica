@@ -133,6 +133,15 @@ export function getPage(slug: string): ManifestEntry | undefined {
   return row ? noteRowToEntry(row) : undefined;
 }
 
+export function getPageBySourcePath(
+  sourcePath: string,
+): ManifestEntry | undefined {
+  const row = loadVaultDb()
+    .db.prepare("SELECT * FROM notes WHERE source_path = ?")
+    .get(normalizeDbSourcePath(sourcePath)) as NoteRow | undefined;
+  return row ? noteRowToEntry(row) : undefined;
+}
+
 export function getPageRuntimeData(slug: string): VaultPageData | undefined {
   const entry = getPage(slug);
   if (!entry) return undefined;
@@ -529,6 +538,13 @@ function noteRowToEntry(row: NoteRow): ManifestEntry {
     contentHash: row.content_hash,
     embeds: getEmbeds(row.slug),
   };
+}
+
+function normalizeDbSourcePath(value: string): string {
+  return value
+    .replace(/\\/g, "/")
+    .replace(/^\/+/, "")
+    .replace(/^content\//, "");
 }
 
 function getEmbeds(slug: string): string[] {

@@ -1,6 +1,6 @@
 export type {
   AssistantCitation,
-  AssistantPage,
+  AssistantCitationResolver,
   AssistantRequest,
   AssistantSiteContext,
   AssistantStreamEvent,

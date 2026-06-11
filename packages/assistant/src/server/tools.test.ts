@@ -1,4 +1,4 @@
-import { mkdtemp, rm, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
@@ -10,24 +10,19 @@ let site: AssistantSiteContext;
 
 beforeAll(async () => {
   contentRoot = await mkdtemp(path.join(tmpdir(), "silica-assistant-"));
+  await mkdir(path.join(contentRoot, "guides"));
   await writeFile(
-    path.join(contentRoot, "install.md"),
+    path.join(contentRoot, "guides/install.md"),
     "# Install\n\nRun `npm install silica`.\n",
   );
   await writeFile(
-    path.join(contentRoot, "secret-draft.md"),
+    path.join(path.dirname(contentRoot), "secret-draft.md"),
     "This draft is not published.\n",
   );
   site = {
     siteTitle: "Docs",
-    pages: [
-      {
-        slug: "install",
-        title: "Install",
-        sourcePath: "guides/install.md",
-        file: path.join(contentRoot, "install.md"),
-      },
-    ],
+    contentRoot,
+    resolveCitation: () => undefined,
   };
 });
 
@@ -45,19 +40,22 @@ describe("createContentSandbox", () => {
     expect(await sandbox.run("cat guides/install.md")).toContain("# Install");
   });
 
-  it("does not expose unpublished files or the host filesystem", async () => {
+  it("does not expose files outside the generated content root", async () => {
     const sandbox = createContentSandbox(site);
-    expect(await sandbox.run("ls /content")).not.toContain("secret-draft.md");
-    const escape = await sandbox.run(`cat ${contentRoot}/secret-draft.md`);
+    const unpublishedFile = path.join(
+      path.dirname(contentRoot),
+      "secret-draft.md",
+    );
+    const escape = await sandbox.run(`cat ${unpublishedFile}`);
     expect(escape).toContain("No such file or directory");
     expect(escape).toContain("exit code: 1");
   });
 
-  it("keeps writes virtual and reports failures as output", async () => {
+  it("rejects writes and reports command failures as output", async () => {
     const sandbox = createContentSandbox(site);
-    expect(
-      await sandbox.run("echo hi > /tmp-note.txt && cat /tmp-note.txt"),
-    ).toBe("hi");
+    await expect(sandbox.run("echo hi > guides/install.md")).rejects.toThrow(
+      "read-only file system",
+    );
     expect(await sandbox.run("definitely-not-a-command")).toContain(
       "command not found",
     );

@@ -1,5 +1,4 @@
-import fs from "node:fs/promises";
-import { Bash } from "just-bash";
+import { Bash, OverlayFs } from "just-bash";
 import type { AssistantSiteContext } from "../types.js";
 
 export const CONTENT_MOUNT = "/content";
@@ -12,29 +11,26 @@ export type ContentSandbox = {
 };
 
 /**
- * In-process simulated shell over the published markdown files only.
- * Files are mounted lazily at `/content/<sourcePath>`; the sandbox has no
- * access to the host filesystem, network, or environment, and writes stay
- * in memory for the duration of one request.
+ * In-process simulated shell over the generated runtime markdown directory.
+ * The content root is mounted read-only at `/content`; the sandbox has no
+ * access to the rest of the host filesystem, network, or environment.
  */
 export function createContentSandbox(
   site: AssistantSiteContext,
 ): ContentSandbox {
-  const files: Record<string, () => Promise<string>> = {};
-  for (const page of site.pages) {
-    files[`${CONTENT_MOUNT}/${page.sourcePath}`] = () =>
-      fs.readFile(page.file, "utf8");
-  }
-
   const bash = new Bash({
-    files,
+    fs: new OverlayFs({
+      root: site.contentRoot,
+      mountPoint: CONTENT_MOUNT,
+      readOnly: true,
+    }),
     cwd: CONTENT_MOUNT,
     // defenseInDepth patches process-wide globals (performance, process.env,
     // Promise.then, …) during exec() and throws when anything else touches
     // them. Inside a Next.js server the framework's own async hooks run in
     // that window, so the patches misfire and crash the process. Isolation
     // here comes from the virtual filesystem itself: no network, no env,
-    // no js/python runtimes, and only published pages are mounted.
+    // no js/python runtimes, and only generated runtime content is mounted.
     defenseInDepth: false,
   });
 

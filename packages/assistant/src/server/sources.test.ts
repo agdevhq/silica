@@ -1,23 +1,26 @@
 import { describe, expect, it } from "vitest";
-import type { AssistantSiteContext } from "../types.js";
+import type { AssistantCitation, AssistantSiteContext } from "../types.js";
 import { resolveCitations, SourceTagFilter } from "./sources.js";
+
+const citationsBySourcePath: Record<string, AssistantCitation> = {
+  "guides/install.md": {
+    slug: "guides/install",
+    title: "Install",
+    href: "/guides/install",
+    sourcePath: "guides/install.md",
+  },
+  "index.md": {
+    slug: "index",
+    title: "Home",
+    href: "/",
+    sourcePath: "index.md",
+  },
+};
 
 const site: AssistantSiteContext = {
   siteTitle: "Docs",
-  pages: [
-    {
-      slug: "guides/install",
-      title: "Install",
-      sourcePath: "guides/install.md",
-      file: "/project/.silica/content/guides/install.md",
-    },
-    {
-      slug: "index",
-      title: "Home",
-      sourcePath: "index.md",
-      file: "/project/.silica/content/index.md",
-    },
-  ],
+  contentRoot: "/project/.silica/content",
+  resolveCitation: (sourcePath) => citationsBySourcePath[sourcePath],
 };
 
 describe("SourceTagFilter", () => {
@@ -57,8 +60,10 @@ describe("SourceTagFilter", () => {
 });
 
 describe("resolveCitations", () => {
-  it("maps source paths to published pages", () => {
-    expect(resolveCitations(site, ["guides/install.md"])).toEqual([
+  it("maps source paths to published pages", async () => {
+    await expect(
+      resolveCitations(site, ["guides/install.md"]),
+    ).resolves.toEqual([
       {
         slug: "guides/install",
         title: "Install",
@@ -68,8 +73,8 @@ describe("resolveCitations", () => {
     ]);
   });
 
-  it("normalizes mount prefixes and drops unknown or duplicate paths", () => {
-    const citations = resolveCitations(site, [
+  it("normalizes mount prefixes and drops unknown or duplicate paths", async () => {
+    const citations = await resolveCitations(site, [
       "/content/guides/install.md",
       "content/guides/install.md",
       "made-up.md",

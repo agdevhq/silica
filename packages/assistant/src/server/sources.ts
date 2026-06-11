@@ -1,4 +1,3 @@
-import { slugToHref } from "@silicajs/core/runtime";
 import type { AssistantCitation, AssistantSiteContext } from "../types.js";
 
 export const SOURCES_OPEN_TAG = "<sources>";
@@ -80,26 +79,17 @@ function parseSourcesBlock(block: string): string[] {
  * are dropped so the assistant can never cite content that is not part
  * of the site.
  */
-export function resolveCitations(
+export async function resolveCitations(
   site: AssistantSiteContext,
   sources: readonly string[],
-): AssistantCitation[] {
-  const bySourcePath = new Map(
-    site.pages.map((page) => [normalizeSourcePath(page.sourcePath), page]),
-  );
-
+): Promise<AssistantCitation[]> {
   const citations: AssistantCitation[] = [];
   const seenSlugs = new Set<string>();
   for (const source of sources) {
-    const page = bySourcePath.get(normalizeSourcePath(source));
-    if (!page || seenSlugs.has(page.slug)) continue;
-    seenSlugs.add(page.slug);
-    citations.push({
-      slug: page.slug,
-      title: page.title,
-      href: slugToHref(page.slug),
-      sourcePath: page.sourcePath,
-    });
+    const citation = await site.resolveCitation(normalizeSourcePath(source));
+    if (!citation || seenSlugs.has(citation.slug)) continue;
+    seenSlugs.add(citation.slug);
+    citations.push(citation);
   }
   return citations;
 }

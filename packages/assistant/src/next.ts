@@ -1,6 +1,14 @@
+import path from "node:path";
 import type { ChatModel } from "@core-ai/core-ai";
-import type { ResolvedSilicaAiConfig } from "@silicajs/core/runtime";
-import { getAllSlugs, getConfig, getPage } from "@silicajs/next/server-data";
+import {
+  slugToHref,
+  type ResolvedSilicaAiConfig,
+} from "@silicajs/core/runtime";
+import {
+  getConfig,
+  getPageBySourcePath,
+  getProjectRoot,
+} from "@silicajs/next/server-data";
 import {
   AssistantUnavailableError,
   createAssistantHandler,
@@ -24,8 +32,8 @@ export type AssistantRouteOptions = {
 
 /**
  * `POST` handler for the generated `/api/assistant` route. Reads the AI
- * configuration and published pages from the Silica vault and answers
- * with a streamed, cited response.
+ * configuration and generated runtime content from the Silica build output
+ * and answers with a streamed, cited response.
  */
 export function createAssistantRouteHandler(
   options: AssistantRouteOptions,
@@ -63,18 +71,19 @@ function loadSiteContext(
   siteTitle: string,
   siteDescription: string | undefined,
 ): AssistantSiteContext {
-  const pages = getAllSlugs().flatMap((slug) => {
-    const entry = getPage(slug);
-    if (!entry) return [];
-    return [
-      {
+  return {
+    siteTitle,
+    siteDescription,
+    contentRoot: path.join(getProjectRoot(), ".silica/content"),
+    resolveCitation: (sourcePath) => {
+      const entry = getPageBySourcePath(sourcePath);
+      if (!entry) return undefined;
+      return {
         slug: entry.slug,
         title: entry.title,
+        href: slugToHref(entry.slug),
         sourcePath: entry.sourcePath,
-        file: entry.file,
-      },
-    ];
-  });
-
-  return { siteTitle, siteDescription, pages };
+      };
+    },
+  };
 }

@@ -209,12 +209,13 @@ export function AssistantProvider({
 
   const bridge = React.useMemo(
     () => ({
+      open,
       openAssistant: (query?: string) => {
         setOpen(true);
         if (query?.trim()) ask(query);
       },
     }),
-    [ask],
+    [open, ask],
   );
 
   return (

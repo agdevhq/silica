@@ -18,10 +18,12 @@ import {
   SidebarTrigger,
 } from "@silicajs/ui/components/sidebar";
 
+import { AssistantDock } from "./assistant-dock.js";
 import { Callout } from "./callout.js";
 import { CodeBlock } from "./code-block.js";
 import { Embed } from "./embed.js";
 import { Mermaid } from "./mermaid.js";
+import { PageContentLayout } from "./page-content.js";
 import { Sidebar } from "./sidebar.js";
 
 function DefaultProvider({ children }: { children: ReactNode }) {
@@ -70,30 +72,42 @@ export function SiteLayout({
   children,
   assistant,
 }: ThemeSiteLayoutProps) {
-  const layout = (
-    <SidebarProvider>
-      <Sidebar
-        navigationEndpoint={navigationEndpoint}
-        config={config}
-        assistant={assistant}
-      />
-      <SidebarInset>
-        <header className="sticky top-0 z-10 flex h-12 shrink-0 items-center gap-2 border-b border-border bg-background px-3 md:hidden">
-          <SidebarTrigger />
-          <SilicaLink
-            href="/"
-            className="truncate text-sm font-semibold tracking-tight text-foreground"
-          >
-            {config.title}
-          </SilicaLink>
-        </header>
-        {children}
-      </SidebarInset>
-      {assistant ? <assistant.Sidebar /> : null}
-    </SidebarProvider>
+  const inset = (
+    <SidebarInset>
+      <header className="sticky top-0 z-10 flex h-12 shrink-0 items-center gap-2 border-b border-border bg-background px-3 md:hidden">
+        <SidebarTrigger />
+        <SilicaLink
+          href="/"
+          className="truncate text-sm font-semibold tracking-tight text-foreground"
+        >
+          {config.title}
+        </SilicaLink>
+      </header>
+      {children}
+    </SidebarInset>
   );
 
-  return assistant ? <assistant.Provider>{layout}</assistant.Provider> : layout;
+  if (!assistant) {
+    return (
+      <SidebarProvider>
+        <Sidebar navigationEndpoint={navigationEndpoint} config={config} />
+        {inset}
+      </SidebarProvider>
+    );
+  }
+
+  return (
+    <assistant.Provider>
+      <SidebarProvider>
+        <Sidebar
+          navigationEndpoint={navigationEndpoint}
+          config={config}
+          assistant={assistant}
+        />
+        <AssistantDock panel={<assistant.Panel />}>{inset}</AssistantDock>
+      </SidebarProvider>
+    </assistant.Provider>
+  );
 }
 
 export function PageRenderer({ page, breadcrumbs, backlinks }: ThemePageProps) {
@@ -102,7 +116,32 @@ export function PageRenderer({ page, breadcrumbs, backlinks }: ThemePageProps) {
   const hasProperties = properties.length > 0;
   const hasTags = page.tags.length > 0;
   return (
-    <div className="mx-auto w-full max-w-6xl px-8 py-12 lg:grid lg:grid-cols-[minmax(0,1fr)_14rem] lg:gap-12">
+    <PageContentLayout
+      sidebar={
+        <>
+          {hasTags ? (
+            <div>
+              <p className="mb-2 text-xs font-medium tracking-wider text-muted-foreground uppercase">
+                Tags
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {page.tags.map((tag) => (
+                  <SilicaLink
+                    key={tag}
+                    href={tagToHref(tag)}
+                    className="inline-flex h-6 items-center rounded-full border border-border px-2 text-xs text-muted-foreground transition-colors hover:border-primary/40 hover:text-foreground"
+                  >
+                    <span className="text-muted-foreground/70">#</span>
+                    <span className="ml-0.5">{tag}</span>
+                  </SilicaLink>
+                ))}
+              </div>
+            </div>
+          ) : null}
+          <TableOfContents toc={page.toc} />
+        </>
+      }
+    >
       <article className="min-w-0">
         <header className="mb-6 flex flex-col gap-6">
           <div className="flex flex-col gap-2">
@@ -125,29 +164,7 @@ export function PageRenderer({ page, breadcrumbs, backlinks }: ThemePageProps) {
           <Backlinks backlinks={backlinks} />
         </div>
       </article>
-      <aside className="mt-12 hidden flex-col gap-8 lg:sticky lg:top-12 lg:mt-0 lg:flex lg:self-start">
-        {hasTags ? (
-          <div>
-            <p className="mb-2 text-xs font-medium tracking-wider text-muted-foreground uppercase">
-              Tags
-            </p>
-            <div className="flex flex-wrap gap-2">
-              {page.tags.map((tag) => (
-                <SilicaLink
-                  key={tag}
-                  href={tagToHref(tag)}
-                  className="inline-flex h-6 items-center rounded-full border border-border px-2 text-xs text-muted-foreground transition-colors hover:border-primary/40 hover:text-foreground"
-                >
-                  <span className="text-muted-foreground/70">#</span>
-                  <span className="ml-0.5">{tag}</span>
-                </SilicaLink>
-              ))}
-            </div>
-          </div>
-        ) : null}
-        <TableOfContents toc={page.toc} />
-      </aside>
-    </div>
+    </PageContentLayout>
   );
 }
 

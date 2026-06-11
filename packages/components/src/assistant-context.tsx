@@ -9,6 +9,8 @@ import * as React from "react";
  * the site runs without AI.
  */
 export type SilicaAssistantContextValue = {
+  /** Whether the assistant UI is currently open. Themes use this to decide when to render the panel. */
+  open: boolean;
   /** Open the assistant, optionally submitting a question right away. */
   openAssistant: (query?: string) => void;
 };

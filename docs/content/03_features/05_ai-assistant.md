@@ -67,6 +67,6 @@ A few properties worth knowing:
 
 ## Theme support
 
-Themes decide whether and where to show the assistant. The default Amethyst theme places the trigger next to search and opens a conversation sidebar. A theme without assistant support simply ignores the configuration — the site still builds and the `/api/assistant` route still exists, there is just no built-in UI for it.
+Themes decide whether and where to show the assistant. The default Amethyst theme places the trigger next to search and docks the conversation as a persistent, resizable sidebar next to the content. A theme without assistant support simply ignores the configuration — the site still builds and the `/api/assistant` route still exists, there is just no built-in UI for it.
 
-If you build your own theme, the framework passes an `assistant` prop (provider, trigger, and sidebar components) to your `SiteLayout` whenever AI is enabled. Render them wherever fits your layout, or ignore the prop entirely.
+If you build your own theme, the framework passes an `assistant` prop (provider, trigger, and chat panel components) to your `SiteLayout` whenever AI is enabled. The panel is layout-agnostic and fills whatever container you render it in — dock it, float it, or ignore the prop entirely.

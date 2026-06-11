@@ -41,12 +41,17 @@ export type ThemeLayoutConfig = {
  * ignore the prop.
  */
 export type ThemeAssistantSlots = {
-  /** Client-side conversation state; must wrap Trigger and Sidebar. */
+  /** Client-side conversation state; must wrap Trigger and Panel. */
   Provider: (props: { children: React.ReactNode }) => React.ReactNode;
   /** Button that opens the assistant (also binds the keyboard shortcut). */
   Trigger: (props: { className?: string; label?: string }) => React.ReactNode;
-  /** Conditional conversation sidebar; renders nothing while closed. */
-  Sidebar: (props: { className?: string }) => React.ReactNode;
+  /**
+   * The assistant chat window (conversation + composer). Fills its
+   * container; the theme owns placement and sizing — e.g. a docked,
+   * resizable sidebar — and decides when to show it based on the `open`
+   * flag of the assistant context in `@silicajs/components`.
+   */
+  Panel: (props: { className?: string }) => React.ReactNode;
 };
 
 export type ThemeProviderComponent = (props: {

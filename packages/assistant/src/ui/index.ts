@@ -6,7 +6,7 @@ export {
   type AssistantProviderProps,
 } from "./provider.js";
 export { AssistantTrigger, type AssistantTriggerProps } from "./trigger.js";
-export { AssistantSidebar, type AssistantSidebarProps } from "./sidebar.js";
+export { AssistantPanel, type AssistantPanelProps } from "./panel.js";
 export { AssistantMessage, type AssistantMessageProps } from "./message.js";
 export type {
   AssistantCitation,

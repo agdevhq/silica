@@ -129,7 +129,7 @@ describe("generated templates", () => {
     expect(rendered).toContain('from "@silicajs/assistant/ui"');
     expect(rendered).toContain("Provider: AssistantProvider");
     expect(rendered).toContain("Trigger: AssistantTrigger");
-    expect(rendered).toContain("Sidebar: AssistantSidebar");
+    expect(rendered).toContain("Panel: AssistantPanel");
   });
 
   it("generates the assistant route for the configured provider", () => {

@@ -14,11 +14,16 @@ import {
 import { AssistantMessage } from "./message.js";
 import { useAssistant } from "./provider.js";
 
-export type AssistantSidebarProps = {
+export type AssistantPanelProps = {
   className?: string;
 };
 
-export function AssistantSidebar({ className }: AssistantSidebarProps) {
+/**
+ * The assistant chat window: header, conversation, and composer. Fills its
+ * container; themes decide where and how to present it (docked sidebar,
+ * overlay, …) and typically mount it only while the assistant is open.
+ */
+export function AssistantPanel({ className }: AssistantPanelProps) {
   const assistant = useAssistant();
   const scrollRef = React.useRef<HTMLDivElement>(null);
   const open = assistant?.open ?? false;
@@ -44,12 +49,8 @@ export function AssistantSidebar({ className }: AssistantSidebarProps) {
   return (
     <aside
       aria-label="AI assistant"
-      aria-hidden={!open}
       className={cn(
-        "fixed inset-y-0 right-0 z-40 flex w-full flex-col border-l border-border bg-background shadow-xl transition-transform duration-200 sm:w-[26rem]",
-        open
-          ? "translate-x-0"
-          : "pointer-events-none invisible translate-x-full",
+        "flex h-full min-h-0 w-full flex-col bg-background",
         className,
       )}
     >

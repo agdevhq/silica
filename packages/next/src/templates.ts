@@ -48,8 +48,8 @@ export const assistant: ThemeAssistantSlots | undefined = undefined;
   }
 
   return `import {
+  AssistantPanel,
   AssistantProvider,
-  AssistantSidebar,
   AssistantTrigger,
 } from "@silicajs/assistant/ui";
 import type { ThemeAssistantSlots } from "@silicajs/core/theme";
@@ -57,7 +57,7 @@ import type { ThemeAssistantSlots } from "@silicajs/core/theme";
 export const assistant: ThemeAssistantSlots | undefined = {
   Provider: AssistantProvider,
   Trigger: AssistantTrigger,
-  Sidebar: AssistantSidebar,
+  Panel: AssistantPanel,
 };
 `;
 }

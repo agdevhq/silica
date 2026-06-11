@@ -16,6 +16,8 @@ import {
 } from "./server/index.js";
 import type { AssistantSiteContext } from "./types.js";
 
+const ASSISTANT_SECRET_ENV = "SILICA_ASSISTANT_SECRET";
+
 export type CreateChatModelOptions = {
   provider: ResolvedSilicaAiConfig["provider"];
   model: string;
@@ -54,6 +56,12 @@ export function createAssistantRouteHandler(
           `The AI assistant is not configured: set the ${ai.apiKeyEnv} environment variable.`,
         );
       }
+      const transcriptSigningSecret = process.env[ASSISTANT_SECRET_ENV];
+      if (!transcriptSigningSecret) {
+        throw new AssistantUnavailableError(
+          `The AI assistant is not configured: set the ${ASSISTANT_SECRET_ENV} environment variable.`,
+        );
+      }
 
       return {
         model: options.createChatModel({
@@ -62,6 +70,7 @@ export function createAssistantRouteHandler(
           apiKey,
         }),
         site: loadSiteContext(config.title, config.description),
+        transcriptSigningSecret,
       };
     },
   });

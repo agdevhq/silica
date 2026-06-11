@@ -92,7 +92,7 @@ function packageJson(name: string): string {
 }
 
 function envExample(): string {
-  return `BETTER_AUTH_SECRET=\nBETTER_AUTH_URL=http://localhost:3000\nGOOGLE_CLIENT_ID=\nGOOGLE_CLIENT_SECRET=\n`;
+  return `BETTER_AUTH_SECRET=\nBETTER_AUTH_URL=http://localhost:3000\nGOOGLE_CLIENT_ID=\nGOOGLE_CLIENT_SECRET=\nSILICA_ASSISTANT_SECRET=\n`;
 }
 
 function gitignore(): string {

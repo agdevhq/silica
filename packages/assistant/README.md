@@ -21,7 +21,7 @@ ai: {
 },
 ```
 
-and set the provider API key (e.g. `OPENAI_API_KEY`) in your environment. The Silica CLI generates the `/api/assistant` route and passes the assistant UI to the active theme.
+and set the provider API key (e.g. `OPENAI_API_KEY`) plus a server-only `SILICA_ASSISTANT_SECRET` in your environment. The Silica CLI generates the `/api/assistant` route and passes the assistant UI to the active theme.
 
 ## Entry points
 

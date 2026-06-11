@@ -7,15 +7,32 @@ export type AssistantCitation = {
   sourcePath: string;
 };
 
-/** One turn of the client-held conversation transcript. */
-export type AssistantTranscriptMessage = {
-  role: "user" | "assistant";
+/** One user turn of the client-held conversation transcript. */
+export type AssistantUserTranscriptMessage = {
+  id: string;
+  previousMessageId: string | null;
+  role: "user";
   content: string;
 };
+
+/** One assistant turn signed by the server for stateless transcript replay. */
+export type AssistantSignedTranscriptMessage = {
+  id: string;
+  previousMessageId: string | null;
+  role: "assistant";
+  content: string;
+  signature: string;
+};
+
+/** One turn of the client-held conversation transcript. */
+export type AssistantTranscriptMessage =
+  | AssistantUserTranscriptMessage
+  | AssistantSignedTranscriptMessage;
 
 /** Request body of `POST /api/assistant`. */
 export type AssistantRequest = {
   messages: AssistantTranscriptMessage[];
+  responseMessageId: string;
 };
 
 /**
@@ -25,6 +42,12 @@ export type AssistantStreamEvent =
   | { type: "text-delta"; text: string }
   | { type: "tool-status"; command: string }
   | { type: "citations"; citations: AssistantCitation[] }
+  | {
+      type: "message-signature";
+      id: string;
+      previousMessageId: string | null;
+      signature: string;
+    }
   | { type: "done" }
   | { type: "error"; message: string };
 

@@ -4,7 +4,11 @@ export {
   type AssistantHandlerOptions,
   type AssistantRuntime,
 } from "./handler.js";
-export { runAssistant, type RunAssistantOptions } from "./runtime.js";
+export {
+  runAssistant,
+  type RunAssistantOptions,
+  type RunAssistantResult,
+} from "./runtime.js";
 export {
   resolveCitations,
   SourceTagFilter,
@@ -21,7 +25,9 @@ export type {
   AssistantCitation,
   AssistantCitationResolver,
   AssistantRequest,
+  AssistantSignedTranscriptMessage,
   AssistantSiteContext,
   AssistantStreamEvent,
   AssistantTranscriptMessage,
+  AssistantUserTranscriptMessage,
 } from "../types.js";

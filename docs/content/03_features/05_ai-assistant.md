@@ -29,10 +29,11 @@ export default defineConfig({
 });
 ```
 
-3. Provide the API key as an environment variable, for example in `.env`:
+3. Provide the provider API key and assistant signing secret as environment variables, for example in `.env`:
 
 ```bash
 OPENAI_API_KEY=sk-...
+SILICA_ASSISTANT_SECRET=generate-a-long-random-string
 ```
 
 That's it. The next `silica dev` or `silica build` generates an `/api/assistant` route and hands the assistant UI to your theme.
@@ -46,7 +47,7 @@ That's it. The next `silica dev` or `silica build` generates an `/api/assistant`
 | `google`    | `@core-ai/google-genai` | `GOOGLE_API_KEY`     |
 | `mistral`   | `@core-ai/mistral`      | `MISTRAL_API_KEY`    |
 
-Set `ai.apiKeyEnv` to read the key from a different variable. If the key is missing at runtime, the site keeps working — the assistant simply reports that it is not configured.
+Set `ai.apiKeyEnv` to read the provider key from a different variable. `SILICA_ASSISTANT_SECRET` is a separate server-only secret used to sign the client-held conversation transcript so follow-up requests can verify prior assistant messages. If either value is missing at runtime, the site keeps working — the assistant simply reports that it is not configured.
 
 ## Using the assistant
 

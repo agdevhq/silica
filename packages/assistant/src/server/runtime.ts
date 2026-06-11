@@ -39,6 +39,10 @@ export type RunAssistantOptions = {
   sandbox?: ContentSandbox;
 };
 
+export type RunAssistantResult = {
+  answer: string;
+};
+
 /**
  * Citation-first docs loop: stream the model, execute constrained shell
  * commands over the markdown content when the model asks for them, and
@@ -46,7 +50,7 @@ export type RunAssistantOptions = {
  */
 export async function runAssistant(
   options: RunAssistantOptions,
-): Promise<void> {
+): Promise<RunAssistantResult> {
   const { model, site, transcript, emit, signal } = options;
   const maxToolTurns = options.maxToolTurns ?? DEFAULT_MAX_TOOL_TURNS;
   const sandbox = options.sandbox ?? createContentSandbox(site);
@@ -66,6 +70,11 @@ export async function runAssistant(
 
   let sources: string[] = [];
   let emittedText = false;
+  let answer = "";
+  const emitText = (text: string) => {
+    answer += text;
+    emit({ type: "text-delta", text });
+  };
 
   for (let turn = 0; turn <= maxToolTurns; turn += 1) {
     const isFinalTurn = turn === maxToolTurns;
@@ -85,9 +94,9 @@ export async function runAssistant(
       const visible = filter.push(event.text);
       if (!visible) continue;
       if (emittedText && !emittedThisTurn) {
-        emit({ type: "text-delta", text: "\n\n" });
+        emitText("\n\n");
       }
-      emit({ type: "text-delta", text: visible });
+      emitText(visible);
       emittedText = true;
       emittedThisTurn = true;
     }
@@ -95,9 +104,9 @@ export async function runAssistant(
     const flushed = filter.flush();
     if (flushed.text.trim()) {
       if (emittedText && !emittedThisTurn) {
-        emit({ type: "text-delta", text: "\n\n" });
+        emitText("\n\n");
       }
-      emit({ type: "text-delta", text: flushed.text });
+      emitText(flushed.text);
       emittedText = true;
     }
     if (flushed.sources.length > 0) sources = flushed.sources;
@@ -120,7 +129,7 @@ export async function runAssistant(
   }
 
   emit({ type: "citations", citations: await resolveCitations(site, sources) });
-  emit({ type: "done" });
+  return { answer };
 }
 
 async function executeBashCall(

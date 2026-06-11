@@ -10,8 +10,10 @@ import type {
 
 export type AssistantChatMessage = {
   id: string;
+  previousMessageId: string | null;
   role: "user" | "assistant";
   content: string;
+  signature?: string;
   citations: AssistantCitation[];
   state: "streaming" | "complete" | "error";
   /** Shell commands the assistant ran while searching site pages, in order. */
@@ -43,10 +45,62 @@ export type AssistantProviderProps = {
   endpoint?: string;
 };
 
-let nextMessageId = 0;
 function createMessageId(): string {
-  nextMessageId += 1;
-  return `assistant-message-${nextMessageId}`;
+  return globalThis.crypto.randomUUID();
+}
+
+export function buildReplayableHistory(history: AssistantChatMessage[]): {
+  messages: AssistantChatMessage[];
+  transcript: AssistantTranscriptMessage[];
+} {
+  const messages: AssistantChatMessage[] = [];
+  const transcript: AssistantTranscriptMessage[] = [];
+
+  for (let index = 0; index < history.length; index += 2) {
+    const user = history[index];
+    const assistant = history[index + 1];
+    const previousMessageId = transcript.at(-1)?.id ?? null;
+
+    if (
+      !user ||
+      user.role !== "user" ||
+      user.state !== "complete" ||
+      !user.content ||
+      user.previousMessageId !== previousMessageId
+    ) {
+      break;
+    }
+
+    if (
+      !assistant ||
+      assistant.role !== "assistant" ||
+      assistant.state !== "complete" ||
+      !assistant.content ||
+      !assistant.signature ||
+      assistant.previousMessageId !== user.id
+    ) {
+      break;
+    }
+
+    messages.push(user, assistant);
+    transcript.push(
+      {
+        id: user.id,
+        previousMessageId: user.previousMessageId,
+        role: "user",
+        content: user.content,
+      },
+      {
+        id: assistant.id,
+        previousMessageId: assistant.previousMessageId,
+        role: "assistant",
+        content: assistant.content,
+        signature: assistant.signature,
+      },
+    );
+  }
+
+  return { messages, transcript };
 }
 
 export function AssistantProvider({
@@ -84,18 +138,25 @@ export function AssistantProvider({
       const controller = new AbortController();
       controllerRef.current = controller;
 
+      const replayableHistory = buildReplayableHistory(history);
+      const userId = createMessageId();
+      const previousMessageId = replayableHistory.transcript.at(-1)?.id ?? null;
       const transcript: AssistantTranscriptMessage[] = [
-        ...history
-          .filter((message) => message.state === "complete" && message.content)
-          .map((message) => ({ role: message.role, content: message.content })),
-        { role: "user" as const, content: trimmed },
+        ...replayableHistory.transcript,
+        {
+          id: userId,
+          previousMessageId,
+          role: "user",
+          content: trimmed,
+        },
       ];
 
       const answerId = createMessageId();
       setMessages([
-        ...history.filter((message) => message.state !== "error"),
+        ...replayableHistory.messages,
         {
-          id: createMessageId(),
+          id: userId,
+          previousMessageId,
           role: "user",
           content: trimmed,
           citations: [],
@@ -104,6 +165,7 @@ export function AssistantProvider({
         },
         {
           id: answerId,
+          previousMessageId: userId,
           role: "assistant",
           content: "",
           citations: [],
@@ -116,6 +178,7 @@ export function AssistantProvider({
       void streamAnswer({
         endpoint,
         transcript,
+        responseMessageId: answerId,
         signal: controller.signal,
         onEvent: (event) => {
           if (event.type === "text-delta") {
@@ -133,6 +196,13 @@ export function AssistantProvider({
               ...message,
               citations: event.citations,
             }));
+          } else if (event.type === "message-signature") {
+            updateMessage(answerId, (message) => ({
+              ...message,
+              id: event.id,
+              previousMessageId: event.previousMessageId,
+              signature: event.signature,
+            }));
           } else if (event.type === "error") {
             updateMessage(answerId, (message) => ({
               ...message,
@@ -146,7 +216,7 @@ export function AssistantProvider({
           updateMessage(answerId, (message) => {
             if (message.state === "error") return message;
             if (outcome === "aborted") {
-              return message.content
+              return message.content && message.signature
                 ? { ...message, state: "complete" }
                 : {
                     ...message,
@@ -154,7 +224,13 @@ export function AssistantProvider({
                     error: "Answer stopped.",
                   };
             }
-            return { ...message, state: "complete" };
+            return message.signature
+              ? { ...message, state: "complete" }
+              : {
+                  ...message,
+                  state: "error",
+                  error: "The assistant reply could not be verified.",
+                };
           });
         })
         .catch((error: unknown) => {
@@ -235,6 +311,7 @@ class AssistantRequestError extends Error {}
 async function streamAnswer(options: {
   endpoint: string;
   transcript: AssistantTranscriptMessage[];
+  responseMessageId: string;
   signal: AbortSignal;
   onEvent: (event: AssistantStreamEvent) => void;
 }): Promise<"done" | "aborted"> {
@@ -243,7 +320,10 @@ async function streamAnswer(options: {
     response = await fetch(options.endpoint, {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ messages: options.transcript }),
+      body: JSON.stringify({
+        messages: options.transcript,
+        responseMessageId: options.responseMessageId,
+      }),
       signal: options.signal,
     });
   } catch (error) {

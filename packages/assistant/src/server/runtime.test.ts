@@ -60,12 +60,19 @@ const finish = (finishReason: "stop" | "tool-calls"): StreamEvent => ({
 async function collectEvents(
   model: ChatModel,
   options?: { maxToolTurns?: number; commands?: string[] },
-): Promise<AssistantStreamEvent[]> {
+): Promise<{ events: AssistantStreamEvent[]; answer: string }> {
   const events: AssistantStreamEvent[] = [];
-  await runAssistant({
+  const result = await runAssistant({
     model,
     site,
-    transcript: [{ role: "user", content: "How do I install?" }],
+    transcript: [
+      {
+        id: "00000000-0000-4000-8000-000000000001",
+        previousMessageId: null,
+        role: "user",
+        content: "How do I install?",
+      },
+    ],
     emit: (event) => events.push(event),
     maxToolTurns: options?.maxToolTurns,
     sandbox: {
@@ -75,7 +82,7 @@ async function collectEvents(
       },
     },
   });
-  return events;
+  return { events, answer: result.answer };
 }
 
 describe("runAssistant", () => {
@@ -101,7 +108,7 @@ describe("runAssistant", () => {
     ]);
 
     const commands: string[] = [];
-    const events = await collectEvents(model, { commands });
+    const { events, answer } = await collectEvents(model, { commands });
 
     expect(commands).toEqual(["grep -ril install ."]);
     expect(events).toContainEqual({
@@ -109,10 +116,11 @@ describe("runAssistant", () => {
       command: "grep -ril install .",
     });
 
-    const answer = events
+    const streamedAnswer = events
       .filter((event) => event.type === "text-delta")
       .map((event) => event.text)
       .join("");
+    expect(streamedAnswer).toBe("Run `npm install`.");
     expect(answer).toBe("Run `npm install`.");
 
     expect(events).toContainEqual({
@@ -126,7 +134,17 @@ describe("runAssistant", () => {
         },
       ],
     });
-    expect(events.at(-1)).toEqual({ type: "done" });
+    expect(events.at(-1)).toEqual({
+      type: "citations",
+      citations: [
+        {
+          slug: "guides/install",
+          title: "Install",
+          href: "/guides/install",
+          sourcePath: "guides/install.md",
+        },
+      ],
+    });
 
     // Second model call must include the tool result message.
     expect(calls).toHaveLength(2);
@@ -152,11 +170,11 @@ describe("runAssistant", () => {
       [{ type: "text-delta", text: "Partial answer." }, finish("stop")],
     ]);
 
-    const events = await collectEvents(model, { maxToolTurns: 1 });
+    const { events } = await collectEvents(model, { maxToolTurns: 1 });
 
     expect(calls).toHaveLength(2);
     expect(calls[0]?.toolChoice).toBe("auto");
     expect(calls[1]?.toolChoice).toBe("none");
-    expect(events.at(-1)).toEqual({ type: "done" });
+    expect(events.at(-1)).toEqual({ type: "citations", citations: [] });
   });
 });

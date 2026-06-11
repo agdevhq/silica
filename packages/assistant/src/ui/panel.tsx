@@ -3,6 +3,11 @@
 import * as React from "react";
 import { Button } from "@silicajs/ui/components/button";
 import { Textarea } from "@silicajs/ui/components/textarea";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@silicajs/ui/components/tooltip";
 import { cn } from "@silicajs/ui/lib/utils";
 import {
   ArrowUpIcon,
@@ -56,27 +61,39 @@ export function AssistantPanel({ className }: AssistantPanelProps) {
           Assistant
         </span>
         {assistant.messages.length > 0 ? (
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon-sm"
-            onClick={assistant.reset}
-            title="New conversation"
-          >
-            <SquarePenIcon />
-            <span className="sr-only">New conversation</span>
-          </Button>
+          <Tooltip>
+            <TooltipTrigger
+              render={
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon-sm"
+                  onClick={assistant.reset}
+                >
+                  <SquarePenIcon />
+                  <span className="sr-only">New conversation</span>
+                </Button>
+              }
+            />
+            <TooltipContent side="bottom">New conversation</TooltipContent>
+          </Tooltip>
         ) : null}
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon-sm"
-          onClick={() => assistant.setOpen(false)}
-          title="Close assistant"
-        >
-          <XIcon />
-          <span className="sr-only">Close assistant</span>
-        </Button>
+        <Tooltip>
+          <TooltipTrigger
+            render={
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon-sm"
+                onClick={() => assistant.setOpen(false)}
+              >
+                <XIcon />
+                <span className="sr-only">Close assistant</span>
+              </Button>
+            }
+          />
+          <TooltipContent side="bottom">Close assistant</TooltipContent>
+        </Tooltip>
       </header>
 
       <div ref={scrollRef} className="flex-1 overflow-y-auto">

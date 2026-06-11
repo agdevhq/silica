@@ -25,11 +25,11 @@ and set the provider API key (e.g. `OPENAI_API_KEY`) in your environment. The Si
 
 ## Entry points
 
-| Export                       | Contents                                                                       |
-| ---------------------------- | ------------------------------------------------------------------------------ |
-| `@silicajs/assistant`        | Shared types (citations, transcript, stream events)                            |
-| `@silicajs/assistant/ui`     | Client components: `AssistantProvider`, `AssistantTrigger`, `AssistantPanel`   |
-| `@silicajs/assistant/server` | Framework-agnostic runtime: handler, agent loop, sandbox, citations            |
-| `@silicajs/assistant/next`   | Route glue for the generated Silica Next.js app                                |
+| Export                       | Contents                                                                     |
+| ---------------------------- | ---------------------------------------------------------------------------- |
+| `@silicajs/assistant`        | Shared types (citations, transcript, stream events)                          |
+| `@silicajs/assistant/ui`     | Client components: `AssistantProvider`, `AssistantTrigger`, `AssistantPanel` |
+| `@silicajs/assistant/server` | Framework-agnostic runtime: handler, agent loop, sandbox, citations          |
+| `@silicajs/assistant/next`   | Route glue for the generated Silica Next.js app                              |
 
 See the [Silica docs](https://github.com/agdevhq/silica) for the full feature documentation.

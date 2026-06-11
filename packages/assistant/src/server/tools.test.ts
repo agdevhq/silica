@@ -31,9 +31,11 @@ afterAll(async () => {
 });
 
 describe("createContentSandbox", () => {
-  it("exposes published pages under /content", async () => {
+  it("exposes published pages under the shell root", async () => {
     const sandbox = createContentSandbox(site);
+    expect(await sandbox.run("pwd")).toBe("/");
     expect(await sandbox.run("ls guides")).toBe("install.md");
+    expect(await sandbox.run("cat /guides/install.md")).toContain("# Install");
     expect(await sandbox.run("grep -ril 'npm install' .")).toContain(
       "guides/install.md",
     );

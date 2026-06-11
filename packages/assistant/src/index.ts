@@ -7,4 +7,5 @@ export type {
   AssistantStreamEvent,
   AssistantTranscriptMessage,
   AssistantUserTranscriptMessage,
+  AssistantWikiLinkResolver,
 } from "./types.js";

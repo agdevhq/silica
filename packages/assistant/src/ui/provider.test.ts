@@ -148,4 +148,31 @@ describe("streamAnswer", () => {
 
     expect(events).toEqual([{ type: "done" }]);
   });
+
+  it("includes current page context in assistant requests", async () => {
+    const fetch = vi.fn(async () => new Response('{"type":"done"}'));
+    vi.stubGlobal("fetch", fetch);
+
+    await streamAnswer({
+      endpoint: "/api/assistant",
+      transcript: [],
+      responseMessageId: "assistant-1",
+      currentSourcePath: "writing/frontmatter.md",
+      currentSlug: "writing/frontmatter",
+      signal: new AbortController().signal,
+      onEvent: () => undefined,
+    });
+
+    expect(fetch).toHaveBeenCalledWith(
+      "/api/assistant",
+      expect.objectContaining({
+        body: JSON.stringify({
+          messages: [],
+          responseMessageId: "assistant-1",
+          currentSourcePath: "writing/frontmatter.md",
+          currentSlug: "writing/frontmatter",
+        }),
+      }),
+    );
+  });
 });

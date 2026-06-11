@@ -20,6 +20,15 @@ const site: AssistantSiteContext = {
           sourcePath: "guides/install.md",
         }
       : undefined,
+  resolveWikiLink: (_currentSourcePath, target) =>
+    target === "Install"
+      ? {
+          slug: "guides/install",
+          title: "Install",
+          href: "/guides/install",
+          sourcePath: "guides/install.md",
+        }
+      : undefined,
 };
 
 function createScriptedModel(script: StreamEvent[][]): {
@@ -175,6 +184,25 @@ describe("runAssistant", () => {
       role: "tool",
       toolCallId: "call-1",
     });
+  });
+
+  it("converts assistant wikilinks in visible streamed text", async () => {
+    const { model } = createScriptedModel([
+      [
+        { type: "text-delta", text: "Open [[Inst" },
+        { type: "text-delta", text: "all]] for setup." },
+        finish("stop"),
+      ],
+    ]);
+
+    const { events, answer } = await collectEvents(model);
+    const streamedAnswer = events
+      .filter((event) => event.type === "text-delta")
+      .map((event) => event.text)
+      .join("");
+
+    expect(streamedAnswer).toBe("Open [Install](/guides/install) for setup.");
+    expect(answer).toBe("Open [Install](/guides/install) for setup.");
   });
 
   it("forces a final answer when tool turns are exhausted", async () => {

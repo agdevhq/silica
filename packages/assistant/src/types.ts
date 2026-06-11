@@ -33,6 +33,10 @@ export type AssistantTranscriptMessage =
 export type AssistantRequest = {
   messages: AssistantTranscriptMessage[];
   responseMessageId: string;
+  /** Current page source path relative to the assistant content root. */
+  currentSourcePath?: string;
+  /** Fallback route slug used when the client cannot provide a source path. */
+  currentSlug?: string;
 };
 
 /**
@@ -56,6 +60,12 @@ export type AssistantCitationResolver = (
   sourcePath: string,
 ) => AssistantCitation | undefined | Promise<AssistantCitation | undefined>;
 
+/** Resolves an Obsidian-style wikilink target from a current source page. */
+export type AssistantWikiLinkResolver = (
+  currentSourcePath: string,
+  target: string,
+) => AssistantCitation | undefined | Promise<AssistantCitation | undefined>;
+
 /** Knowledge-site context the server runtime operates on. */
 export type AssistantSiteContext = {
   siteTitle: string;
@@ -65,7 +75,14 @@ export type AssistantSiteContext = {
     sourcePath: string;
     excerpt: string;
   };
-  /** Filesystem directory mounted read-only as `/content` for shell tools. */
+  currentPage?: {
+    title: string;
+    slug: string;
+    sourcePath: string;
+    excerpt: string;
+  };
+  /** Filesystem directory mounted read-only as `/` for shell tools. */
   contentRoot: string;
   resolveCitation: AssistantCitationResolver;
+  resolveWikiLink?: AssistantWikiLinkResolver;
 };

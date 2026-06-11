@@ -1,7 +1,7 @@
 import { Bash, OverlayFs } from "just-bash";
 import type { AssistantSiteContext } from "../types.js";
 
-export const CONTENT_MOUNT = "/content";
+export const CONTENT_MOUNT = "/";
 
 const MAX_TOOL_OUTPUT_CHARS = 16_000;
 const COMMAND_TIMEOUT_MS = 10_000;
@@ -12,7 +12,7 @@ export type ContentSandbox = {
 
 /**
  * In-process simulated shell over the generated runtime markdown directory.
- * The content root is mounted read-only at `/content`; the sandbox has no
+ * The content root is mounted read-only at `/`; the sandbox has no
  * access to the rest of the host filesystem, network, or environment.
  */
 export function createContentSandbox(

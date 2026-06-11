@@ -2,6 +2,7 @@ export {
   AssistantUnavailableError,
   createAssistantHandler,
   type AssistantHandlerOptions,
+  type AssistantRequestContext,
   type AssistantRuntime,
 } from "./handler.js";
 export {
@@ -21,6 +22,11 @@ export {
   type ContentSandbox,
 } from "./tools.js";
 export { buildSystemPrompt } from "./prompt.js";
+export {
+  AssistantWikiLinkFilter,
+  createAssistantWikiLinkFilter,
+  resolveAssistantWikiLinks,
+} from "./wikilinks.js";
 export type {
   AssistantCitation,
   AssistantCitationResolver,
@@ -30,4 +36,5 @@ export type {
   AssistantStreamEvent,
   AssistantTranscriptMessage,
   AssistantUserTranscriptMessage,
+  AssistantWikiLinkResolver,
 } from "../types.js";

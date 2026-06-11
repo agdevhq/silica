@@ -17,6 +17,18 @@ const SIGNATURE_CONTEXT = "silica.assistant.transcript.v1\n";
 const messageIdSchema = z.string().uuid();
 const previousMessageIdSchema = messageIdSchema.nullable();
 const messageContentSchema = z.string().min(1).max(MAX_MESSAGE_LENGTH);
+const requestSourcePathSchema = z
+  .string()
+  .min(1)
+  .max(512)
+  .transform(normalizeRequestSourcePath)
+  .pipe(z.string().min(1).refine(isSafeRequestSourcePath));
+const requestSlugSchema = z
+  .string()
+  .min(1)
+  .max(512)
+  .transform(normalizeRequestSlug)
+  .pipe(z.string().min(1).refine(isSafeRequestSlug));
 
 const requestSchema = z.object({
   messages: z
@@ -40,6 +52,8 @@ const requestSchema = z.object({
     .min(1)
     .max(MAX_MESSAGES),
   responseMessageId: messageIdSchema,
+  currentSourcePath: requestSourcePathSchema.optional(),
+  currentSlug: requestSlugSchema.optional(),
 });
 
 /**
@@ -57,6 +71,11 @@ export type AssistantRuntime = {
   maxToolTurns?: number;
 };
 
+export type AssistantRequestContext = {
+  currentSourcePath?: string;
+  currentSlug?: string;
+};
+
 export type AssistantHandlerOptions = {
   /**
    * Optional request gate for auth, quotas, or rate limits. Return a Response to
@@ -66,7 +85,9 @@ export type AssistantHandlerOptions = {
     request: Request,
   ) => Response | undefined | Promise<Response | undefined>;
   /** Resolves the model and site context for the current request. */
-  resolve: () => AssistantRuntime | Promise<AssistantRuntime>;
+  resolve: (
+    context: AssistantRequestContext,
+  ) => AssistantRuntime | Promise<AssistantRuntime>;
 };
 
 /**
@@ -102,7 +123,10 @@ export function createAssistantHandler(
 
     let runtime: AssistantRuntime;
     try {
-      runtime = await options.resolve();
+      runtime = await options.resolve({
+        currentSourcePath: parsed.data.currentSourcePath,
+        currentSlug: parsed.data.currentSlug,
+      });
     } catch (error) {
       if (error instanceof AssistantUnavailableError) {
         return jsonError(error.message, 503);
@@ -136,6 +160,7 @@ export function createAssistantHandler(
             site: runtime.site,
             maxToolTurns: runtime.maxToolTurns,
             transcript,
+            currentSourcePath: parsed.data.currentSourcePath,
             emit,
             signal: request.signal,
           });
@@ -226,6 +251,37 @@ function parseJson(body: string): unknown {
 
 function jsonError(message: string, status: number): Response {
   return Response.json({ error: message }, { status });
+}
+
+function normalizeRequestSourcePath(value: string): string {
+  return value.trim().replace(/\\/g, "/").replace(/^\/+/, "");
+}
+
+function isSafeRequestSourcePath(value: string): boolean {
+  if (!/\.(md|markdown|mdx)$/i.test(value)) return false;
+  return isSafeContentPath(value);
+}
+
+function normalizeRequestSlug(value: string): string {
+  const normalized = value
+    .trim()
+    .replace(/\\/g, "/")
+    .replace(/^\/+|\/+$/g, "");
+  return normalized || "index";
+}
+
+function isSafeRequestSlug(value: string): boolean {
+  return isSafeContentPath(value);
+}
+
+function isSafeContentPath(value: string): boolean {
+  if (!value || value.startsWith("~") || /^[A-Za-z]:/.test(value)) {
+    return false;
+  }
+  if (value.includes("//")) return false;
+  return value
+    .split("/")
+    .every((segment) => segment && segment !== "." && segment !== "..");
 }
 
 function verifyTranscript(

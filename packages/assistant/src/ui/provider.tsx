@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import { SilicaAssistantProvider } from "@silicajs/components";
+import { useSilicaRouting } from "@silicajs/components/routing";
 import type {
   AssistantCitation,
   AssistantStreamEvent,
@@ -109,6 +110,7 @@ export function AssistantProvider({
   children,
   endpoint = "/api/assistant",
 }: AssistantProviderProps) {
+  const { currentSlug } = useSilicaRouting();
   const [open, setOpen] = React.useState(false);
   const [messages, setMessages] = React.useState<AssistantChatMessage[]>([]);
   const [isStreaming, setIsStreaming] = React.useState(false);
@@ -181,6 +183,7 @@ export function AssistantProvider({
         endpoint,
         transcript,
         responseMessageId: answerId,
+        currentSlug,
         signal: controller.signal,
         onEvent: (event) => {
           if (event.type === "text-delta") {
@@ -252,7 +255,7 @@ export function AssistantProvider({
           }
         });
     },
-    [endpoint, updateMessage],
+    [currentSlug, endpoint, updateMessage],
   );
 
   const ask = React.useCallback(
@@ -315,6 +318,8 @@ export async function streamAnswer(options: {
   endpoint: string;
   transcript: AssistantTranscriptMessage[];
   responseMessageId: string;
+  currentSourcePath?: string;
+  currentSlug?: string;
   signal: AbortSignal;
   onEvent: (event: AssistantStreamEvent) => void;
 }): Promise<"done" | "aborted"> {
@@ -326,6 +331,8 @@ export async function streamAnswer(options: {
       body: JSON.stringify({
         messages: options.transcript,
         responseMessageId: options.responseMessageId,
+        currentSourcePath: options.currentSourcePath,
+        currentSlug: options.currentSlug,
       }),
       signal: options.signal,
     });

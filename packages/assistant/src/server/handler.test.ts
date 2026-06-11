@@ -330,6 +330,64 @@ describe("createAssistantHandler", () => {
     });
   });
 
+  it("forwards normalized current page context to runtime resolution", async () => {
+    const contexts: unknown[] = [];
+    const response = await createAssistantHandler({
+      resolve: (context) => {
+        contexts.push(context);
+        return {
+          model: fakeModel,
+          site,
+          transcriptSigningSecret,
+        };
+      },
+    })(
+      request({
+        messages: [
+          {
+            id: ids.firstUser,
+            previousMessageId: null,
+            role: "user",
+            content: "Hello?",
+          },
+        ],
+        responseMessageId: ids.firstAssistant,
+        currentSourcePath: "/writing/frontmatter.md",
+        currentSlug: "/writing/frontmatter/",
+      }),
+    );
+
+    expect(response.status).toBe(200);
+    expect(contexts).toEqual([
+      {
+        currentSourcePath: "writing/frontmatter.md",
+        currentSlug: "writing/frontmatter",
+      },
+    ]);
+  });
+
+  it("rejects unsafe current source paths", async () => {
+    const response = await handler()(
+      request({
+        messages: [
+          {
+            id: ids.firstUser,
+            previousMessageId: null,
+            role: "user",
+            content: "Hello?",
+          },
+        ],
+        responseMessageId: ids.firstAssistant,
+        currentSourcePath: "../secret.md",
+      }),
+    );
+
+    expect(response.status).toBe(400);
+    expect(await response.json()).toEqual({
+      error: "Invalid assistant request.",
+    });
+  });
+
   it("does not sign assistant answers that cannot be replayed", async () => {
     const response = await handler(createTextModel("x".repeat(8_001)))(
       request({

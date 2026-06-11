@@ -4,16 +4,19 @@ import type { ChatModel } from "@core-ai/core-ai";
 import {
   slugToHref,
   type ResolvedSilicaAiConfig,
+  type ResolvedSilicaConfig,
 } from "@silicajs/core/runtime";
 import {
   getConfig,
   getPage,
   getPageBySourcePath,
   getProjectRoot,
+  resolveWikiLinkFromDb,
 } from "@silicajs/next/server-data";
 import {
   AssistantUnavailableError,
   createAssistantHandler,
+  type AssistantRequestContext,
   type AssistantRuntime,
 } from "./server/index.js";
 import type { AssistantSiteContext } from "./types.js";
@@ -65,7 +68,7 @@ export function createAssistantRouteHandler(
       options.rateLimit === false
         ? undefined
         : createRateLimitGuard(options.rateLimit),
-    resolve: (): AssistantRuntime => {
+    resolve: (requestContext): AssistantRuntime => {
       const config = getConfig();
       const ai = config.ai;
       if (!ai) {
@@ -93,7 +96,7 @@ export function createAssistantRouteHandler(
           model: ai.model,
           apiKey,
         }),
-        site: loadSiteContext(config.title, config.description),
+        site: loadSiteContext(config, requestContext),
         transcriptSigningSecret,
       };
     },
@@ -156,17 +159,48 @@ function pruneExpiredBuckets(now: number): void {
 }
 
 function loadSiteContext(
-  siteTitle: string,
-  siteDescription: string | undefined,
+  config: ResolvedSilicaConfig,
+  requestContext: AssistantRequestContext,
 ): AssistantSiteContext {
   const contentRoot = path.join(getProjectRoot(), ".silica/content");
+  const homePage = loadHomePageContext(contentRoot);
+  const currentPage = loadCurrentPageContext(
+    contentRoot,
+    requestContext,
+    homePage?.sourcePath,
+  );
   return {
-    siteTitle,
-    siteDescription,
-    homePage: loadHomePageContext(contentRoot),
+    siteTitle: config.title,
+    siteDescription: config.description,
+    homePage,
+    currentPage,
     contentRoot,
     resolveCitation: (sourcePath) => {
       const entry = getPageBySourcePath(sourcePath);
+      if (!entry) return undefined;
+      return {
+        slug: entry.slug,
+        title: entry.title,
+        href: slugToHref(entry.slug),
+        sourcePath: entry.sourcePath,
+      };
+    },
+    resolveWikiLink: (currentSourcePath, target) => {
+      const currentEntry =
+        getPageBySourcePath(currentSourcePath) ??
+        (homePage ? getPageBySourcePath(homePage.sourcePath) : undefined) ??
+        getPage("index");
+      if (!currentEntry) return undefined;
+
+      const resolvedSlug = resolveWikiLinkFromDb(
+        currentEntry.slug,
+        target,
+        config.wikilinks.strategy,
+        config.ordering,
+      );
+      if (!resolvedSlug) return undefined;
+
+      const entry = getPage(resolvedSlug);
       if (!entry) return undefined;
       return {
         slug: entry.slug,
@@ -198,6 +232,41 @@ function loadHomePageContext(
   } catch {
     return undefined;
   }
+}
+
+function loadCurrentPageContext(
+  contentRoot: string,
+  requestContext: AssistantRequestContext,
+  fallbackSourcePath: string | undefined,
+): AssistantSiteContext["currentPage"] {
+  const sourcePath =
+    requestContext.currentSourcePath ??
+    sourcePathForSlug(requestContext.currentSlug) ??
+    fallbackSourcePath;
+  if (!sourcePath) return undefined;
+
+  const entry = getPageBySourcePath(sourcePath);
+  if (!entry) return undefined;
+
+  try {
+    const raw = fs.readFileSync(path.join(contentRoot, entry.sourcePath), {
+      encoding: "utf8",
+    });
+    const excerpt = truncateHomePageExcerpt(stripFrontmatter(raw).trim());
+    return {
+      title: entry.title,
+      slug: entry.slug,
+      sourcePath: entry.sourcePath,
+      excerpt,
+    };
+  } catch {
+    return undefined;
+  }
+}
+
+function sourcePathForSlug(slug: string | undefined): string | undefined {
+  if (!slug) return undefined;
+  return getPage(slug)?.sourcePath;
 }
 
 function stripFrontmatter(markdown: string): string {

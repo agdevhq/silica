@@ -15,6 +15,7 @@ import type {
 import { buildSystemPrompt } from "./prompt.js";
 import { resolveCitations, SourceTagFilter } from "./sources.js";
 import { createContentSandbox, type ContentSandbox } from "./tools.js";
+import { createAssistantWikiLinkFilter } from "./wikilinks.js";
 
 const DEFAULT_MAX_TOOL_TURNS = 8;
 
@@ -22,7 +23,7 @@ const bashTool = defineTool({
   name: "bash",
   description:
     "Run a read-only shell command over the site's markdown files " +
-    "(ls, find, grep, cat, head, tail, wc, …). The content root is /content.",
+    '(find . -name "*.md", grep, cat, head, tail, wc, …). The content root is /.',
   parameters: z.object({
     command: z.string().describe("The shell command to execute."),
   }),
@@ -35,6 +36,7 @@ export type RunAssistantOptions = {
   emit: (event: AssistantStreamEvent) => void;
   signal?: AbortSignal;
   maxToolTurns?: number;
+  currentSourcePath?: string;
   /** Test seam; defaults to a just-bash sandbox over the site's content root. */
   sandbox?: ContentSandbox;
 };
@@ -54,6 +56,14 @@ export async function runAssistant(
   const { model, site, transcript, emit, signal } = options;
   const maxToolTurns = options.maxToolTurns ?? DEFAULT_MAX_TOOL_TURNS;
   const sandbox = options.sandbox ?? createContentSandbox(site);
+  const wikiLinkFilter = createAssistantWikiLinkFilter({
+    currentSourcePath:
+      options.currentSourcePath ??
+      site.currentPage?.sourcePath ??
+      site.homePage?.sourcePath ??
+      "index.md",
+    resolveWikiLink: site.resolveWikiLink,
+  });
 
   const messages: Message[] = [
     { role: "system", content: buildSystemPrompt(site) },
@@ -89,26 +99,27 @@ export async function runAssistant(
 
     const filter = new SourceTagFilter();
     let emittedThisTurn = false;
+    const emitVisible = (text: string) => {
+      if (!text) return;
+      if (emittedText && !emittedThisTurn) {
+        emitText("\n\n");
+      }
+      emitText(text);
+      emittedText = true;
+      emittedThisTurn = true;
+    };
     for await (const event of chatStream) {
       if (event.type !== "text-delta") continue;
       const visible = filter.push(event.text);
       if (!visible) continue;
-      if (emittedText && !emittedThisTurn) {
-        emitText("\n\n");
-      }
-      emitText(visible);
-      emittedText = true;
-      emittedThisTurn = true;
+      emitVisible(await wikiLinkFilter.push(visible));
     }
 
     const flushed = filter.flush();
     if (flushed.text.trim()) {
-      if (emittedText && !emittedThisTurn) {
-        emitText("\n\n");
-      }
-      emitText(flushed.text);
-      emittedText = true;
+      emitVisible(await wikiLinkFilter.push(flushed.text));
     }
+    emitVisible(await wikiLinkFilter.flush());
     if (flushed.sources.length > 0) sources = flushed.sources;
 
     const result = await chatStream.result;

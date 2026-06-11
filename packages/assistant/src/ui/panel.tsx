@@ -28,15 +28,6 @@ export function AssistantPanel({ className }: AssistantPanelProps) {
   const scrollRef = React.useRef<HTMLDivElement>(null);
   const open = assistant?.open ?? false;
 
-  React.useEffect(() => {
-    if (!assistant || !open) return;
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") assistant.setOpen(false);
-    };
-    window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
-  }, [assistant, open]);
-
   const messageCount = assistant?.messages.length ?? 0;
   const lastMessage = assistant?.messages.at(-1);
   React.useEffect(() => {
@@ -54,7 +45,7 @@ export function AssistantPanel({ className }: AssistantPanelProps) {
         className,
       )}
     >
-      <header className="flex h-12 shrink-0 items-center gap-2 border-b border-border px-3">
+      <header className="flex h-12 shrink-0 items-center gap-2 px-3">
         <SparklesIcon className="size-4 text-primary" />
         <span className="flex-1 text-sm font-semibold tracking-tight">
           Assistant
@@ -142,13 +133,13 @@ function AssistantComposer({
 
   return (
     <form
-      className="shrink-0 border-t border-border p-3"
+      className="shrink-0 px-3 pb-3"
       onSubmit={(event) => {
         event.preventDefault();
         submit();
       }}
     >
-      <div className="flex items-end gap-2">
+      <div className="relative">
         <Textarea
           ref={textareaRef}
           value={draft}
@@ -160,14 +151,15 @@ function AssistantComposer({
             }
           }}
           placeholder="Ask a question…"
-          rows={1}
-          className="max-h-40 min-h-9 flex-1 resize-none"
+          rows={2}
+          className="max-h-40 min-h-14 resize-none pr-11"
         />
         {isStreaming ? (
           <Button
             type="button"
             variant="outline"
-            size="icon"
+            size="icon-sm"
+            className="absolute bottom-1.5 right-1.5"
             onClick={onStop}
             title="Stop answering"
           >
@@ -177,7 +169,8 @@ function AssistantComposer({
         ) : (
           <Button
             type="submit"
-            size="icon"
+            size="icon-sm"
+            className="absolute bottom-1.5 right-1.5"
             disabled={!draft.trim()}
             title="Send question"
           >

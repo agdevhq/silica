@@ -23,6 +23,21 @@ assistant: {
 
 and set the provider API key (e.g. `OPENAI_API_KEY`) plus a server-only `SILICA_ASSISTANT_SECRET` in your environment. The Silica CLI generates the `/api/assistant` route and passes the assistant UI to the active theme.
 
+For providers without a Silica preset, configure the core-ai package and factory explicitly:
+
+```typescript
+assistant: {
+  provider: {
+    package: "@acme/core-ai-provider",
+    factory: "createAcme",
+    env: { baseURL: "ACME_BASE_URL" },
+    secrets: { apiKey: "ACME_API_KEY" },
+    options: { region: "eu" },
+  },
+  model: "acme-chat",
+},
+```
+
 Generated assistant routes include a 10 requests/minute rate limit keyed by `x-forwarded-for`. In `silica.config.ts`, set `assistant.rateLimit.trustedProxyHeaders` if your deployment proxy uses a different client-IP header, and only include headers your proxy sets or overwrites.
 
 ## Entry points

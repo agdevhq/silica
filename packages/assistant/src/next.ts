@@ -15,6 +15,8 @@ import {
 } from "@silicajs/next/server-data";
 import {
   AssistantUnavailableError,
+  type AssistantProviderModule,
+  createChatModelFromConfig,
   createAssistantHandler,
   type AssistantRequestContext,
   type AssistantRuntime,
@@ -31,9 +33,7 @@ const MAX_HOME_PAGE_EXCERPT_CHARS = 2_000;
 const rateLimitBuckets = new Map<string, { count: number; resetAt: number }>();
 
 export type CreateChatModelOptions = {
-  provider: ResolvedSilicaAssistantConfig["provider"];
-  model: string;
-  apiKey: string;
+  assistant: ResolvedSilicaAssistantConfig;
 };
 
 export type AssistantRateLimitOptions = {
@@ -55,10 +55,17 @@ export type AssistantRateLimitOptions = {
 
 export type AssistantRouteOptions = {
   /**
-   * Instantiates the configured chat model. The generated assistant route
-   * wires this to the provider package matching `silica.config.ts`.
+   * Provider package module imported by the generated route. Keeping this
+   * import static lets Next trace and bundle optional provider packages.
    */
-  createChatModel: (options: CreateChatModelOptions) => ChatModel;
+  providerModule?: AssistantProviderModule;
+  /**
+   * Instantiates the configured chat model. Defaults to resolving the factory
+   * from `providerModule` and the resolved Silica assistant config.
+   */
+  createChatModel?: (
+    options: CreateChatModelOptions,
+  ) => ChatModel | Promise<ChatModel>;
   /**
    * Basic per-client request cap for assistant routes. Pass `false` only when
    * another quota guard protects this endpoint.
@@ -72,14 +79,18 @@ export type AssistantRouteOptions = {
  * and answers with a streamed, cited response.
  */
 export function createAssistantRouteHandler(
-  options: AssistantRouteOptions,
+  options: AssistantRouteOptions = {},
 ): (request: Request) => Promise<Response> {
   return createAssistantHandler({
-    authorizeRequest:
-      options.rateLimit === false
-        ? undefined
-        : createRateLimitGuard(options.rateLimit),
-    resolve: (requestContext): AssistantRuntime => {
+    authorizeRequest: async (request) => {
+      const assistantRateLimit =
+        options.rateLimit !== undefined
+          ? options.rateLimit
+          : getConfig().assistant?.rateLimit;
+      if (assistantRateLimit === false) return undefined;
+      return createRateLimitGuard(assistantRateLimit)(request);
+    },
+    resolve: async (requestContext): Promise<AssistantRuntime> => {
       const config = getConfig();
       const assistant = config.assistant;
       if (!assistant) {
@@ -88,25 +99,28 @@ export function createAssistantRouteHandler(
         );
       }
 
-      const apiKey = process.env[assistant.apiKeyEnv];
-      if (!apiKey) {
-        throw new AssistantUnavailableError(
-          `The AI assistant is not configured: set the ${assistant.apiKeyEnv} environment variable.`,
-        );
-      }
       const transcriptSigningSecret = process.env[ASSISTANT_SECRET_ENV];
       if (!transcriptSigningSecret) {
         throw new AssistantUnavailableError(
           `The AI assistant is not configured: set the ${ASSISTANT_SECRET_ENV} environment variable.`,
         );
       }
+      const createChatModel =
+        options.createChatModel ??
+        ((modelOptions: CreateChatModelOptions) => {
+          if (!options.providerModule) {
+            throw new AssistantUnavailableError(
+              "The AI assistant provider module is not configured.",
+            );
+          }
+          return createChatModelFromConfig(
+            modelOptions.assistant,
+            options.providerModule,
+          );
+        });
 
       return {
-        model: options.createChatModel({
-          provider: assistant.provider,
-          model: assistant.model,
-          apiKey,
-        }),
+        model: await createChatModel({ assistant }),
         site: loadSiteContext(config, requestContext),
         transcriptSigningSecret,
       };

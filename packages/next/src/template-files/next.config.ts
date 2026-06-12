@@ -10,10 +10,18 @@ const nextRoot = path.dirname(fileURLToPath(import.meta.url));
 const silicaRoot = path.resolve(nextRoot, "..");
 const vaultMetadata = readVaultMetadata(path.join(silicaRoot, "vault.db"));
 type VaultConfig = {
+  assistant?: { provider?: { package?: string } };
   render?: { cache?: { storage?: "memory" | "filesystem" } };
 };
 const resolvedConfig = parseJson<VaultConfig>(vaultMetadata.configJson);
 const useFilesystemCache = resolvedConfig?.render?.cache?.storage !== "memory";
+const serverExternalPackages = [
+  "better-sqlite3",
+  "just-bash",
+  resolvedConfig?.assistant?.provider?.package,
+].filter((packageName, index, packages): packageName is string => {
+  return Boolean(packageName) && packages.indexOf(packageName) === index;
+});
 
 const baseNextConfig: NextConfig = {
   cacheComponents: true,
@@ -37,7 +45,7 @@ const baseNextConfig: NextConfig = {
     "@silicajs/ui",
     "@silicajs/theme-amethyst",
   ],
-  serverExternalPackages: ["better-sqlite3", "just-bash"],
+  serverExternalPackages,
   outputFileTracingIncludes: {
     "/*": ["../content/**/*", "../vault.db"],
   },

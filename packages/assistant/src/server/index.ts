@@ -11,6 +11,10 @@ export {
   type RunAssistantResult,
 } from "./runtime.js";
 export {
+  createChatModelFromConfig,
+  type AssistantProviderModule,
+} from "./provider.js";
+export {
   resolveCitations,
   SourceTagFilter,
   SOURCES_CLOSE_TAG,

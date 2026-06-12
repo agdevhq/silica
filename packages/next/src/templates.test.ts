@@ -1,7 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
   assistantModuleTemplate,
-  assistantProviderPackageName,
   assistantRouteTemplate,
   getSilicaTemplates,
   nextConfigTemplate,
@@ -62,6 +61,15 @@ describe("generated templates", () => {
     expect(rendered).toContain("generateBuildId");
     expect(rendered).toContain("cacheHandlers");
     expect(rendered).toContain("./cache-handlers/filesystem-cache.js");
+  });
+
+  it("traces configured assistant provider packages for standalone output", () => {
+    const rendered = nextConfigTemplate();
+
+    expect(rendered).toContain("resolvedConfig?.assistant?.provider?.package");
+    expect(rendered).toContain("serverExternalPackages");
+    expect(rendered).toContain('"better-sqlite3"');
+    expect(rendered).toContain('"just-bash"');
   });
 
   it("generates a static import for local themes", () => {
@@ -133,68 +141,27 @@ describe("generated templates", () => {
     expect(rendered).toContain("Panel: AssistantPanel");
   });
 
-  it("generates the assistant route for the configured provider", () => {
+  it("generates an assistant route with a static provider import", () => {
     const rendered = assistantRouteTemplate({
-      provider: "anthropic",
-      model: "claude-sonnet-4-5",
-      apiKeyEnv: "ANTHROPIC_API_KEY",
+      model: "gpt-5.2",
+      provider: {
+        package: "@core-ai/openai",
+        factory: "createOpenAI",
+        secrets: { apiKey: "OPENAI_API_KEY" },
+      },
     });
+
     expect(rendered).toContain(
-      'import { createAnthropic } from "@core-ai/anthropic"',
+      'import * as assistantProvider from "@core-ai/openai"',
     );
     expect(rendered).toContain(
       'import { createAssistantRouteHandler } from "@silicajs/assistant/next"',
     );
     expect(rendered).toContain(
-      'rateLimit: { maxRequests: 10, windowMs: 60_000, trustedProxyHeaders: ["x-forwarded-for"] }',
+      "export const POST = createAssistantRouteHandler({",
     );
-    expect(rendered).toContain("createAnthropic({ apiKey }).chatModel(model)");
-  });
-
-  it("keeps assistant route rate limiting enabled", () => {
-    const rendered = assistantRouteTemplate({
-      provider: "openai",
-      model: "gpt-5.2",
-      apiKeyEnv: "OPENAI_API_KEY",
-    });
-
-    expect(rendered).toContain(
-      'rateLimit: { maxRequests: 10, windowMs: 60_000, trustedProxyHeaders: ["x-forwarded-for"] }',
-    );
-  });
-
-  it("generates configured assistant route rate limiting", () => {
-    const rendered = assistantRouteTemplate({
-      provider: "openai",
-      model: "gpt-5.2",
-      apiKeyEnv: "OPENAI_API_KEY",
-      rateLimit: {
-        maxRequests: 20,
-        windowMs: 120_000,
-        trustedProxyHeaders: ["x-real-ip"],
-      },
-    });
-
-    expect(rendered).toContain(
-      'rateLimit: { maxRequests: 20, windowMs: 120000, trustedProxyHeaders: ["x-real-ip"] }',
-    );
-  });
-
-  it("allows generated assistant route rate limiting to be disabled explicitly", () => {
-    const rendered = assistantRouteTemplate({
-      provider: "openai",
-      model: "gpt-5.2",
-      apiKeyEnv: "OPENAI_API_KEY",
-      rateLimit: false,
-    });
-
-    expect(rendered).toContain("rateLimit: false");
-  });
-
-  it("resolves assistant provider package names", () => {
-    expect(assistantProviderPackageName("google")).toBe(
-      "@core-ai/google-genai",
-    );
+    expect(rendered).toContain("providerModule: assistantProvider");
+    expect(rendered).not.toContain("rateLimit:");
   });
 
   it("renders the tsconfig extends placeholder when a user config exists", () => {

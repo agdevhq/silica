@@ -40,14 +40,65 @@ That's it. The next `silica dev` or `silica build` generates an `/api/assistant`
 
 ## Providers
 
-| `provider`  | Package                 | Default key variable |
-| ----------- | ----------------------- | -------------------- |
-| `openai`    | `@core-ai/openai`       | `OPENAI_API_KEY`     |
-| `anthropic` | `@core-ai/anthropic`    | `ANTHROPIC_API_KEY`  |
-| `google`    | `@core-ai/google-genai` | `GOOGLE_API_KEY`     |
-| `mistral`   | `@core-ai/mistral`      | `MISTRAL_API_KEY`    |
+| `provider`     | Package                 | Default env vars                                | Notes                                           |
+| -------------- | ----------------------- | ----------------------------------------------- | ----------------------------------------------- |
+| `openai`       | `@core-ai/openai`       | `OPENAI_API_KEY`                                |                                                 |
+| `anthropic`    | `@core-ai/anthropic`    | `ANTHROPIC_API_KEY`                             |                                                 |
+| `google`       | `@core-ai/google-genai` | `GOOGLE_API_KEY`                                |                                                 |
+| `mistral`      | `@core-ai/mistral`      | `MISTRAL_API_KEY`                               |                                                 |
+| `omnifact`     | `@core-ai/omnifact`     | `OMNIFACT_API_KEY`                              | Use a Gateway model id such as `eu/gpt-5-mini`. |
+| `azure-openai` | `@core-ai/azure-openai` | `AZURE_OPENAI_API_KEY`, `AZURE_OPENAI_ENDPOINT` | Use your Azure deployment name as the model id. |
 
-Set `assistant.apiKeyEnv` to read the provider key from a different variable. `SILICA_ASSISTANT_SECRET` is a separate server-only secret used to sign the client-held conversation transcript so follow-up requests can verify prior assistant messages. If either value is missing at runtime, the site keeps working — the assistant simply reports that it is not configured.
+For Azure OpenAI, set `AZURE_OPENAI_ENDPOINT` in the runtime environment or pass `options.endpoint` explicitly:
+
+```typescript
+export default defineConfig({
+  assistant: {
+    provider: "azure-openai",
+    model: "gpt-5-mini-deployment",
+  },
+});
+```
+
+Use `options.endpoint` when you want to keep the endpoint in source control instead of the environment:
+
+```typescript
+provider: {
+  preset: "azure-openai",
+  options: {
+    endpoint: "https://my-resource.openai.azure.com/openai/v1",
+  },
+}
+```
+
+`SILICA_ASSISTANT_SECRET` is a separate server-only secret used to sign the client-held conversation transcript so follow-up requests can verify prior assistant messages. If a required provider API key or the assistant secret is missing at runtime, the site keeps working — the assistant simply reports that it is not configured.
+
+### Custom providers
+
+Silica presets are conveniences, not a complete registry. To use a community core-ai provider, provide its package, factory export, non-secret runtime env mappings, static options, and any secrets that should be read from environment variables at request time:
+
+```typescript
+export default defineConfig({
+  assistant: {
+    provider: {
+      package: "@acme/core-ai-provider",
+      factory: "createAcme",
+      env: {
+        baseURL: "ACME_BASE_URL",
+      },
+      secrets: {
+        apiKey: "ACME_API_KEY",
+      },
+      options: {
+        region: "eu",
+      },
+    },
+    model: "acme-chat",
+  },
+});
+```
+
+`env` and `secrets` map provider factory argument names to environment variable names and are resolved only on the server at request time, so CI builds do not need those values. `options` must be JSON-serializable because it is stored with the resolved site config.
 
 ## Rate limiting
 

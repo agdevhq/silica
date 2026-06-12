@@ -6,7 +6,6 @@ import { scaffoldProject } from "./scaffold.js";
 import { scaffoldDependencyRanges } from "./scaffold-versions.js";
 
 const tempRoots: string[] = [];
-
 afterEach(async () => {
   await Promise.all(tempRoots.splice(0).map((root) => fs.remove(root)));
 });
@@ -91,6 +90,45 @@ describe("silica CLI helpers", () => {
     expect(await fs.pathExists(path.join(nextRoot, "public/favicon.svg"))).toBe(
       true,
     );
+  });
+
+  it("materializes a static assistant route for a resolved provider package", async () => {
+    const root = await makeTempRoot("silica-materialize-assistant");
+    await fs.ensureDir(path.join(root, "content"));
+    await fs.writeFile(path.join(root, "content/index.md"), "# Home");
+    await fs.writeJson(path.join(root, "package.json"), { type: "module" });
+    await fs.outputJson(
+      path.join(root, "node_modules/@silicajs/assistant/package.json"),
+      {},
+    );
+    await fs.outputJson(
+      path.join(root, "node_modules/@acme/provider/package.json"),
+      {},
+    );
+    await fs.writeFile(
+      path.join(root, "silica.config.ts"),
+      `export default {
+  assistant: {
+    provider: {
+      package: "@acme/provider",
+      factory: "createAcme"
+    },
+    model: "acme-chat"
+  }
+};
+`,
+    );
+
+    const nextRoot = await materializeNextApp({ projectRoot: root });
+
+    const route = await fs.readFile(
+      path.join(nextRoot, "app/api/assistant/route.ts"),
+      "utf8",
+    );
+    expect(route).toContain(
+      'import * as assistantProvider from "@acme/provider"',
+    );
+    expect(route).toContain("providerModule: assistantProvider");
   });
 });
 

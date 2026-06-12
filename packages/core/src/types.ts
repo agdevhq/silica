@@ -11,6 +11,7 @@ import type {
   FullSlug,
   WikiLinkResolutionIndex,
 } from "./path.js";
+import type { SilicaAssistantProviderPreset } from "./assistant-providers.js";
 
 export type ThemeConfig =
   | "default"
@@ -27,11 +28,23 @@ export type SilicaAuthConfig = {
   allowedEmails?: string[];
 };
 
-export type SilicaAssistantProvider =
-  | "openai"
-  | "anthropic"
-  | "google"
-  | "mistral";
+export type SilicaAssistantProviderConfig = {
+  package: string;
+  factory: string;
+  env?: Record<string, string>;
+  secrets?: Record<string, string>;
+  options?: Record<string, unknown>;
+};
+
+export type SilicaAssistantProviderPresetConfig = {
+  preset: SilicaAssistantProviderPreset;
+  options?: Record<string, unknown>;
+};
+
+export type SilicaAssistantProviderInput =
+  | SilicaAssistantProviderPreset
+  | SilicaAssistantProviderPresetConfig
+  | SilicaAssistantProviderConfig;
 
 export type SilicaAssistantRateLimitConfig = {
   /** Maximum assistant requests allowed per client in the configured window. */
@@ -48,15 +61,9 @@ export type SilicaAssistantRateLimitConfig = {
 export type SilicaAssistantConfig = {
   enabled?: boolean;
   /** Provider the assistant uses for model calls. */
-  provider: SilicaAssistantProvider;
+  provider: SilicaAssistantProviderInput;
   /** Model identifier passed to the provider (e.g. `gpt-5.2`). */
   model: string;
-  /**
-   * Environment variable holding the provider API key.
-   * Defaults to the provider's conventional variable
-   * (e.g. `OPENAI_API_KEY`).
-   */
-  apiKeyEnv?: string;
   /**
    * Built-in assistant request rate limit. Pass `false` only when another
    * quota guard protects the generated assistant route.
@@ -65,9 +72,8 @@ export type SilicaAssistantConfig = {
 };
 
 export type ResolvedSilicaAssistantConfig = {
-  provider: SilicaAssistantProvider;
+  provider: SilicaAssistantProviderConfig;
   model: string;
-  apiKeyEnv: string;
   rateLimit?: SilicaAssistantRateLimitConfig | false;
 };
 

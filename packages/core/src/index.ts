@@ -1,4 +1,9 @@
 export { defineConfig, loadConfig, resolveConfig } from "./config.js";
+export {
+  ASSISTANT_PROVIDER_PRESETS,
+  resolveAssistantProvider,
+  type SilicaAssistantProviderPreset,
+} from "./assistant-providers.js";
 export { resolvePublicAssetPath } from "./logo.js";
 export {
   isMarkdownFile,
@@ -100,7 +105,9 @@ export type {
   ResolvedSilicaPrerenderConfig,
   ResolvedSilicaRenderConfig,
   SilicaAssistantConfig,
-  SilicaAssistantProvider,
+  SilicaAssistantProviderConfig,
+  SilicaAssistantProviderInput,
+  SilicaAssistantProviderPresetConfig,
   SilicaAssistantRateLimitConfig,
   SilicaAuthConfig,
   SilicaConfig,

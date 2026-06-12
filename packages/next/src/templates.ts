@@ -62,57 +62,16 @@ export const assistant: ThemeAssistantSlots | undefined = {
 `;
 }
 
-const ASSISTANT_PROVIDER_IMPORTS: Record<
-  ResolvedSilicaAssistantConfig["provider"],
-  { packageName: string; factory: string }
-> = {
-  openai: { packageName: "@core-ai/openai", factory: "createOpenAI" },
-  anthropic: { packageName: "@core-ai/anthropic", factory: "createAnthropic" },
-  google: {
-    packageName: "@core-ai/google-genai",
-    factory: "createGoogleGenAI",
-  },
-  mistral: { packageName: "@core-ai/mistral", factory: "createMistral" },
-};
-
-export function assistantProviderPackageName(
-  provider: ResolvedSilicaAssistantConfig["provider"],
-): string {
-  return ASSISTANT_PROVIDER_IMPORTS[provider].packageName;
-}
-
 export function assistantRouteTemplate(
   assistant: ResolvedSilicaAssistantConfig,
 ): string {
-  const provider = ASSISTANT_PROVIDER_IMPORTS[assistant.provider];
-  return `import { ${provider.factory} } from "${provider.packageName}";
+  return `import * as assistantProvider from ${JSON.stringify(assistant.provider.package)};
 import { createAssistantRouteHandler } from "@silicajs/assistant/next";
 
 export const POST = createAssistantRouteHandler({
-  rateLimit: ${assistantRateLimitTemplate(assistant.rateLimit)},
-  createChatModel: ({ apiKey, model }) =>
-    ${provider.factory}({ apiKey }).chatModel(model),
+  providerModule: assistantProvider,
 });
 `;
-}
-
-function assistantRateLimitTemplate(
-  rateLimit: ResolvedSilicaAssistantConfig["rateLimit"],
-): string {
-  if (rateLimit === false) return "false";
-
-  const maxRequests = rateLimit?.maxRequests ?? 10;
-  const windowMs = rateLimit?.windowMs ?? 60_000;
-  const trustedProxyHeaders = rateLimit?.trustedProxyHeaders ?? [
-    "x-forwarded-for",
-  ];
-  const entries = [
-    `maxRequests: ${maxRequests}`,
-    `windowMs: ${windowMs === 60_000 ? "60_000" : windowMs}`,
-    `trustedProxyHeaders: ${JSON.stringify(trustedProxyHeaders)}`,
-  ];
-
-  return `{ ${entries.join(", ")} }`;
 }
 
 export function proxyTemplate(config: ResolvedSilicaConfig): string {

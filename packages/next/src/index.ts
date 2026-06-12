@@ -1,5 +1,4 @@
 export {
-  assistantProviderPackageName,
   assistantModuleTemplate,
   assistantRouteTemplate,
   getSilicaTemplates,

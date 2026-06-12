@@ -8,8 +8,8 @@ export default defineConfig({
   contentDir: process.env.SILICA_CONTENT_DIR ?? "content",
   theme: "default",
   assistant: {
-    provider: "openai",
-    model: "gpt-5.4-mini",
+    provider: "azure-openai",
+    model: "gpt-5-mini",
   },
   wikilinks: {
     strategy: "shortest",

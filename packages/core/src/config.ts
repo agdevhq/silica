@@ -1,6 +1,7 @@
 import path from "node:path";
 import { existsSync } from "node:fs";
 import { createJiti } from "jiti";
+import { resolveAssistantProvider } from "./assistant-providers.js";
 import { resolvePublicAssetPath } from "./logo.js";
 import type {
   ResolvedSilicaAssistantConfig,
@@ -10,16 +11,6 @@ import type {
   SilicaConfig,
   SilicaPrerenderConfig,
 } from "./types.js";
-
-const DEFAULT_API_KEY_ENV_BY_PROVIDER: Record<
-  ResolvedSilicaAssistantConfig["provider"],
-  string
-> = {
-  openai: "OPENAI_API_KEY",
-  anthropic: "ANTHROPIC_API_KEY",
-  google: "GOOGLE_API_KEY",
-  mistral: "MISTRAL_API_KEY",
-};
 
 export function defineConfig(config: SilicaConfig): SilicaConfig {
   return config;
@@ -118,13 +109,6 @@ function resolveAssistantConfig(
 ): ResolvedSilicaAssistantConfig | undefined {
   if (!assistant || assistant.enabled === false) return undefined;
 
-  const apiKeyEnv = DEFAULT_API_KEY_ENV_BY_PROVIDER[assistant.provider];
-  if (!apiKeyEnv) {
-    throw new Error(
-      `Unknown Silica assistant provider "${String(assistant.provider)}". ` +
-        "Expected one of: openai, anthropic, google, mistral.",
-    );
-  }
   if (!assistant.model) {
     throw new Error(
       "Silica assistant requires a model (e.g. assistant: { provider: 'openai', model: 'gpt-5.2' }).",
@@ -132,9 +116,8 @@ function resolveAssistantConfig(
   }
 
   return {
-    provider: assistant.provider,
+    provider: resolveAssistantProvider(assistant.provider),
     model: assistant.model,
-    apiKeyEnv: assistant.apiKeyEnv ?? apiKeyEnv,
     ...(assistant.rateLimit !== undefined
       ? { rateLimit: assistant.rateLimit }
       : {}),

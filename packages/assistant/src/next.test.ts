@@ -1,15 +1,35 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { createChatStream, type ChatModel } from "@core-ai/core-ai";
-import { createAssistantRouteHandler } from "./next.js";
+import {
+  createAssistantRouteHandler,
+  type AssistantRouteOptions,
+} from "./next.js";
+
+const mockConfig = vi.hoisted(() => ({
+  assistantRateLimit: undefined as
+    | {
+        maxRequests?: number;
+        windowMs?: number;
+        trustedProxyHeaders?: string[];
+      }
+    | false
+    | undefined,
+}));
 
 vi.mock("@silicajs/next/server-data", () => ({
   getConfig: () => ({
     title: "Docs",
     description: "Test docs",
     assistant: {
-      provider: "openai",
+      provider: {
+        package: "@core-ai/openai",
+        factory: "createOpenAI",
+        secrets: { apiKey: "OPENAI_API_KEY" },
+      },
       model: "fake-model",
-      apiKeyEnv: "OPENAI_API_KEY",
+      ...(mockConfig.assistantRateLimit !== undefined
+        ? { rateLimit: mockConfig.assistantRateLimit }
+        : {}),
     },
     wikilinks: { strategy: "shortest" },
     ordering: [],
@@ -50,16 +70,14 @@ const ids = {
   firstAssistant: "00000000-0000-4000-8000-000000000002",
 };
 
-const originalOpenAiApiKey = process.env.OPENAI_API_KEY;
 const originalAssistantSecret = process.env.SILICA_ASSISTANT_SECRET;
 
 beforeEach(() => {
-  process.env.OPENAI_API_KEY = "test-api-key";
+  mockConfig.assistantRateLimit = undefined;
   process.env.SILICA_ASSISTANT_SECRET = "test-assistant-secret";
 });
 
 afterEach(() => {
-  restoreEnv("OPENAI_API_KEY", originalOpenAiApiKey);
   restoreEnv("SILICA_ASSISTANT_SECRET", originalAssistantSecret);
 });
 
@@ -147,12 +165,47 @@ describe("createAssistantRouteHandler rate limiting", () => {
       ).status,
     ).toBe(429);
   });
+
+  it("uses rate limiting from resolved config when route options omit it", async () => {
+    mockConfig.assistantRateLimit = {
+      maxRequests: 1,
+      windowMs: 60_000,
+      trustedProxyHeaders: ["x-real-ip"],
+    };
+    const handler = createAssistantRouteHandler({
+      createChatModel: () => fakeModel,
+    });
+
+    expect(
+      (await handler(request({ "x-real-ip": "203.0.113.50" }))).status,
+    ).toBe(200);
+    expect(
+      (await handler(request({ "x-real-ip": "203.0.113.50" }))).status,
+    ).toBe(429);
+  });
+
+  it("lets explicit route options override resolved config rate limiting", async () => {
+    mockConfig.assistantRateLimit = {
+      maxRequests: 1,
+      windowMs: 60_000,
+      trustedProxyHeaders: ["x-real-ip"],
+    };
+    const handler = createAssistantRouteHandler({
+      rateLimit: false,
+      createChatModel: () => fakeModel,
+    });
+
+    expect(
+      (await handler(request({ "x-real-ip": "203.0.113.60" }))).status,
+    ).toBe(200);
+    expect(
+      (await handler(request({ "x-real-ip": "203.0.113.60" }))).status,
+    ).toBe(200);
+  });
 });
 
 function routeHandler(
-  rateLimit: NonNullable<
-    Parameters<typeof createAssistantRouteHandler>[0]["rateLimit"]
-  >,
+  rateLimit: NonNullable<AssistantRouteOptions["rateLimit"]>,
 ): (request: Request) => Promise<Response> {
   return createAssistantRouteHandler({
     rateLimit,

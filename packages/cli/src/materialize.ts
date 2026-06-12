@@ -4,7 +4,6 @@ import fs from "fs-extra";
 import { loadConfig } from "@silicajs/core";
 import {
   assistantModuleTemplate,
-  assistantProviderPackageName,
   assistantRouteTemplate,
   getSilicaTemplates,
   nextConfigTemplate,
@@ -84,9 +83,8 @@ export async function materializeNextApp(
 
 function assertAssistantDependenciesInstalled(
   projectRoot: string,
-  provider: Parameters<typeof assistantProviderPackageName>[0],
+  provider: { package: string },
 ): void {
-  const providerPackage = assistantProviderPackageName(provider);
   if (!isPackageInstalled(projectRoot, "@silicajs/assistant")) {
     throw new Error(
       "Assistant is enabled in silica.config.ts but @silicajs/assistant is not installed.\n" +
@@ -95,11 +93,11 @@ function assertAssistantDependenciesInstalled(
     );
   }
 
-  if (!isPackageInstalled(projectRoot, providerPackage)) {
+  if (!isPackageInstalled(projectRoot, provider.package)) {
     throw new Error(
-      `Assistant is enabled in silica.config.ts but ${providerPackage} is not installed.\n` +
+      `Assistant is enabled in silica.config.ts but ${provider.package} is not installed.\n` +
         "Install it together with @silicajs/assistant for your configured model, e.g.:\n" +
-        `  npm install @silicajs/assistant ${providerPackage}`,
+        `  npm install @silicajs/assistant ${provider.package}`,
     );
   }
 }

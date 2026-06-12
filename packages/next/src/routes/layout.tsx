@@ -34,7 +34,7 @@ async function getCachedLayoutProps(renderEnvironmentHash: string) {
       logo: config.logo,
       baseUrl: config.baseUrl,
       authEnabled: auth.authEnabled,
-      assistantEnabled: Boolean(config.ai),
+      assistantEnabled: Boolean(config.assistant),
     },
   };
 }

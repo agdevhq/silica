@@ -3,16 +3,16 @@ import { existsSync } from "node:fs";
 import { createJiti } from "jiti";
 import { resolvePublicAssetPath } from "./logo.js";
 import type {
-  ResolvedSilicaAiConfig,
+  ResolvedSilicaAssistantConfig,
   ResolvedSilicaConfig,
   ResolvedSilicaPrerenderConfig,
-  SilicaAiConfig,
+  SilicaAssistantConfig,
   SilicaConfig,
   SilicaPrerenderConfig,
 } from "./types.js";
 
 const DEFAULT_API_KEY_ENV_BY_PROVIDER: Record<
-  ResolvedSilicaAiConfig["provider"],
+  ResolvedSilicaAssistantConfig["provider"],
   string
 > = {
   openai: "OPENAI_API_KEY",
@@ -88,7 +88,7 @@ export function resolveConfig(
           allowedEmails,
         }
       : undefined,
-    ai: resolveAiConfig(config.ai),
+    assistant: resolveAssistantConfig(config.assistant),
     wikilinks: {
       strategy: config.wikilinks?.strategy ?? "shortest",
       strict: config.wikilinks?.strict ?? false,
@@ -113,28 +113,31 @@ export function resolveConfig(
   };
 }
 
-function resolveAiConfig(
-  ai: SilicaAiConfig | false | undefined,
-): ResolvedSilicaAiConfig | undefined {
-  if (!ai || ai.enabled === false) return undefined;
+function resolveAssistantConfig(
+  assistant: SilicaAssistantConfig | false | undefined,
+): ResolvedSilicaAssistantConfig | undefined {
+  if (!assistant || assistant.enabled === false) return undefined;
 
-  const apiKeyEnv = DEFAULT_API_KEY_ENV_BY_PROVIDER[ai.provider];
+  const apiKeyEnv = DEFAULT_API_KEY_ENV_BY_PROVIDER[assistant.provider];
   if (!apiKeyEnv) {
     throw new Error(
-      `Unknown Silica AI provider "${String(ai.provider)}". ` +
+      `Unknown Silica assistant provider "${String(assistant.provider)}". ` +
         "Expected one of: openai, anthropic, google, mistral.",
     );
   }
-  if (!ai.model) {
+  if (!assistant.model) {
     throw new Error(
-      "Silica AI requires a model (e.g. ai: { provider: 'openai', model: 'gpt-5.2' }).",
+      "Silica assistant requires a model (e.g. assistant: { provider: 'openai', model: 'gpt-5.2' }).",
     );
   }
 
   return {
-    provider: ai.provider,
-    model: ai.model,
-    apiKeyEnv: ai.apiKeyEnv ?? apiKeyEnv,
+    provider: assistant.provider,
+    model: assistant.model,
+    apiKeyEnv: assistant.apiKeyEnv ?? apiKeyEnv,
+    ...(assistant.rateLimit !== undefined
+      ? { rateLimit: assistant.rateLimit }
+      : {}),
   };
 }
 

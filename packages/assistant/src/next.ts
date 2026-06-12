@@ -3,7 +3,7 @@ import path from "node:path";
 import type { ChatModel } from "@core-ai/core-ai";
 import {
   slugToHref,
-  type ResolvedSilicaAiConfig,
+  type ResolvedSilicaAssistantConfig,
   type ResolvedSilicaConfig,
 } from "@silicajs/core/runtime";
 import {
@@ -24,13 +24,14 @@ import type { AssistantSiteContext } from "./types.js";
 const ASSISTANT_SECRET_ENV = "SILICA_ASSISTANT_SECRET";
 const DEFAULT_RATE_LIMIT_MAX_REQUESTS = 10;
 const DEFAULT_RATE_LIMIT_WINDOW_MS = 60_000;
+const DEFAULT_TRUSTED_PROXY_HEADERS = ["x-forwarded-for"] as const;
 const MAX_RATE_LIMIT_BUCKETS = 10_000;
 const MAX_HOME_PAGE_EXCERPT_CHARS = 2_000;
 
 const rateLimitBuckets = new Map<string, { count: number; resetAt: number }>();
 
 export type CreateChatModelOptions = {
-  provider: ResolvedSilicaAiConfig["provider"];
+  provider: ResolvedSilicaAssistantConfig["provider"];
   model: string;
   apiKey: string;
 };
@@ -40,6 +41,16 @@ export type AssistantRateLimitOptions = {
   maxRequests?: number;
   /** Window size in milliseconds. Defaults to one minute. */
   windowMs?: number;
+  /**
+   * Headers set or overwritten by the deployment proxy and used to derive the
+   * caller IP for the built-in rate limit. Defaults to `x-forwarded-for`.
+   */
+  trustedProxyHeaders?: readonly string[];
+  /**
+   * Custom bucket key. Prefer this for authenticated routes where a stable
+   * session or user id is available.
+   */
+  key?: (request: Request) => string | Promise<string>;
 };
 
 export type AssistantRouteOptions = {
@@ -49,8 +60,8 @@ export type AssistantRouteOptions = {
    */
   createChatModel: (options: CreateChatModelOptions) => ChatModel;
   /**
-   * Basic per-client request cap for public assistant routes. Pass `false`
-   * only when another guard, such as Silica auth, protects this endpoint.
+   * Basic per-client request cap for assistant routes. Pass `false` only when
+   * another quota guard protects this endpoint.
    */
   rateLimit?: AssistantRateLimitOptions | false;
 };
@@ -70,17 +81,17 @@ export function createAssistantRouteHandler(
         : createRateLimitGuard(options.rateLimit),
     resolve: (requestContext): AssistantRuntime => {
       const config = getConfig();
-      const ai = config.ai;
-      if (!ai) {
+      const assistant = config.assistant;
+      if (!assistant) {
         throw new AssistantUnavailableError(
           "The AI assistant is not enabled for this site.",
         );
       }
 
-      const apiKey = process.env[ai.apiKeyEnv];
+      const apiKey = process.env[assistant.apiKeyEnv];
       if (!apiKey) {
         throw new AssistantUnavailableError(
-          `The AI assistant is not configured: set the ${ai.apiKeyEnv} environment variable.`,
+          `The AI assistant is not configured: set the ${assistant.apiKeyEnv} environment variable.`,
         );
       }
       const transcriptSigningSecret = process.env[ASSISTANT_SECRET_ENV];
@@ -92,8 +103,8 @@ export function createAssistantRouteHandler(
 
       return {
         model: options.createChatModel({
-          provider: ai.provider,
-          model: ai.model,
+          provider: assistant.provider,
+          model: assistant.model,
           apiKey,
         }),
         site: loadSiteContext(config, requestContext),
@@ -105,7 +116,7 @@ export function createAssistantRouteHandler(
 
 function createRateLimitGuard(
   options: AssistantRateLimitOptions | undefined,
-): (request: Request) => Response | undefined {
+): (request: Request) => Promise<Response | undefined> {
   const maxRequests = Math.max(
     1,
     options?.maxRequests ?? DEFAULT_RATE_LIMIT_MAX_REQUESTS,
@@ -114,10 +125,15 @@ function createRateLimitGuard(
     1,
     options?.windowMs ?? DEFAULT_RATE_LIMIT_WINDOW_MS,
   );
+  const trustedProxyHeaders =
+    options?.trustedProxyHeaders ?? DEFAULT_TRUSTED_PROXY_HEADERS;
 
-  return (request) => {
+  return async (request) => {
     const now = Date.now();
-    const key = rateLimitKey(request);
+    const key = await rateLimitKey(request, {
+      key: options?.key,
+      trustedProxyHeaders,
+    });
     const bucket = rateLimitBuckets.get(key);
     if (!bucket || bucket.resetAt <= now) {
       rateLimitBuckets.set(key, { count: 1, resetAt: now + windowMs });
@@ -140,15 +156,30 @@ function createRateLimitGuard(
   };
 }
 
-function rateLimitKey(request: Request): string {
-  const forwardedFor = request.headers.get("x-forwarded-for");
-  const forwardedClient = forwardedFor?.split(",")[0]?.trim();
-  return (
-    forwardedClient ||
-    request.headers.get("cf-connecting-ip")?.trim() ||
-    request.headers.get("x-real-ip")?.trim() ||
-    "anonymous"
-  );
+async function rateLimitKey(
+  request: Request,
+  options: Pick<AssistantRateLimitOptions, "key" | "trustedProxyHeaders">,
+): Promise<string> {
+  const customKey = await options.key?.(request);
+  if (customKey?.trim()) return customKey.trim();
+
+  for (const header of options.trustedProxyHeaders ?? []) {
+    const value = rateLimitHeaderValue(header, request.headers.get(header));
+    if (value) return value;
+  }
+
+  return "anonymous";
+}
+
+function rateLimitHeaderValue(
+  header: string,
+  value: string | null,
+): string | undefined {
+  if (!value) return undefined;
+  const normalizedHeader = header.toLowerCase();
+  const candidate =
+    normalizedHeader === "x-forwarded-for" ? value.split(",")[0] : value;
+  return candidate?.trim() || undefined;
 }
 
 function pruneExpiredBuckets(now: number): void {

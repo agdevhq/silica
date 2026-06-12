@@ -27,12 +27,28 @@ export type SilicaAuthConfig = {
   allowedEmails?: string[];
 };
 
-export type SilicaAiProvider = "openai" | "anthropic" | "google" | "mistral";
+export type SilicaAssistantProvider =
+  | "openai"
+  | "anthropic"
+  | "google"
+  | "mistral";
 
-export type SilicaAiConfig = {
+export type SilicaAssistantRateLimitConfig = {
+  /** Maximum assistant requests allowed per client in the configured window. */
+  maxRequests?: number;
+  /** Window size in milliseconds. Defaults to one minute. */
+  windowMs?: number;
+  /**
+   * Headers set or overwritten by your deployment proxy and used to derive the
+   * caller IP for the built-in assistant rate limit.
+   */
+  trustedProxyHeaders?: string[];
+};
+
+export type SilicaAssistantConfig = {
   enabled?: boolean;
   /** Provider the assistant uses for model calls. */
-  provider: SilicaAiProvider;
+  provider: SilicaAssistantProvider;
   /** Model identifier passed to the provider (e.g. `gpt-5.2`). */
   model: string;
   /**
@@ -41,12 +57,18 @@ export type SilicaAiConfig = {
    * (e.g. `OPENAI_API_KEY`).
    */
   apiKeyEnv?: string;
+  /**
+   * Built-in assistant request rate limit. Pass `false` only when another
+   * quota guard protects the generated assistant route.
+   */
+  rateLimit?: SilicaAssistantRateLimitConfig | false;
 };
 
-export type ResolvedSilicaAiConfig = {
-  provider: SilicaAiProvider;
+export type ResolvedSilicaAssistantConfig = {
+  provider: SilicaAssistantProvider;
   model: string;
   apiKeyEnv: string;
+  rateLimit?: SilicaAssistantRateLimitConfig | false;
 };
 
 export type SilicaNextConfig = Record<string, unknown>;
@@ -64,7 +86,7 @@ export type SilicaConfig = {
   contentDir?: string;
   theme?: ThemeConfig;
   auth?: SilicaAuthConfig | false;
-  ai?: SilicaAiConfig | false;
+  assistant?: SilicaAssistantConfig | false;
   wikilinks?: {
     strategy?: "absolute" | "relative" | "shortest";
     strict?: boolean;
@@ -125,7 +147,7 @@ export type ResolvedSilicaConfig = {
   contentDir: string;
   theme: ThemeConfig;
   auth?: SilicaAuthConfig;
-  ai?: ResolvedSilicaAiConfig;
+  assistant?: ResolvedSilicaAssistantConfig;
   wikilinks: {
     strategy: "absolute" | "relative" | "shortest";
     strict: boolean;

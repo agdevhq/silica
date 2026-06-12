@@ -5,7 +5,7 @@ description: An optional AI assistant that answers questions from your pages, wi
 
 Silica can add an AI assistant to your site. Readers ask questions in plain language; the assistant searches your original markdown files, answers from what it finds, and links the pages it used. It supports follow-up questions in the same conversation.
 
-The assistant is **off by default**. A site without AI configuration installs, builds, and runs without any AI packages, routes, or API keys.
+The assistant is **off by default**. A site without assistant configuration installs, builds, and runs without any AI packages, routes, or API keys.
 
 ## Enabling the assistant
 
@@ -22,7 +22,7 @@ import { defineConfig } from "@silicajs/core";
 
 export default defineConfig({
   // ...
-  ai: {
+  assistant: {
     provider: "openai",
     model: "gpt-5-mini",
   },
@@ -47,7 +47,29 @@ That's it. The next `silica dev` or `silica build` generates an `/api/assistant`
 | `google`    | `@core-ai/google-genai` | `GOOGLE_API_KEY`     |
 | `mistral`   | `@core-ai/mistral`      | `MISTRAL_API_KEY`    |
 
-Set `ai.apiKeyEnv` to read the provider key from a different variable. `SILICA_ASSISTANT_SECRET` is a separate server-only secret used to sign the client-held conversation transcript so follow-up requests can verify prior assistant messages. If either value is missing at runtime, the site keeps working — the assistant simply reports that it is not configured.
+Set `assistant.apiKeyEnv` to read the provider key from a different variable. `SILICA_ASSISTANT_SECRET` is a separate server-only secret used to sign the client-held conversation transcript so follow-up requests can verify prior assistant messages. If either value is missing at runtime, the site keeps working — the assistant simply reports that it is not configured.
+
+## Rate limiting
+
+The generated `/api/assistant` route is rate limited by default to 10 requests per minute per caller. Silica derives the caller from `x-forwarded-for`, which is the standard reverse-proxy header used by hosted Next.js deployments.
+
+If your deployment proxy sets or overwrites a different client-IP header, configure it in `silica.config.ts`:
+
+```typescript
+export default defineConfig({
+  assistant: {
+    provider: "openai",
+    model: "gpt-5-mini",
+    rateLimit: {
+      maxRequests: 20,
+      windowMs: 60_000,
+      trustedProxyHeaders: ["x-real-ip"],
+    },
+  },
+});
+```
+
+Only include headers that your proxy controls before the request reaches Next.js. If you self-host, make sure the proxy strips or overwrites client-supplied forwarding headers.
 
 ## Using the assistant
 
@@ -70,4 +92,4 @@ A few properties worth knowing:
 
 Themes decide whether and where to show the assistant. The default Amethyst theme places the trigger next to search and docks the conversation as a persistent, resizable sidebar next to the content. A theme without assistant support simply ignores the configuration — the site still builds and the `/api/assistant` route still exists, there is just no built-in UI for it.
 
-If you build your own theme, the framework passes an `assistant` prop (provider, trigger, and chat panel components) to your `SiteLayout` whenever AI is enabled. The panel is layout-agnostic and fills whatever container you render it in — dock it, float it, or ignore the prop entirely.
+If you build your own theme, the framework passes an `assistant` prop (provider, trigger, and chat panel components) to your `SiteLayout` whenever the assistant is enabled. The panel is layout-agnostic and fills whatever container you render it in — dock it, float it, or ignore the prop entirely.

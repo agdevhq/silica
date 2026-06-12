@@ -35,8 +35,8 @@ export type ThemeLayoutConfig = {
 };
 
 /**
- * Pre-wired AI assistant components handed to themes when the maintainer
- * enabled AI and `@silicajs/assistant` is installed. Themes that support
+ * Pre-wired assistant components handed to themes when the maintainer
+ * enabled the assistant and `@silicajs/assistant` is installed. Themes that support
  * the assistant decide where to render them; themes that don't simply
  * ignore the prop.
  */
@@ -72,7 +72,7 @@ export type ThemeSiteLayoutProps = {
   navigationEndpoint: string;
   config: ThemeLayoutConfig;
   children: React.ReactNode;
-  /** Present only when AI is enabled for the site. */
+  /** Present only when the assistant is enabled for the site. */
   assistant?: ThemeAssistantSlots;
 };
 

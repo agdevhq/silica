@@ -15,13 +15,15 @@ npm install @silicajs/assistant @core-ai/openai
 Enable it in `silica.config.ts`:
 
 ```typescript
-ai: {
+assistant: {
   provider: "openai",
   model: "gpt-5-mini",
 },
 ```
 
 and set the provider API key (e.g. `OPENAI_API_KEY`) plus a server-only `SILICA_ASSISTANT_SECRET` in your environment. The Silica CLI generates the `/api/assistant` route and passes the assistant UI to the active theme.
+
+Generated assistant routes include a 10 requests/minute rate limit keyed by `x-forwarded-for`. In `silica.config.ts`, set `assistant.rateLimit.trustedProxyHeaders` if your deployment proxy uses a different client-IP header, and only include headers your proxy sets or overwrites.
 
 ## Entry points
 

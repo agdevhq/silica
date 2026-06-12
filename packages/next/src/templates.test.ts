@@ -125,7 +125,7 @@ describe("generated templates", () => {
     expect(rendered).not.toContain("@silicajs/assistant");
   });
 
-  it("wires assistant slots when AI is enabled", () => {
+  it("wires assistant slots when the assistant is enabled", () => {
     const rendered = assistantModuleTemplate(true);
     expect(rendered).toContain('from "@silicajs/assistant/ui"');
     expect(rendered).toContain("Provider: AssistantProvider");
@@ -146,20 +146,47 @@ describe("generated templates", () => {
       'import { createAssistantRouteHandler } from "@silicajs/assistant/next"',
     );
     expect(rendered).toContain(
-      "rateLimit: { maxRequests: 10, windowMs: 60_000 }",
+      'rateLimit: { maxRequests: 10, windowMs: 60_000, trustedProxyHeaders: ["x-forwarded-for"] }',
     );
     expect(rendered).toContain("createAnthropic({ apiKey }).chatModel(model)");
   });
 
-  it("disables assistant route rate limiting when auth protects the site", () => {
-    const rendered = assistantRouteTemplate(
-      {
-        provider: "openai",
-        model: "gpt-5.2",
-        apiKeyEnv: "OPENAI_API_KEY",
-      },
-      { authEnabled: true },
+  it("keeps assistant route rate limiting enabled", () => {
+    const rendered = assistantRouteTemplate({
+      provider: "openai",
+      model: "gpt-5.2",
+      apiKeyEnv: "OPENAI_API_KEY",
+    });
+
+    expect(rendered).toContain(
+      'rateLimit: { maxRequests: 10, windowMs: 60_000, trustedProxyHeaders: ["x-forwarded-for"] }',
     );
+  });
+
+  it("generates configured assistant route rate limiting", () => {
+    const rendered = assistantRouteTemplate({
+      provider: "openai",
+      model: "gpt-5.2",
+      apiKeyEnv: "OPENAI_API_KEY",
+      rateLimit: {
+        maxRequests: 20,
+        windowMs: 120_000,
+        trustedProxyHeaders: ["x-real-ip"],
+      },
+    });
+
+    expect(rendered).toContain(
+      'rateLimit: { maxRequests: 20, windowMs: 120000, trustedProxyHeaders: ["x-real-ip"] }',
+    );
+  });
+
+  it("allows generated assistant route rate limiting to be disabled explicitly", () => {
+    const rendered = assistantRouteTemplate({
+      provider: "openai",
+      model: "gpt-5.2",
+      apiKeyEnv: "OPENAI_API_KEY",
+      rateLimit: false,
+    });
 
     expect(rendered).toContain("rateLimit: false");
   });

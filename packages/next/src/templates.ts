@@ -2,7 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import type {
-  ResolvedSilicaAiConfig,
+  ResolvedSilicaAssistantConfig,
   ResolvedSilicaConfig,
 } from "@silicajs/core/runtime";
 
@@ -39,8 +39,8 @@ export function themeModuleTemplate(themeValue: unknown): string {
   );
 }
 
-export function assistantModuleTemplate(aiEnabled: boolean): string {
-  if (!aiEnabled) {
+export function assistantModuleTemplate(assistantEnabled: boolean): string {
+  if (!assistantEnabled) {
     return `import type { ThemeAssistantSlots } from "@silicajs/core/theme";
 
 export const assistant: ThemeAssistantSlots | undefined = undefined;
@@ -63,7 +63,7 @@ export const assistant: ThemeAssistantSlots | undefined = {
 }
 
 const ASSISTANT_PROVIDER_IMPORTS: Record<
-  ResolvedSilicaAiConfig["provider"],
+  ResolvedSilicaAssistantConfig["provider"],
   { packageName: string; factory: string }
 > = {
   openai: { packageName: "@core-ai/openai", factory: "createOpenAI" },
@@ -75,33 +75,44 @@ const ASSISTANT_PROVIDER_IMPORTS: Record<
   mistral: { packageName: "@core-ai/mistral", factory: "createMistral" },
 };
 
-export type AssistantRouteTemplateOptions = {
-  authEnabled?: boolean;
-};
-
 export function assistantProviderPackageName(
-  provider: ResolvedSilicaAiConfig["provider"],
+  provider: ResolvedSilicaAssistantConfig["provider"],
 ): string {
   return ASSISTANT_PROVIDER_IMPORTS[provider].packageName;
 }
 
 export function assistantRouteTemplate(
-  ai: ResolvedSilicaAiConfig,
-  options: AssistantRouteTemplateOptions = {},
+  assistant: ResolvedSilicaAssistantConfig,
 ): string {
-  const provider = ASSISTANT_PROVIDER_IMPORTS[ai.provider];
-  const rateLimit = options.authEnabled
-    ? "false"
-    : "{ maxRequests: 10, windowMs: 60_000 }";
+  const provider = ASSISTANT_PROVIDER_IMPORTS[assistant.provider];
   return `import { ${provider.factory} } from "${provider.packageName}";
 import { createAssistantRouteHandler } from "@silicajs/assistant/next";
 
 export const POST = createAssistantRouteHandler({
-  rateLimit: ${rateLimit},
+  rateLimit: ${assistantRateLimitTemplate(assistant.rateLimit)},
   createChatModel: ({ apiKey, model }) =>
     ${provider.factory}({ apiKey }).chatModel(model),
 });
 `;
+}
+
+function assistantRateLimitTemplate(
+  rateLimit: ResolvedSilicaAssistantConfig["rateLimit"],
+): string {
+  if (rateLimit === false) return "false";
+
+  const maxRequests = rateLimit?.maxRequests ?? 10;
+  const windowMs = rateLimit?.windowMs ?? 60_000;
+  const trustedProxyHeaders = rateLimit?.trustedProxyHeaders ?? [
+    "x-forwarded-for",
+  ];
+  const entries = [
+    `maxRequests: ${maxRequests}`,
+    `windowMs: ${windowMs === 60_000 ? "60_000" : windowMs}`,
+    `trustedProxyHeaders: ${JSON.stringify(trustedProxyHeaders)}`,
+  ];
+
+  return `{ ${entries.join(", ")} }`;
 }
 
 export function proxyTemplate(config: ResolvedSilicaConfig): string {

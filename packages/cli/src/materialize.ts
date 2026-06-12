@@ -48,10 +48,13 @@ export async function materializeNextApp(
   );
   await fs.writeFile(
     path.join(nextRoot, "silica-assistant.ts"),
-    assistantModuleTemplate(Boolean(config.ai)),
+    assistantModuleTemplate(Boolean(config.assistant)),
   );
-  if (config.ai) {
-    assertAssistantDependenciesInstalled(projectRoot, config.ai.provider);
+  if (config.assistant) {
+    assertAssistantDependenciesInstalled(
+      projectRoot,
+      config.assistant.provider,
+    );
     const assistantRoutePath = path.join(
       nextRoot,
       "app/api/assistant/route.ts",
@@ -59,7 +62,7 @@ export async function materializeNextApp(
     await fs.ensureDir(path.dirname(assistantRoutePath));
     await fs.writeFile(
       assistantRoutePath,
-      assistantRouteTemplate(config.ai, { authEnabled: Boolean(config.auth) }),
+      assistantRouteTemplate(config.assistant),
     );
   }
   await fs.writeFile(
@@ -86,7 +89,7 @@ function assertAssistantDependenciesInstalled(
   const providerPackage = assistantProviderPackageName(provider);
   if (!isPackageInstalled(projectRoot, "@silicajs/assistant")) {
     throw new Error(
-      "AI is enabled in silica.config.ts but @silicajs/assistant is not installed.\n" +
+      "Assistant is enabled in silica.config.ts but @silicajs/assistant is not installed.\n" +
         "Install it together with the provider package for your configured model, e.g.:\n" +
         "  npm install @silicajs/assistant @core-ai/openai",
     );
@@ -94,7 +97,7 @@ function assertAssistantDependenciesInstalled(
 
   if (!isPackageInstalled(projectRoot, providerPackage)) {
     throw new Error(
-      `AI is enabled in silica.config.ts but ${providerPackage} is not installed.\n` +
+      `Assistant is enabled in silica.config.ts but ${providerPackage} is not installed.\n` +
         "Install it together with @silicajs/assistant for your configured model, e.g.:\n" +
         `  npm install @silicajs/assistant ${providerPackage}`,
     );

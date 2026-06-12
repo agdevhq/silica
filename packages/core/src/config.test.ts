@@ -9,14 +9,15 @@ describe("resolveConfig", () => {
     });
   });
 
-  it("leaves AI disabled by default", () => {
-    expect(resolveConfig().ai).toBeUndefined();
-    expect(resolveConfig({ ai: false }).ai).toBeUndefined();
+  it("leaves the assistant disabled by default", () => {
+    expect(resolveConfig().assistant).toBeUndefined();
+    expect(resolveConfig({ assistant: false }).assistant).toBeUndefined();
   });
 
-  it("resolves AI config with the provider's default API key variable", () => {
+  it("resolves assistant config with the provider's default API key variable", () => {
     expect(
-      resolveConfig({ ai: { provider: "openai", model: "gpt-5.2" } }).ai,
+      resolveConfig({ assistant: { provider: "openai", model: "gpt-5.2" } })
+        .assistant,
     ).toEqual({
       provider: "openai",
       model: "gpt-5.2",
@@ -27,12 +28,12 @@ describe("resolveConfig", () => {
   it("respects an explicit apiKeyEnv and enabled: false", () => {
     expect(
       resolveConfig({
-        ai: {
+        assistant: {
           provider: "anthropic",
           model: "claude-sonnet-4-5",
           apiKeyEnv: "MY_KEY",
         },
-      }).ai,
+      }).assistant,
     ).toEqual({
       provider: "anthropic",
       model: "claude-sonnet-4-5",
@@ -40,14 +41,43 @@ describe("resolveConfig", () => {
     });
     expect(
       resolveConfig({
-        ai: { enabled: false, provider: "openai", model: "gpt-5.2" },
-      }).ai,
+        assistant: { enabled: false, provider: "openai", model: "gpt-5.2" },
+      }).assistant,
     ).toBeUndefined();
   });
 
-  it("rejects AI config without a model", () => {
+  it("resolves assistant rate limit config", () => {
+    expect(
+      resolveConfig({
+        assistant: {
+          provider: "openai",
+          model: "gpt-5.2",
+          rateLimit: {
+            maxRequests: 20,
+            windowMs: 120_000,
+            trustedProxyHeaders: ["x-real-ip"],
+          },
+        },
+      }).assistant?.rateLimit,
+    ).toEqual({
+      maxRequests: 20,
+      windowMs: 120_000,
+      trustedProxyHeaders: ["x-real-ip"],
+    });
+    expect(
+      resolveConfig({
+        assistant: {
+          provider: "openai",
+          model: "gpt-5.2",
+          rateLimit: false,
+        },
+      }).assistant?.rateLimit,
+    ).toBe(false);
+  });
+
+  it("rejects assistant config without a model", () => {
     expect(() =>
-      resolveConfig({ ai: { provider: "openai", model: "" } }),
+      resolveConfig({ assistant: { provider: "openai", model: "" } }),
     ).toThrowError(/requires a model/);
   });
 

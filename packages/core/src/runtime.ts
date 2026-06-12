@@ -67,7 +67,7 @@ export type {
   RenderContext,
   RenderCacheState,
   RenderResult,
-  ResolvedSilicaAiConfig,
+  ResolvedSilicaAssistantConfig,
   ResolvedSilicaConfig,
   TocItem,
 } from "./types.js";

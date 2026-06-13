@@ -14,6 +14,8 @@
     "start": "node ../packages/cli/dist/bin.js start"
   },
   "dependencies": {
+    "@core-ai/azure-openai": "^0.11.0",
+    "@silicajs/assistant": "^0.0.0",
     "@silicajs/auth": "^0.1.0",
     "@silicajs/cli": "^0.2.2",
     "@silicajs/core": "^0.7.1",

@@ -11,6 +11,7 @@ import type {
   FullSlug,
   WikiLinkResolutionIndex,
 } from "./path.js";
+import type { SilicaAssistantProviderPreset } from "./assistant-providers.js";
 
 export type ThemeConfig =
   | "default"
@@ -25,6 +26,55 @@ export type SilicaAuthConfig = {
   enabled?: boolean;
   allowedDomains?: string[];
   allowedEmails?: string[];
+};
+
+export type SilicaAssistantProviderConfig = {
+  package: string;
+  factory: string;
+  env?: Record<string, string>;
+  secrets?: Record<string, string>;
+  options?: Record<string, unknown>;
+};
+
+export type SilicaAssistantProviderPresetConfig = {
+  preset: SilicaAssistantProviderPreset;
+  options?: Record<string, unknown>;
+};
+
+export type SilicaAssistantProviderInput =
+  | SilicaAssistantProviderPreset
+  | SilicaAssistantProviderPresetConfig
+  | SilicaAssistantProviderConfig;
+
+export type SilicaAssistantRateLimitConfig = {
+  /** Maximum assistant requests allowed per client in the configured window. */
+  maxRequests?: number;
+  /** Window size in milliseconds. Defaults to one minute. */
+  windowMs?: number;
+  /**
+   * Headers set or overwritten by your deployment proxy and used to derive the
+   * caller IP for the built-in assistant rate limit.
+   */
+  trustedProxyHeaders?: string[];
+};
+
+export type SilicaAssistantConfig = {
+  enabled?: boolean;
+  /** Provider the assistant uses for model calls. */
+  provider: SilicaAssistantProviderInput;
+  /** Model identifier passed to the provider (e.g. `gpt-5.2`). */
+  model: string;
+  /**
+   * Built-in assistant request rate limit. Pass `false` only when another
+   * quota guard protects the generated assistant route.
+   */
+  rateLimit?: SilicaAssistantRateLimitConfig | false;
+};
+
+export type ResolvedSilicaAssistantConfig = {
+  provider: SilicaAssistantProviderConfig;
+  model: string;
+  rateLimit?: SilicaAssistantRateLimitConfig | false;
 };
 
 export type SilicaNextConfig = Record<string, unknown>;
@@ -42,6 +92,7 @@ export type SilicaConfig = {
   contentDir?: string;
   theme?: ThemeConfig;
   auth?: SilicaAuthConfig | false;
+  assistant?: SilicaAssistantConfig | false;
   wikilinks?: {
     strategy?: "absolute" | "relative" | "shortest";
     strict?: boolean;
@@ -102,6 +153,7 @@ export type ResolvedSilicaConfig = {
   contentDir: string;
   theme: ThemeConfig;
   auth?: SilicaAuthConfig;
+  assistant?: ResolvedSilicaAssistantConfig;
   wikilinks: {
     strategy: "absolute" | "relative" | "shortest";
     strict: boolean;

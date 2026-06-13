@@ -1,10 +1,13 @@
 import path from "node:path";
 import { existsSync } from "node:fs";
 import { createJiti } from "jiti";
+import { resolveAssistantProvider } from "./assistant-providers.js";
 import { resolvePublicAssetPath } from "./logo.js";
 import type {
+  ResolvedSilicaAssistantConfig,
   ResolvedSilicaConfig,
   ResolvedSilicaPrerenderConfig,
+  SilicaAssistantConfig,
   SilicaConfig,
   SilicaPrerenderConfig,
 } from "./types.js";
@@ -76,6 +79,7 @@ export function resolveConfig(
           allowedEmails,
         }
       : undefined,
+    assistant: resolveAssistantConfig(config.assistant),
     wikilinks: {
       strategy: config.wikilinks?.strategy ?? "shortest",
       strict: config.wikilinks?.strict ?? false,
@@ -97,6 +101,26 @@ export function resolveConfig(
         directory: config.render?.cache?.directory,
       },
     },
+  };
+}
+
+function resolveAssistantConfig(
+  assistant: SilicaAssistantConfig | false | undefined,
+): ResolvedSilicaAssistantConfig | undefined {
+  if (!assistant || assistant.enabled === false) return undefined;
+
+  if (!assistant.model) {
+    throw new Error(
+      "Silica assistant requires a model (e.g. assistant: { provider: 'openai', model: 'gpt-5.2' }).",
+    );
+  }
+
+  return {
+    provider: resolveAssistantProvider(assistant.provider),
+    model: assistant.model,
+    ...(assistant.rateLimit !== undefined
+      ? { rateLimit: assistant.rateLimit }
+      : {}),
   };
 }
 

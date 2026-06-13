@@ -1,7 +1,10 @@
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import type { ResolvedSilicaConfig } from "@silicajs/core/runtime";
+import type {
+  ResolvedSilicaAssistantConfig,
+  ResolvedSilicaConfig,
+} from "@silicajs/core/runtime";
 
 export type TemplateFile = {
   path: string;
@@ -34,6 +37,41 @@ export function themeModuleTemplate(themeValue: unknown): string {
     '"{{themeSpecifier}}"',
     JSON.stringify(resolveThemeSpecifier(themeValue)),
   );
+}
+
+export function assistantModuleTemplate(assistantEnabled: boolean): string {
+  if (!assistantEnabled) {
+    return `import type { ThemeAssistantSlots } from "@silicajs/core/theme";
+
+export const assistant: ThemeAssistantSlots | undefined = undefined;
+`;
+  }
+
+  return `import {
+  AssistantPanel,
+  AssistantProvider,
+  AssistantTrigger,
+} from "@silicajs/assistant/ui";
+import type { ThemeAssistantSlots } from "@silicajs/core/theme";
+
+export const assistant: ThemeAssistantSlots | undefined = {
+  Provider: AssistantProvider,
+  Trigger: AssistantTrigger,
+  Panel: AssistantPanel,
+};
+`;
+}
+
+export function assistantRouteTemplate(
+  assistant: ResolvedSilicaAssistantConfig,
+): string {
+  return `import * as assistantProvider from ${JSON.stringify(assistant.provider.package)};
+import { createAssistantRouteHandler } from "@silicajs/assistant/next";
+
+export const POST = createAssistantRouteHandler({
+  providerModule: assistantProvider,
+});
+`;
 }
 
 export function proxyTemplate(config: ResolvedSilicaConfig): string {

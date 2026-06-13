@@ -38,6 +38,11 @@ export {
   type WikiLinkResolutionIndex,
 } from "./path.js";
 export { tagToHref } from "./tags.js";
+export {
+  ASSISTANT_PROVIDER_PRESETS,
+  resolveAssistantProvider,
+  type SilicaAssistantProviderPreset,
+} from "./assistant-providers.js";
 export type {
   MarkdownComponents,
   SilicaTheme,
@@ -45,6 +50,7 @@ export type {
   SilicaCodeBlockProps,
   SilicaEmbedProps,
   SilicaMermaidProps,
+  ThemeAssistantSlots,
   ThemeBacklink,
   ThemeBreadcrumb,
   ThemeLayoutConfig,
@@ -66,6 +72,10 @@ export type {
   RenderContext,
   RenderCacheState,
   RenderResult,
+  ResolvedSilicaAssistantConfig,
   ResolvedSilicaConfig,
+  SilicaAssistantProviderConfig,
+  SilicaAssistantProviderInput,
+  SilicaAssistantProviderPresetConfig,
   TocItem,
 } from "./types.js";

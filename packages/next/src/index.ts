@@ -1,4 +1,6 @@
 export {
+  assistantModuleTemplate,
+  assistantRouteTemplate,
   getSilicaTemplates,
   nextConfigTemplate,
   packageJsonTemplate,
@@ -16,6 +18,7 @@ export {
   getEntriesForTag,
   getNavigation,
   getPage,
+  getPageBySourcePath,
   getPageRuntimeData,
   getProjectRoot,
   getPrerenderSlugs,

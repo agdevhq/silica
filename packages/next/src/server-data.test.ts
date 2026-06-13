@@ -3,6 +3,7 @@ import fs from "fs-extra";
 import { describe, expect, it } from "vitest";
 import { precompute, resolveConfig } from "@silicajs/core";
 import {
+  getPageBySourcePath,
   getPageRuntimeData,
   loadVaultDb,
   resolveAssetFromDb,
@@ -25,6 +26,7 @@ describe("server data", () => {
       config: resolveConfig({ title: "Test" }, root),
     });
     expect(getPageRuntimeData("index")?.entry.title).toBe("First");
+    expect(getPageBySourcePath("/content/index.md")?.slug).toBe("index");
 
     await fs.writeFile(
       path.join(root, "content/index.md"),

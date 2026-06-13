@@ -31,6 +31,31 @@ export type ThemeLayoutConfig = {
   logo?: string;
   baseUrl?: string;
   authEnabled: boolean;
+  assistantEnabled: boolean;
+};
+
+/**
+ * Pre-wired assistant components handed to themes when the maintainer
+ * enabled the assistant and `@silicajs/assistant` is installed. Themes that support
+ * the assistant decide where to render them; themes that don't simply
+ * ignore the prop.
+ */
+export type ThemeAssistantSlots = {
+  /** Client-side conversation state; must wrap Trigger and Panel. */
+  Provider: (props: { children: React.ReactNode }) => React.ReactNode;
+  /** Button that opens the assistant (also binds the keyboard shortcut). */
+  Trigger: (props: {
+    className?: string;
+    label?: string;
+    iconOnly?: boolean;
+  }) => React.ReactNode;
+  /**
+   * The assistant chat window (conversation + composer). Fills its
+   * container; the theme owns placement and sizing — e.g. a docked,
+   * resizable sidebar — and decides when to show it based on the `open`
+   * flag of the assistant context in `@silicajs/components`.
+   */
+  Panel: (props: { className?: string }) => React.ReactNode;
 };
 
 export type ThemeProviderComponent = (props: {
@@ -47,6 +72,8 @@ export type ThemeSiteLayoutProps = {
   navigationEndpoint: string;
   config: ThemeLayoutConfig;
   children: React.ReactNode;
+  /** Present only when the assistant is enabled for the site. */
+  assistant?: ThemeAssistantSlots;
 };
 
 export type ThemePage = {

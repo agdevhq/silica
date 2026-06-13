@@ -85,6 +85,13 @@
       "import": "./dist/routing-provider.js"
     }
   },
+  "typesVersions": {
+    "*": {
+      "server-data": [
+        "dist/server-data.d.ts"
+      ]
+    }
+  },
   "files": [
     "dist"
   ],

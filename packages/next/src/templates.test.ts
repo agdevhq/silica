@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
+  assistantModuleTemplate,
+  assistantRouteTemplate,
   getSilicaTemplates,
   nextConfigTemplate,
   proxyTemplate,
@@ -61,6 +63,15 @@ describe("generated templates", () => {
     expect(rendered).toContain("./cache-handlers/filesystem-cache.js");
   });
 
+  it("traces configured assistant provider packages for standalone output", () => {
+    const rendered = nextConfigTemplate();
+
+    expect(rendered).toContain("resolvedConfig?.assistant?.provider?.package");
+    expect(rendered).toContain("serverExternalPackages");
+    expect(rendered).toContain('"better-sqlite3"');
+    expect(rendered).toContain('"just-bash"');
+  });
+
   it("generates a static import for local themes", () => {
     expect(themeModuleTemplate("./themes/my-theme")).toContain(
       'from "../../themes/my-theme"',
@@ -113,6 +124,44 @@ describe("generated templates", () => {
         },
       }),
     ).toContain('"publicPaths": [\n    "/logo.svg"\n  ]');
+  });
+
+  it("generates an inert assistant module when AI is disabled", () => {
+    const rendered = assistantModuleTemplate(false);
+    expect(rendered).toContain("export const assistant");
+    expect(rendered).toContain("undefined");
+    expect(rendered).not.toContain("@silicajs/assistant");
+  });
+
+  it("wires assistant slots when the assistant is enabled", () => {
+    const rendered = assistantModuleTemplate(true);
+    expect(rendered).toContain('from "@silicajs/assistant/ui"');
+    expect(rendered).toContain("Provider: AssistantProvider");
+    expect(rendered).toContain("Trigger: AssistantTrigger");
+    expect(rendered).toContain("Panel: AssistantPanel");
+  });
+
+  it("generates an assistant route with a static provider import", () => {
+    const rendered = assistantRouteTemplate({
+      model: "gpt-5.2",
+      provider: {
+        package: "@core-ai/openai",
+        factory: "createOpenAI",
+        secrets: { apiKey: "OPENAI_API_KEY" },
+      },
+    });
+
+    expect(rendered).toContain(
+      'import * as assistantProvider from "@core-ai/openai"',
+    );
+    expect(rendered).toContain(
+      'import { createAssistantRouteHandler } from "@silicajs/assistant/next"',
+    );
+    expect(rendered).toContain(
+      "export const POST = createAssistantRouteHandler({",
+    );
+    expect(rendered).toContain("providerModule: assistantProvider");
+    expect(rendered).not.toContain("rateLimit:");
   });
 
   it("renders the tsconfig extends placeholder when a user config exists", () => {

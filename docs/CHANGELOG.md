@@ -1,5 +1,21 @@
 # docs
 
+## 0.1.9
+
+### Patch Changes
+
+- Updated dependencies [473d120]
+- Updated dependencies [473d120]
+- Updated dependencies [a1e4c0d]
+- Updated dependencies [473d120]
+- Updated dependencies [473d120]
+- Updated dependencies [473d120]
+  - @silicajs/cli@0.3.0
+  - @silicajs/core@0.8.0
+  - @silicajs/assistant@0.1.0
+  - @silicajs/next@0.5.0
+  - @silicajs/theme-amethyst@0.5.0
+
 ## 0.1.8
 
 ### Patch Changes

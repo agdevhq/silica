@@ -1,6 +1,6 @@
 {
   "name": "create-silica",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "User-facing npx wrapper for creating a Silica vault.",
   "type": "module",
   "license": "MIT",
@@ -23,7 +23,7 @@
     "lint": "tsc --noEmit"
   },
   "dependencies": {
-    "@silicajs/create": "^0.1.2"
+    "@silicajs/create": "^0.1.3"
   },
   "homepage": "https://github.com/agdevhq/silica/tree/main/packages/create-silica#readme",
   "repository": {

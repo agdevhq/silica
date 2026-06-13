@@ -1,5 +1,18 @@
 # @silicajs/cli
 
+## 0.3.0
+
+### Minor Changes
+
+- 473d120: Materialize assistant routes and UI wiring for assistant-enabled projects, including dependency checks for the configured provider package before generating the Next app.
+
+### Patch Changes
+
+- Updated dependencies [473d120]
+- Updated dependencies [473d120]
+  - @silicajs/core@0.8.0
+  - @silicajs/next@0.5.0
+
 ## 0.2.2
 
 ### Patch Changes

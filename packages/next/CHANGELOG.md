@@ -1,5 +1,18 @@
 # @silicajs/next
 
+## 0.5.0
+
+### Minor Changes
+
+- 473d120: Add generated Next.js assistant integration. Assistant-enabled sites now get static provider imports for bundle tracing, assistant provider packages are included in standalone output, and generated routes defer rate-limit and provider configuration to resolved Silica config at runtime.
+
+### Patch Changes
+
+- Updated dependencies [473d120]
+- Updated dependencies [473d120]
+  - @silicajs/components@0.4.0
+  - @silicajs/core@0.8.0
+
 ## 0.4.0
 
 ### Minor Changes

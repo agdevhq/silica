@@ -1,5 +1,11 @@
 # @silicajs/ui
 
+## 0.2.0
+
+### Minor Changes
+
+- 473d120: Add resizable panel primitives used by the assistant conversation sidebar and available to other Silica UI integrations.
+
 ## 0.1.3
 
 ### Patch Changes

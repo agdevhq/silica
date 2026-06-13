@@ -47,14 +47,8 @@
     "zod": "^4.0.0"
   },
   "peerDependencies": {
-    "@silicajs/next": "^0.4.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0"
-  },
-  "peerDependenciesMeta": {
-    "@silicajs/next": {
-      "optional": true
-    }
   },
   "devDependencies": {
     "@silicajs/next": "^0.4.0",

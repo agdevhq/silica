@@ -1,6 +1,6 @@
 {
   "name": "@silicajs/create",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "Scaffold a new Silica vault.",
   "type": "module",
   "license": "MIT",
@@ -26,7 +26,7 @@
     "lint": "tsc --noEmit"
   },
   "dependencies": {
-    "@silicajs/cli": "^0.2.0"
+    "@silicajs/cli": "^0.3.0"
   },
   "homepage": "https://github.com/agdevhq/silica/tree/main/packages/create#readme",
   "repository": {

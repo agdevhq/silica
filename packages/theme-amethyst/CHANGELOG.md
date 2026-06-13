@@ -1,5 +1,20 @@
 # @silicajs/theme-amethyst
 
+## 0.5.0
+
+### Minor Changes
+
+- 473d120: Integrate the assistant into Amethyst with an Ask AI trigger, Cmd+I shortcut, mobile safeguards, long-command overflow handling, and a persistent resizable conversation sidebar.
+
+### Patch Changes
+
+- Updated dependencies [473d120]
+- Updated dependencies [473d120]
+- Updated dependencies [473d120]
+  - @silicajs/components@0.4.0
+  - @silicajs/core@0.8.0
+  - @silicajs/ui@0.2.0
+
 ## 0.4.0
 
 ### Minor Changes

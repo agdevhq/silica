@@ -1,5 +1,18 @@
 # @silicajs/components
 
+## 0.4.0
+
+### Minor Changes
+
+- 473d120: Add assistant component plumbing so themes can receive and render assistant provider, trigger, and panel slots alongside the existing site layout.
+
+### Patch Changes
+
+- Updated dependencies [473d120]
+- Updated dependencies [473d120]
+  - @silicajs/core@0.8.0
+  - @silicajs/ui@0.2.0
+
 ## 0.3.1
 
 ### Patch Changes

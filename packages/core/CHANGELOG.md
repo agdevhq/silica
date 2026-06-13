@@ -1,5 +1,11 @@
 # @silicajs/core
 
+## 0.8.0
+
+### Minor Changes
+
+- 473d120: Add assistant configuration support with provider presets and explicit core-ai-compatible package, factory, env, option, and secret mappings. This is a breaking pre-1.0 config change for assistant users: `assistant.apiKeyEnv` is replaced by provider `secrets`.
+
 ## 0.7.1
 
 ### Patch Changes

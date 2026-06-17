@@ -8,9 +8,11 @@ SILICA_PROJECT_ROOT = "docs"
 
 [context.deploy-preview.environment]
 SILICA_PROJECT_ROOT = "docs"
+SILICA_CACHE_DIR = "/tmp/silica-cache"
 
 [context.production.environment]
 SILICA_PROJECT_ROOT = "docs"
+SILICA_CACHE_DIR = "/tmp/silica-cache"
 
 [[plugins]]
 package = "@netlify/plugin-nextjs"

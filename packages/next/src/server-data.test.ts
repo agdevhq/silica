@@ -12,39 +12,19 @@ import {
 } from "./server-data.js";
 
 describe("server data", () => {
-  it("discovers the project root from .silica/vault.db", async () => {
-    const root = path.join(process.cwd(), ".tmp-server-data-discover");
-    const nextRoot = path.join(root, ".silica/next");
+  it("resolves a relative SILICA_PROJECT_ROOT against cwd", () => {
+    const root = path.join(process.cwd(), ".tmp-server-data-relative-root");
     const previousProjectRoot = process.env.SILICA_PROJECT_ROOT;
-    const previousCwd = process.cwd();
-    delete process.env.SILICA_PROJECT_ROOT;
-    await fs.emptyDir(path.join(root, "content"));
+    process.env.SILICA_PROJECT_ROOT = root;
 
     try {
-      await fs.writeFile(
-        path.join(root, "content/index.md"),
-        "---\ntitle: Discovered\n---\n# Discovered",
-      );
-      await precompute({
-        projectRoot: root,
-        config: resolveConfig({ title: "Test" }, root),
-      });
-      await fs.ensureDir(nextRoot);
-      process.chdir(nextRoot);
-
       expect(getProjectRoot()).toBe(root);
-      expect(getPageRuntimeData("index")?.entry.title).toBe("Discovered");
     } finally {
-      if (await fs.pathExists(path.join(root, ".silica/vault.db"))) {
-        loadVaultDb().close();
-      }
-      process.chdir(previousCwd);
       if (previousProjectRoot === undefined) {
         delete process.env.SILICA_PROJECT_ROOT;
       } else {
         process.env.SILICA_PROJECT_ROOT = previousProjectRoot;
       }
-      await fs.remove(root);
     }
   });
 

@@ -2,4 +2,4 @@
 "@silicajs/next": patch
 ---
 
-Discover the Silica project root from `.silica/vault.db` when `SILICA_PROJECT_ROOT` is unset, so serverless hosts can resolve vault data at runtime.
+Resolve relative `SILICA_PROJECT_ROOT` values against the process cwd so serverless hosts like Netlify can point at monorepo docs without filesystem discovery during tracing.

@@ -4,6 +4,13 @@ publish = "docs/.silica/next/.next"
 
 [build.environment]
 NODE_VERSION = "22"
+SILICA_PROJECT_ROOT = "docs"
+
+[context.deploy-preview.environment]
+SILICA_PROJECT_ROOT = "docs"
+
+[context.production.environment]
+SILICA_PROJECT_ROOT = "docs"
 
 [[plugins]]
 package = "@netlify/plugin-nextjs"

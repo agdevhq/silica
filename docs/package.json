@@ -4,14 +4,14 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "node ../packages/cli/dist/bin.js build",
-    "dev": "node ../packages/cli/dist/bin.js dev",
+    "build": "silica build",
+    "dev": "silica dev",
     "perf:large-vault:build": "SILICA_CONTENT_DIR=content-large npm run build",
     "perf:large-vault:dev": "SILICA_CONTENT_DIR=content-large npm run dev",
     "perf:large-vault:generate": "node ../scripts/perf-generate-large-vault.mjs --out content-large --notes 1200 --paragraphs 8",
     "perf:large-vault:measure": "node ../scripts/perf-measure-large-vault-output.mjs --next-root .silica/next/.next",
-    "precompute": "node ../packages/cli/dist/bin.js build",
-    "start": "node ../packages/cli/dist/bin.js start"
+    "precompute": "silica build",
+    "start": "silica start"
   },
   "dependencies": {
     "@core-ai/azure-openai": "^0.11.0",

@@ -1,5 +1,5 @@
 [build]
-command = "SILICA_SITE_URL=${URL:-$DEPLOY_PRIME_URL} npm run build --workspace docs"
+command = "SILICA_SITE_URL=${URL:-$DEPLOY_PRIME_URL} npx turbo run build --filter=docs"
 publish = "docs/.silica/next/.next"
 
 [build.environment]

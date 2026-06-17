@@ -47,7 +47,7 @@ export function AssistantDock({ panel, children }: AssistantDockProps) {
           <SheetContent
             side="right"
             showCloseButton={false}
-            className="inset-0 h-dvh w-full max-w-none border-0 p-0 sm:max-w-none"
+            className="inset-0 h-dvh !w-screen max-w-none border-0 p-0 sm:max-w-none"
           >
             <SheetHeader className="sr-only">
               <SheetTitle>AI assistant</SheetTitle>

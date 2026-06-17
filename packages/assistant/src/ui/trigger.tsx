@@ -15,15 +15,22 @@ export type AssistantTriggerProps = {
   className?: string;
   label?: string;
   iconOnly?: boolean;
+  onOpen?: () => void;
 };
 
 export function AssistantTrigger({
   className,
   label = "Ask AI",
   iconOnly = false,
+  onOpen,
 }: AssistantTriggerProps) {
   const assistant = useAssistant();
   const setOpen = assistant?.setOpen;
+
+  const openAssistant = React.useCallback(() => {
+    onOpen?.();
+    assistant?.setOpen(true);
+  }, [assistant, onOpen]);
 
   React.useEffect(() => {
     if (!setOpen) return;
@@ -49,7 +56,7 @@ export function AssistantTrigger({
               type="button"
               variant="outline"
               size="icon-sm"
-              onClick={() => assistant.setOpen(true)}
+              onClick={openAssistant}
               className={className}
             >
               <SparklesIcon className="text-muted-foreground" />
@@ -70,7 +77,7 @@ export function AssistantTrigger({
       type="button"
       variant="outline"
       size="sm"
-      onClick={() => assistant.setOpen(true)}
+      onClick={openAssistant}
       className={className}
     >
       <SparklesIcon

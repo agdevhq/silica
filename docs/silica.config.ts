@@ -18,6 +18,10 @@ export default defineConfig({
     strict: false,
   },
   render: {
+    cache: {
+      // Netlify functions have no persistent filesystem for Silica's cache handler.
+      storage: "memory",
+    },
     prerender: {
       strategy: "none",
       include: ["index", "writing/links"],

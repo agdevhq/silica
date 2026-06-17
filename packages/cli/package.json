@@ -26,6 +26,7 @@
     "lint": "tsc --noEmit"
   },
   "dependencies": {
+    "@next/env": "^16.2.7",
     "@silicajs/core": "^0.8.0",
     "@silicajs/next": "^0.5.0",
     "better-sqlite3": "^12.10.0",

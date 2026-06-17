@@ -76,7 +76,7 @@ export async function materializeNextApp(
     path.join(nextRoot, "next-env.d.ts"),
     '/// <reference types="next" />\n/// <reference types="next/image-types/global" />\n',
   );
-  await syncEnvFiles(projectRoot, nextRoot);
+  await removeGeneratedEnvFiles(nextRoot);
   await overlayPublic(projectRoot, publicRoot);
   return nextRoot;
 }
@@ -136,23 +136,17 @@ async function findUserConfig(
   return undefined;
 }
 
-async function syncEnvFiles(
-  projectRoot: string,
-  nextRoot: string,
-): Promise<void> {
-  const entries = await fs.readdir(projectRoot).catch(() => []);
-  for (const entry of entries.filter(
-    (name) => name === ".env" || name.startsWith(".env."),
-  )) {
-    const source = path.join(projectRoot, entry);
-    const destination = path.join(nextRoot, entry);
-    await fs.remove(destination);
-    try {
-      await fs.symlink(source, destination);
-    } catch {
-      await fs.copyFile(source, destination);
-    }
-  }
+async function removeGeneratedEnvFiles(nextRoot: string): Promise<void> {
+  const entries = await fs.readdir(nextRoot).catch(() => []);
+  await Promise.all(
+    entries
+      .filter(isEnvFile)
+      .map((entry) => fs.remove(path.join(nextRoot, entry))),
+  );
+}
+
+function isEnvFile(name: string): boolean {
+  return name === ".env" || name.startsWith(".env.");
 }
 
 async function overlayPublic(

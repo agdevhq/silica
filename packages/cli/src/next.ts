@@ -121,9 +121,11 @@ async function makeNextEnv(): Promise<NodeJS.ProcessEnv> {
     ...(config.auth?.allowedEmails ?? []),
     ...parseList(process.env.SILICA_ALLOWED_EMAILS),
   ]);
+  const env = { ...process.env };
+  delete env.__NEXT_PROCESSED_ENV;
 
   return {
-    ...process.env,
+    ...env,
     SILICA_PROJECT_ROOT: process.cwd(),
     SILICA_AUTH_ENABLED: authEnabled ? "true" : "false",
     SILICA_ALLOWED_DOMAINS: allowedDomains.join(","),

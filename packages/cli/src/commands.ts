@@ -1,6 +1,7 @@
 import crypto from "node:crypto";
 import { precompute } from "@silicajs/core";
 import { reportBrokenWikilinks } from "./diagnostics.js";
+import { loadProjectEnv } from "./env.js";
 import { materializeNextApp } from "./materialize.js";
 import { runNext, runStart, startNext } from "./next.js";
 import { scaffoldProject } from "./scaffold.js";
@@ -13,6 +14,7 @@ export async function createCommand(directory: string): Promise<void> {
 
 export async function devCommand(): Promise<void> {
   const projectRoot = process.cwd();
+  loadProjectEnv(projectRoot, "development");
   let shouldRestart = true;
 
   while (shouldRestart) {
@@ -43,6 +45,7 @@ export async function devCommand(): Promise<void> {
 
 export async function buildCommand(): Promise<void> {
   const projectRoot = process.cwd();
+  loadProjectEnv(projectRoot, "production");
   const nextRoot = await materializeNextApp({ projectRoot });
   const result = await precompute({ projectRoot });
   reportBrokenWikilinks(result.brokenLinks);
@@ -50,6 +53,8 @@ export async function buildCommand(): Promise<void> {
 }
 
 export async function startCommand(): Promise<void> {
-  const nextRoot = await materializeNextApp({ projectRoot: process.cwd() });
+  const projectRoot = process.cwd();
+  loadProjectEnv(projectRoot, "production");
+  const nextRoot = await materializeNextApp({ projectRoot });
   await runStart(nextRoot);
 }

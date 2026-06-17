@@ -1,10 +1,12 @@
 import { defineConfig } from "@silicajs/core";
 
+const siteUrl = process.env.SILICA_SITE_URL || "http://localhost:3000";
+
 export default defineConfig({
   title: "Silica Docs",
   description: "Documentation for the Silica framework",
   logo: "/favicon.svg",
-  baseUrl: "http://localhost:3000",
+  baseUrl: siteUrl,
   contentDir: process.env.SILICA_CONTENT_DIR ?? "content",
   theme: "default",
   assistant: {

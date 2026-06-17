@@ -7,6 +7,7 @@ export default defineConfig({
   sourcemap: true,
   clean: true,
   external: [
+    "@next/env",
     "@silicajs/core",
     "@silicajs/next",
     "better-sqlite3",

@@ -77,28 +77,13 @@ let loadedVaultDb: LoadedVaultDb | undefined;
 
 export function getProjectRoot(): string {
   const configured = process.env.SILICA_PROJECT_ROOT?.trim();
-  if (configured) {
-    return path.isAbsolute(configured)
-      ? configured
-      : path.resolve(process.cwd(), configured);
+  if (!configured) {
+    throw new Error("SILICA_PROJECT_ROOT must be set by the Silica CLI.");
   }
 
-  return discoverProjectRoot();
-}
-
-function discoverProjectRoot(): string {
-  let dir = process.cwd();
-  for (let depth = 0; depth < 12; depth++) {
-    if (fs.existsSync(path.join(dir, ".silica", VAULT_DATABASE_FILENAME))) {
-      return dir;
-    }
-
-    const parent = path.dirname(dir);
-    if (parent === dir) break;
-    dir = parent;
-  }
-
-  throw new Error("SILICA_PROJECT_ROOT must be set by the Silica CLI.");
+  return path.isAbsolute(configured)
+    ? configured
+    : path.resolve(/* turbopackIgnore: true */ process.cwd(), configured);
 }
 
 export function getSilicaRoot(): string {

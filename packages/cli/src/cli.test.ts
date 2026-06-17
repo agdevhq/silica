@@ -1,6 +1,7 @@
 import path from "node:path";
 import fs from "fs-extra";
 import { afterEach, describe, expect, it } from "vitest";
+import { loadProjectEnv } from "./env.js";
 import { materializeNextApp } from "./materialize.js";
 import { scaffoldProject } from "./scaffold.js";
 import { scaffoldDependencyRanges } from "./scaffold-versions.js";
@@ -90,6 +91,37 @@ describe("silica CLI helpers", () => {
     expect(await fs.pathExists(path.join(nextRoot, "public/favicon.svg"))).toBe(
       true,
     );
+  });
+
+  it("loads project env without materializing env files", async () => {
+    const root = await makeTempRoot("silica-project-env");
+    await fs.ensureDir(path.join(root, "content"));
+    await fs.writeFile(path.join(root, "content/index.md"), "# Home");
+    await fs.writeFile(path.join(root, ".env"), "SILICA_TEST_ENV=local\n");
+    await fs.writeFile(path.join(root, ".env.example"), "SECRET=\n");
+
+    const previousValue = process.env.SILICA_TEST_ENV;
+    try {
+      delete process.env.SILICA_TEST_ENV;
+
+      loadProjectEnv(root, "production");
+      expect(process.env.SILICA_TEST_ENV).toBe("local");
+
+      const nextRoot = await materializeNextApp({ projectRoot: root });
+      await fs.writeFile(path.join(nextRoot, ".env"), "STALE=true\n");
+
+      await materializeNextApp({ projectRoot: root });
+      expect(await fs.pathExists(path.join(nextRoot, ".env"))).toBe(false);
+      expect(await fs.pathExists(path.join(nextRoot, ".env.example"))).toBe(
+        false,
+      );
+    } finally {
+      if (previousValue === undefined) {
+        delete process.env.SILICA_TEST_ENV;
+      } else {
+        process.env.SILICA_TEST_ENV = previousValue;
+      }
+    }
   });
 
   it("materializes a static assistant route for a resolved provider package", async () => {

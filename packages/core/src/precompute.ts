@@ -43,7 +43,7 @@ const MAX_ANALYSIS_WORKERS = 12;
 // in a way that affects output (markdown pipeline, Shiki engine/themes, etc.)
 // but the user-facing config/theme do not — otherwise stale renders from a
 // previous deploy are served from the durable cache across deploys.
-const RENDER_CACHE_SCHEMA_VERSION = "silica-render-v3-shiki-eager-compile";
+const RENDER_CACHE_SCHEMA_VERSION = "silica-render-v4-shiki-oniguruma";
 
 export type PrecomputeOptions = {
   projectRoot?: string;

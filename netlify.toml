@@ -1,5 +1,5 @@
 [build]
-command = "SILICA_SITE_URL=${URL:-$DEPLOY_PRIME_URL} npx turbo run build --filter=docs"
+command = "SILICA_TIMING_LOGS=1 SILICA_SITE_URL=${URL:-$DEPLOY_PRIME_URL} npx turbo run build --filter=docs"
 publish = "docs/.silica/next/.next"
 
 [build.environment]

@@ -2,4 +2,4 @@
 "@silicajs/next": patch
 ---
 
-Resolve relative `SILICA_PROJECT_ROOT` values against the process cwd so serverless hosts like Netlify can point at monorepo docs without filesystem discovery during tracing.
+Bake `SILICA_PROJECT_ROOT` (and optional `SILICA_CACHE_DIR`) into generated `next.config.ts` so serverless hosts like Netlify have vault paths at runtime without filesystem discovery during tracing.

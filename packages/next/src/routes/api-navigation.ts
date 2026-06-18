@@ -1,14 +1,27 @@
 import { cacheLife, cacheTag } from "next/cache";
 import { NextResponse } from "next/server";
 import { getCacheState, getNavigation } from "../server-data.js";
+import {
+  logSilicaTiming,
+  timeSilica,
+  timeSilicaAsync,
+  withSilicaTimingTrace,
+} from "../server-timing.js";
 
 export async function GET() {
-  const cacheState = getCacheState();
-  const navigation = await getCachedNavigation(
-    cacheState.renderEnvironmentHash,
-    cacheState.navigationHash,
-  );
-  return NextResponse.json(navigation);
+  return withSilicaTimingTrace("api.navigation.request", {}, async () => {
+    const cacheState = timeSilica("api.navigation.cache-state", {}, () =>
+      getCacheState(),
+    );
+    const navigation = await getCachedNavigation(
+      cacheState.renderEnvironmentHash,
+      cacheState.navigationHash,
+    );
+    logSilicaTiming("api.navigation.response", {
+      entryCount: navigation.entries.length,
+    });
+    return NextResponse.json(navigation);
+  });
 }
 
 async function getCachedNavigation(
@@ -21,5 +34,11 @@ async function getCachedNavigation(
     `environment:${renderEnvironmentHash}`,
     `navigation:${navigationHash}`,
   );
-  return getNavigation();
+  logSilicaTiming("api.navigation.cache-miss", {
+    renderEnvironmentHash,
+    navigationHash,
+  });
+  return timeSilicaAsync("api.navigation.get-navigation", {}, () =>
+    getNavigation(),
+  );
 }

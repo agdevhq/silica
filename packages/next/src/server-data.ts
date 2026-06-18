@@ -6,6 +6,7 @@ import {
   resolveProjectRoot,
   VAULT_DATABASE_FILENAME,
 } from "./runtime-paths.js";
+import { logSilicaTiming, timeSilica } from "./server-timing.js";
 import type {
   Navigation,
   ManifestEntry,
@@ -91,22 +92,43 @@ export function getVaultDatabasePath(): string {
 
 export function loadVaultDb(): LoadedVaultDb {
   const databasePath = getVaultDatabasePath();
-  const stat = fs.statSync(databasePath);
+  const stat = timeSilica("vault-db.stat", { databasePath }, () =>
+    fs.statSync(databasePath),
+  );
   if (
     loadedVaultDb?.databasePath === databasePath &&
     loadedVaultDb.mtimeMs === stat.mtimeMs
   ) {
+    logSilicaTiming("vault-db.reuse", {
+      databasePath,
+      mtimeMs: stat.mtimeMs,
+    });
     return loadedVaultDb;
   }
 
-  loadedVaultDb?.close();
+  if (loadedVaultDb) {
+    logSilicaTiming("vault-db.close-stale", {
+      previousDatabasePath: loadedVaultDb.databasePath,
+      databasePath,
+    });
+    loadedVaultDb.close();
+  }
 
-  const db = new Database(databasePath, {
-    fileMustExist: true,
-    readonly: true,
-  });
-  db.pragma("query_only = ON");
-  const metadata = readMetadata(db);
+  const db = timeSilica(
+    "vault-db.open",
+    { databasePath },
+    () =>
+      new Database(databasePath, {
+        fileMustExist: true,
+        readonly: true,
+      }),
+  );
+  timeSilica("vault-db.pragma", { databasePath }, () =>
+    db.pragma("query_only = ON"),
+  );
+  const metadata = timeSilica("vault-db.metadata", { databasePath }, () =>
+    readMetadata(db),
+  );
   loadedVaultDb = {
     databasePath,
     generatedAt: metadata.generatedAt,
@@ -120,33 +142,43 @@ export function loadVaultDb(): LoadedVaultDb {
       if (loadedVaultDb?.db === db) loadedVaultDb = undefined;
     },
   };
+  logSilicaTiming("vault-db.loaded", {
+    databasePath,
+    generatedAt: metadata.generatedAt,
+    renderEnvironmentHash: metadata.renderEnvironmentHash,
+    mtimeMs: stat.mtimeMs,
+  });
   return loadedVaultDb;
 }
 
 export function getPage(slug: string): ManifestEntry | undefined {
-  const row = loadVaultDb()
-    .db.prepare("SELECT * FROM notes WHERE slug = ?")
-    .get(slug) as NoteRow | undefined;
+  const row = timeSilica("db.query.page", { slug }, () =>
+    loadVaultDb().db.prepare("SELECT * FROM notes WHERE slug = ?").get(slug),
+  ) as NoteRow | undefined;
   return row ? noteRowToEntry(row) : undefined;
 }
 
 export function getPageBySourcePath(
   sourcePath: string,
 ): ManifestEntry | undefined {
-  const row = loadVaultDb()
-    .db.prepare("SELECT * FROM notes WHERE source_path = ?")
-    .get(normalizeDbSourcePath(sourcePath)) as NoteRow | undefined;
+  const row = timeSilica("db.query.page-by-source-path", { sourcePath }, () =>
+    loadVaultDb()
+      .db.prepare("SELECT * FROM notes WHERE source_path = ?")
+      .get(normalizeDbSourcePath(sourcePath)),
+  ) as NoteRow | undefined;
   return row ? noteRowToEntry(row) : undefined;
 }
 
 export function getPageRuntimeData(slug: string): VaultPageData | undefined {
-  const entry = getPage(slug);
-  if (!entry) return undefined;
-  return {
-    entry,
-    config: getConfig(),
-    cacheState: getCacheState(),
-  };
+  return timeSilica("server-data.page-runtime-data", { slug }, () => {
+    const entry = getPage(slug);
+    if (!entry) return undefined;
+    return {
+      entry,
+      config: getConfig(),
+      cacheState: getCacheState(),
+    };
+  });
 }
 
 export function getRenderKey(slug: string): {
@@ -154,9 +186,9 @@ export function getRenderKey(slug: string): {
   renderEnvironmentHash: string;
 } {
   const loaded = loadVaultDb();
-  const row = loaded.db
-    .prepare("SELECT render_hash FROM notes WHERE slug = ?")
-    .get(slug) as { render_hash: string } | undefined;
+  const row = timeSilica("db.query.render-key", { slug }, () =>
+    loaded.db.prepare("SELECT render_hash FROM notes WHERE slug = ?").get(slug),
+  ) as { render_hash: string } | undefined;
   return {
     renderHash: row?.render_hash ?? "missing",
     renderEnvironmentHash: loaded.renderEnvironmentHash,
@@ -168,12 +200,16 @@ export function loadRenderEnvironmentHash(): string {
 }
 
 export function getPrerenderSlugs(): string[] {
-  return loadVaultDb()
-    .db.prepare(
-      "SELECT slug FROM notes WHERE prerender = 1 ORDER BY COALESCE(sort_key, slug), slug",
-    )
-    .all()
-    .map((row) => (row as { slug: string }).slug);
+  const slugs = timeSilica("db.query.prerender-slugs", {}, () =>
+    loadVaultDb()
+      .db.prepare(
+        "SELECT slug FROM notes WHERE prerender = 1 ORDER BY COALESCE(sort_key, slug), slug",
+      )
+      .all()
+      .map((row) => (row as { slug: string }).slug),
+  );
+  logSilicaTiming("db.prerender-slugs", { count: slugs.length });
+  return slugs;
 }
 
 export function getAllSlugs(): string[] {
@@ -184,16 +220,19 @@ export function getAllSlugs(): string[] {
 }
 
 export function getNavigation(): Navigation {
-  const entries = loadVaultDb()
-    .db.prepare(
-      `
+  const entries = timeSilica("db.query.navigation", {}, () =>
+    loadVaultDb()
+      .db.prepare(
+        `
       SELECT slug, menu_label AS title, sort_key
       FROM notes
       WHERE listed = 1
       ORDER BY COALESCE(sort_key, slug), slug
     `,
-    )
-    .all() as NavigationRow[];
+      )
+      .all(),
+  ) as NavigationRow[];
+  logSilicaTiming("db.navigation", { count: entries.length });
   return {
     version: 1,
     entries: entries.map((entry) => ({
@@ -205,9 +244,10 @@ export function getNavigation(): Navigation {
 }
 
 export function getBacklinks(slug: string): BacklinkRow[] {
-  return loadVaultDb()
-    .db.prepare(
-      `
+  const backlinks = timeSilica("db.query.backlinks", { slug }, () =>
+    loadVaultDb()
+      .db.prepare(
+        `
       SELECT n.slug, n.title
       FROM links l
       JOIN notes n ON n.slug = l.source_slug
@@ -215,8 +255,11 @@ export function getBacklinks(slug: string): BacklinkRow[] {
         AND l.kind = 'link'
       ORDER BY n.title COLLATE NOCASE ASC, n.slug
     `,
-    )
-    .all(slug) as BacklinkRow[];
+      )
+      .all(slug),
+  ) as BacklinkRow[];
+  logSilicaTiming("db.backlinks", { slug, count: backlinks.length });
+  return backlinks;
 }
 
 export function getConfig(): ResolvedSilicaConfig {
@@ -362,12 +405,14 @@ export function getBreadcrumbs(slug: string) {
 }
 
 export function loadSearchIndex(): LoadedSearchIndex {
-  const loaded = loadVaultDb();
-  return {
-    databasePath: loaded.databasePath,
-    db: loaded.db,
-    close: () => undefined,
-  };
+  return timeSilica("server-data.load-search-index", {}, () => {
+    const loaded = loadVaultDb();
+    return {
+      databasePath: loaded.databasePath,
+      db: loaded.db,
+      close: () => undefined,
+    };
+  });
 }
 
 export function normalizeRouteSlug(slug?: string[]): string {

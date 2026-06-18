@@ -1,5 +1,6 @@
 {
   "$schema": "https://turbo.build/schema.json",
+  "globalEnv": ["SILICA_TIMING_LOGS"],
   "tasks": {
     "build": {
       "dependsOn": ["^build"],

@@ -1,8 +1,5 @@
 import { createHighlighter, type Highlighter } from "shiki";
-import {
-  createJavaScriptRegexEngine,
-  defaultJavaScriptRegexConstructor,
-} from "shiki/engine/javascript";
+import { createOnigurumaEngine } from "shiki/engine/oniguruma";
 
 /**
  * Themes used for every code block. Kept here so the highlighter and the
@@ -18,32 +15,24 @@ let highlighterPromise: Promise<Highlighter> | undefined;
 /**
  * Returns a process-wide Shiki highlighter.
  *
- * It uses the pure-JavaScript RegExp engine instead of the WASM Oniguruma
- * engine: on memory-constrained serverless runtimes (where CPU scales with
- * memory) compiling the Oniguruma WASM module on the first render dominated
- * request latency. The JS engine has no WASM startup cost, and the singleton
- * means grammars/themes are only ever loaded once per instance. Languages are
- * loaded lazily on demand by the rehype integration.
+ * It uses the WASM Oniguruma engine. The pure-JavaScript RegExp engine has no
+ * WASM startup cost, but on Netlify's serverless V8 its first tokenization pass
+ * over a freshly used grammar intermittently mis-tokenized: Shiki renders dual
+ * themes as one tokenization pass per theme, and the cold first (light) pass
+ * collapsed every token to a single scope while the warm second (dark) pass was
+ * correct — so pages rendered correct dark colors but broken light colors.
+ * Oniguruma is the battle-tested default and tokenizes deterministically.
  *
- * `lazyCompileLength: Infinity` forces every grammar pattern to be compiled up
- * front instead of on first match. Shiki renders dual themes with one
- * tokenization pass per theme; with the default lazy compilation, the first
- * pass triggers compilation of large patterns and — on some serverless V8
- * builds — that first match returned wrong results, so the light pass collapsed
- * to a single scope while the (now-warm) dark pass tokenized correctly. Eager
- * compilation makes both passes deterministic.
+ * The singleton means the WASM module and grammars/themes are only ever
+ * compiled once per instance; languages are still loaded lazily on demand by
+ * the rehype integration, so a cold instance only pays for the grammars a page
+ * actually uses, and full pages are durably cached on top of that.
  */
 export function getSilicaHighlighter(): Promise<Highlighter> {
   highlighterPromise ??= createHighlighter({
     themes: [SILICA_SHIKI_THEMES.light, SILICA_SHIKI_THEMES.dark],
     langs: [],
-    engine: createJavaScriptRegexEngine({
-      forgiving: true,
-      regexConstructor: (pattern) =>
-        defaultJavaScriptRegexConstructor(pattern, {
-          lazyCompileLength: Infinity,
-        }),
-    }),
+    engine: createOnigurumaEngine(import("shiki/wasm")),
   });
   return highlighterPromise;
 }

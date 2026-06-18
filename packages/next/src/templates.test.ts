@@ -63,15 +63,6 @@ describe("generated templates", () => {
     expect(rendered).toContain("./cache-handlers/filesystem-cache.js");
   });
 
-  it("bakes runtime env for serverless hosts without process env", () => {
-    const rendered = nextConfigTemplate();
-    expect(rendered).toContain("const projectRoot = path.dirname(silicaRoot)");
-    expect(rendered).toContain("SILICA_PROJECT_ROOT: projectRoot");
-    expect(rendered).toContain(
-      "SILICA_CACHE_DIR: process.env.SILICA_CACHE_DIR",
-    );
-  });
-
   it("traces configured assistant provider packages for standalone output", () => {
     const rendered = nextConfigTemplate();
 

@@ -1,8 +1,10 @@
+import crypto from "node:crypto";
 import path from "node:path";
 import fs from "fs-extra";
 import { describe, expect, it } from "vitest";
 import { precompute, resolveConfig } from "@silicajs/core";
 import {
+  getProjectRoot,
   getPageBySourcePath,
   getPageRuntimeData,
   loadVaultDb,
@@ -11,6 +13,34 @@ import {
 } from "./server-data.js";
 
 describe("server data", () => {
+  it("resolves the project root from a generated Next runtime cwd", async () => {
+    const root = path.join(
+      process.cwd(),
+      `.tmp-server-data-runtime-${crypto.randomUUID()}`,
+    );
+    const nextRoot = path.join(root, ".silica/next");
+    const previousCwd = process.cwd();
+    const previousProjectRoot = process.env.SILICA_PROJECT_ROOT;
+
+    await fs.ensureDir(nextRoot);
+    await fs.writeFile(path.join(root, ".silica/vault.db"), "");
+
+    try {
+      delete process.env.SILICA_PROJECT_ROOT;
+      process.chdir(nextRoot);
+
+      expect(getProjectRoot()).toBe(root);
+    } finally {
+      process.chdir(previousCwd);
+      if (previousProjectRoot === undefined) {
+        delete process.env.SILICA_PROJECT_ROOT;
+      } else {
+        process.env.SILICA_PROJECT_ROOT = previousProjectRoot;
+      }
+      await fs.remove(root);
+    }
+  });
+
   it("reloads vault.db when precompute swaps the database", async () => {
     const root = path.join(process.cwd(), ".tmp-server-data-reload");
     const previousProjectRoot = process.env.SILICA_PROJECT_ROOT;

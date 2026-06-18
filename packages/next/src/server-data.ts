@@ -2,6 +2,10 @@ import path from "node:path";
 import fs from "node:fs";
 import Database from "better-sqlite3";
 import type { LoadedSearchIndex } from "@silicajs/search";
+import {
+  resolveProjectRoot,
+  VAULT_DATABASE_FILENAME,
+} from "./runtime-paths.js";
 import type {
   Navigation,
   ManifestEntry,
@@ -16,8 +20,6 @@ import {
   resolveRelative,
   slugToHref,
 } from "@silicajs/core/runtime";
-
-const VAULT_DATABASE_FILENAME = "vault.db";
 
 export type LoadedVaultDb = {
   databasePath: string;
@@ -76,12 +78,7 @@ type BacklinkRow = {
 let loadedVaultDb: LoadedVaultDb | undefined;
 
 export function getProjectRoot(): string {
-  const projectRoot = process.env.SILICA_PROJECT_ROOT;
-  if (!projectRoot) {
-    throw new Error("SILICA_PROJECT_ROOT must be set by the Silica CLI.");
-  }
-
-  return projectRoot;
+  return resolveProjectRoot();
 }
 
 export function getSilicaRoot(): string {

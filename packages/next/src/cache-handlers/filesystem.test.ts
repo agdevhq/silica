@@ -1,4 +1,6 @@
+import crypto from "node:crypto";
 import path from "node:path";
+import os from "node:os";
 import { ReadableStream } from "node:stream/web";
 import Database from "better-sqlite3";
 import fs from "fs-extra";
@@ -30,6 +32,120 @@ describe("filesystem cache handler", () => {
     await expect(handler.get("cache-key", [])).resolves.toBeUndefined();
 
     await fs.remove(root);
+  });
+
+  it("uses the OS temp directory for unmanaged generated runtime cache writes", async () => {
+    const root = path.join(
+      process.cwd(),
+      `.tmp-unmanaged-runtime-cache-${crypto.randomUUID()}`,
+    );
+    const nextRoot = path.join(root, ".silica/next");
+    const previousCacheDir = process.env.SILICA_CACHE_DIR;
+    const previousProjectRoot = process.env.SILICA_PROJECT_ROOT;
+    const previousCwd = process.cwd();
+    const cacheRoot = path.join(os.tmpdir(), "silica-cache");
+
+    delete process.env.SILICA_CACHE_DIR;
+    delete process.env.SILICA_PROJECT_ROOT;
+    await fs.emptyDir(path.join(root, "content"));
+    await fs.writeFile(path.join(root, "content/index.md"), "# Home");
+    await precompute({
+      projectRoot: root,
+      config: resolveConfig({ title: "Test" }, root),
+    });
+    await fs.ensureDir(nextRoot);
+    await fs.remove(cacheRoot);
+
+    try {
+      process.chdir(nextRoot);
+      const handler = createFilesystemCacheHandler();
+      await handler.set(
+        "unmanaged-runtime-cache-key",
+        Promise.resolve({
+          value: streamFromString("cached from unmanaged runtime"),
+          tags: ["page:index"],
+          stale: 300,
+          timestamp: Date.now(),
+          expire: 60,
+          revalidate: 60,
+        }),
+      );
+
+      expect(await fs.pathExists(path.join(cacheRoot, "entries"))).toBe(true);
+    } finally {
+      process.chdir(previousCwd);
+      if (previousCacheDir === undefined) {
+        delete process.env.SILICA_CACHE_DIR;
+      } else {
+        process.env.SILICA_CACHE_DIR = previousCacheDir;
+      }
+      if (previousProjectRoot === undefined) {
+        delete process.env.SILICA_PROJECT_ROOT;
+      } else {
+        process.env.SILICA_PROJECT_ROOT = previousProjectRoot;
+      }
+      await fs.remove(cacheRoot);
+      await fs.remove(root);
+    }
+  });
+
+  it("reads cache config from the project root when cwd is the generated app", async () => {
+    const root = path.join(
+      process.cwd(),
+      `.tmp-generated-runtime-cache-${crypto.randomUUID()}`,
+    );
+    const cacheRoot = path.join(root, ".cache/next");
+    const nextRoot = path.join(root, ".silica/next");
+    const previousCwd = process.cwd();
+    const previousCacheDir = process.env.SILICA_CACHE_DIR;
+    const previousProjectRoot = process.env.SILICA_PROJECT_ROOT;
+
+    delete process.env.SILICA_CACHE_DIR;
+    delete process.env.SILICA_PROJECT_ROOT;
+    await fs.emptyDir(path.join(root, "content"));
+    await fs.writeFile(path.join(root, "content/index.md"), "# Home");
+    await precompute({
+      projectRoot: root,
+      config: resolveConfig(
+        {
+          title: "Test",
+          render: { cache: { directory: ".cache/next" } },
+        },
+        root,
+      ),
+    });
+    await fs.ensureDir(nextRoot);
+
+    try {
+      process.chdir(nextRoot);
+      const handler = createFilesystemCacheHandler();
+      await handler.set(
+        "generated-runtime-cache-key",
+        Promise.resolve({
+          value: streamFromString("cached from generated runtime"),
+          tags: ["page:index"],
+          stale: 300,
+          timestamp: Date.now(),
+          expire: 60,
+          revalidate: 60,
+        }),
+      );
+
+      expect(await fs.pathExists(path.join(cacheRoot, "entries"))).toBe(true);
+    } finally {
+      process.chdir(previousCwd);
+      if (previousCacheDir === undefined) {
+        delete process.env.SILICA_CACHE_DIR;
+      } else {
+        process.env.SILICA_CACHE_DIR = previousCacheDir;
+      }
+      if (previousProjectRoot === undefined) {
+        delete process.env.SILICA_PROJECT_ROOT;
+      } else {
+        process.env.SILICA_PROJECT_ROOT = previousProjectRoot;
+      }
+      await fs.remove(root);
+    }
   });
 
   it("reuses cross-build cache entries for unchanged render inputs", async () => {

@@ -76,14 +76,12 @@ type BacklinkRow = {
 let loadedVaultDb: LoadedVaultDb | undefined;
 
 export function getProjectRoot(): string {
-  const configured = process.env.SILICA_PROJECT_ROOT?.trim();
-  if (!configured) {
+  const projectRoot = process.env.SILICA_PROJECT_ROOT;
+  if (!projectRoot) {
     throw new Error("SILICA_PROJECT_ROOT must be set by the Silica CLI.");
   }
 
-  return path.isAbsolute(configured)
-    ? configured
-    : path.resolve(/* turbopackIgnore: true */ process.cwd(), configured);
+  return projectRoot;
 }
 
 export function getSilicaRoot(): string {

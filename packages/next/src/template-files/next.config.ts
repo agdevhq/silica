@@ -8,7 +8,6 @@ import type { NextConfig } from "next";
 const require = createRequire(import.meta.url);
 const nextRoot = path.dirname(fileURLToPath(import.meta.url));
 const silicaRoot = path.resolve(nextRoot, "..");
-const projectRoot = path.dirname(silicaRoot);
 const vaultMetadata = readVaultMetadata(path.join(silicaRoot, "vault.db"));
 type VaultConfig = {
   assistant?: { provider?: { package?: string } };
@@ -25,12 +24,6 @@ const serverExternalPackages = [
 });
 
 const baseNextConfig: NextConfig = {
-  env: {
-    SILICA_PROJECT_ROOT: projectRoot,
-    ...(process.env.SILICA_CACHE_DIR
-      ? { SILICA_CACHE_DIR: process.env.SILICA_CACHE_DIR }
-      : {}),
-  },
   cacheComponents: true,
   ...(useFilesystemCache
     ? {

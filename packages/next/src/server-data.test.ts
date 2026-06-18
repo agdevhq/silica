@@ -5,29 +5,12 @@ import { precompute, resolveConfig } from "@silicajs/core";
 import {
   getPageBySourcePath,
   getPageRuntimeData,
-  getProjectRoot,
   loadVaultDb,
   resolveAssetFromDb,
   resolveWikiLinkFromDb,
 } from "./server-data.js";
 
 describe("server data", () => {
-  it("resolves a relative SILICA_PROJECT_ROOT against cwd", () => {
-    const root = path.join(process.cwd(), ".tmp-server-data-relative-root");
-    const previousProjectRoot = process.env.SILICA_PROJECT_ROOT;
-    process.env.SILICA_PROJECT_ROOT = root;
-
-    try {
-      expect(getProjectRoot()).toBe(root);
-    } finally {
-      if (previousProjectRoot === undefined) {
-        delete process.env.SILICA_PROJECT_ROOT;
-      } else {
-        process.env.SILICA_PROJECT_ROOT = previousProjectRoot;
-      }
-    }
-  });
-
   it("reloads vault.db when precompute swaps the database", async () => {
     const root = path.join(process.cwd(), ".tmp-server-data-reload");
     const previousProjectRoot = process.env.SILICA_PROJECT_ROOT;

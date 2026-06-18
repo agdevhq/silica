@@ -38,7 +38,12 @@ const execFileAsync = promisify(execFile);
 const MIN_PARALLEL_ANALYSIS_FILES = 64;
 const ANALYSIS_BATCH_SIZE = 16;
 const MAX_ANALYSIS_WORKERS = 12;
-const RENDER_CACHE_SCHEMA_VERSION = "silica-render-v1";
+// Feeds `renderEnvironmentHash`, which keys the durable `"use cache"` entries
+// for rendered pages. Bump this whenever the rendering implementation changes
+// in a way that affects output (markdown pipeline, Shiki engine/themes, etc.)
+// but the user-facing config/theme do not — otherwise stale renders from a
+// previous deploy are served from the durable cache across deploys.
+const RENDER_CACHE_SCHEMA_VERSION = "silica-render-v2-shiki-js-engine";
 
 export type PrecomputeOptions = {
   projectRoot?: string;

@@ -96,8 +96,8 @@ export function resolveConfig(
     },
     render: {
       prerender: resolvePrerenderConfig(config.render?.prerender),
+      output: config.render?.output ?? "default",
       cache: {
-        storage: config.render?.cache?.storage ?? "filesystem",
         directory: config.render?.cache?.directory,
       },
     },

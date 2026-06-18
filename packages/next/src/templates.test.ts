@@ -99,7 +99,8 @@ describe("generated templates", () => {
         filters: { removeDrafts: true, explicitPublish: false },
         render: {
           prerender: { strategy: "all" },
-          cache: { storage: "filesystem" },
+          output: "default",
+          cache: {},
         },
       }),
     ).toContain('"authEnabled": true');
@@ -120,7 +121,8 @@ describe("generated templates", () => {
         filters: { removeDrafts: true, explicitPublish: false },
         render: {
           prerender: { strategy: "all" },
-          cache: { storage: "filesystem" },
+          output: "default",
+          cache: {},
         },
       }),
     ).toContain('"publicPaths": [\n    "/logo.svg"\n  ]');

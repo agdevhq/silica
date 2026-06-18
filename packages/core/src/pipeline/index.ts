@@ -10,7 +10,7 @@ import rehypeSanitize, { defaultSchema } from "rehype-sanitize";
 import rehypeKatex from "rehype-katex";
 import rehypeSlug from "rehype-slug";
 import rehypeAutolinkHeadings from "rehype-autolink-headings";
-import rehypeShiki from "@shikijs/rehype";
+import rehypeShikiFromHighlighter from "@shikijs/rehype/core";
 import rehypeReact from "rehype-react";
 import rehypeStringify from "rehype-stringify";
 import { getTags, remarkObsidian } from "@silicajs/remark-obsidian";
@@ -22,6 +22,7 @@ import type {
   TocItem,
 } from "../types.js";
 import { rehypeShikiCodeBlockWrapper } from "./code-block.js";
+import { getSilicaHighlighter, SILICA_SHIKI_THEMES } from "./highlighter.js";
 import {
   createSilicaObsidianHandlers,
   remarkSilicaObsidian,
@@ -202,15 +203,15 @@ export async function renderMarkdown(
     .use(rehypeKatex);
 
   if (hasCodeFence(parsed.content)) {
-    processor.use(rehypeShiki, {
-      themes: {
-        light: "github-light",
-        dark: "github-dark",
-      },
+    const highlighter = await getSilicaHighlighter();
+    processor.use(rehypeShikiFromHighlighter, highlighter, {
+      themes: SILICA_SHIKI_THEMES,
       defaultColor: "light-dark()",
       // Ensure unlabeled fences still flow through Shiki so they pick up the
       // wrapper transformer below (just without a language header).
       defaultLanguage: "text",
+      fallbackLanguage: "text",
+      lazy: true,
       rootStyle: false,
       transformers: [rehypeShikiCodeBlockWrapper()],
     });
@@ -256,13 +257,13 @@ export async function renderMarkdownHtml(
     .use(rehypeKatex);
 
   if (hasCodeFence(parsed.content)) {
-    processor.use(rehypeShiki, {
-      themes: {
-        light: "github-light",
-        dark: "github-dark",
-      },
+    const highlighter = await getSilicaHighlighter();
+    processor.use(rehypeShikiFromHighlighter, highlighter, {
+      themes: SILICA_SHIKI_THEMES,
       defaultColor: "light-dark()",
       defaultLanguage: "text",
+      fallbackLanguage: "text",
+      lazy: true,
       rootStyle: false,
       transformers: [rehypeShikiCodeBlockWrapper()],
     });

@@ -67,7 +67,9 @@ describe("generated templates", () => {
     const rendered = nextConfigTemplate();
     expect(rendered).toContain("const projectRoot = path.dirname(silicaRoot)");
     expect(rendered).toContain("SILICA_PROJECT_ROOT: projectRoot");
-    expect(rendered).toContain("SILICA_CACHE_DIR: process.env.SILICA_CACHE_DIR");
+    expect(rendered).toContain(
+      "SILICA_CACHE_DIR: process.env.SILICA_CACHE_DIR",
+    );
   });
 
   it("traces configured assistant provider packages for standalone output", () => {

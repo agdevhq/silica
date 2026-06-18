@@ -1,8 +1,13 @@
 import crypto from "node:crypto";
+import os from "node:os";
 import path from "node:path";
 import { ReadableStream } from "node:stream/web";
 import Database from "better-sqlite3";
 import fs from "fs-extra";
+import {
+  resolveGeneratedRuntimeProjectRoot,
+  tryResolveProjectRoot,
+} from "../runtime-paths.js";
 
 export type CacheEntry = {
   value: ReadableStream<Uint8Array>;
@@ -126,13 +131,18 @@ async function ensureCacheRoot(entriesRoot: string): Promise<void> {
 
 function resolveCacheRoot(): string {
   if (process.env.SILICA_CACHE_DIR) return process.env.SILICA_CACHE_DIR;
-  const projectRoot = process.env.SILICA_PROJECT_ROOT ?? process.cwd();
+
+  const generatedProjectRoot = resolveGeneratedRuntimeProjectRoot();
+  const projectRoot = tryResolveProjectRoot() ?? process.cwd();
   const config = readConfigFromVaultDb(projectRoot);
   const configured = config?.render?.cache?.directory;
   if (configured) {
     return path.isAbsolute(configured)
       ? configured
       : path.join(projectRoot, configured);
+  }
+  if (generatedProjectRoot && !process.env.SILICA_PROJECT_ROOT) {
+    return path.join(os.tmpdir(), "silica-cache");
   }
   return path.join(projectRoot, ".silica/cache/next");
 }

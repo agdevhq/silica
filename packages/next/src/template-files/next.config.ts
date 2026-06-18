@@ -25,6 +25,9 @@ const serverExternalPackages = [
 
 const baseNextConfig: NextConfig = {
   cacheComponents: true,
+  ...(process.env.SILICA_TIMING_LOGS
+    ? { env: { SILICA_TIMING_LOGS: process.env.SILICA_TIMING_LOGS } }
+    : {}),
   ...(useFilesystemCache
     ? {
         cacheHandlers: {

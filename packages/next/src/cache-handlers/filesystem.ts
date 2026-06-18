@@ -8,6 +8,11 @@ import {
   resolveGeneratedRuntimeProjectRoot,
   tryResolveProjectRoot,
 } from "../runtime-paths.js";
+import {
+  logSilicaTiming,
+  timeSilica,
+  timeSilicaAsync,
+} from "../server-timing.js";
 
 export type CacheEntry = {
   value: ReadableStream<Uint8Array>;
@@ -38,29 +43,70 @@ export function createFilesystemCacheHandler(
   const entriesRoot = path.join(root, "entries");
   const tagsPath = path.join(root, "tags.json");
   let tagState: TagState | undefined;
+  logSilicaTiming("cache.filesystem.created", { root });
 
   return {
     async get(
       cacheKey: string,
       softTags: string[] = [],
     ): Promise<CacheEntry | undefined> {
-      await ensureCacheRoot(entriesRoot);
-      await loadTagState();
-      const stored = await readStoredEntry(getEntryPath(entriesRoot, cacheKey));
-      if (!stored) return undefined;
+      const cacheKeyHash = getCacheKeyDigest(cacheKey);
+      await timeSilicaAsync("cache.filesystem.ensure-root", { root }, () =>
+        ensureCacheRoot(entriesRoot),
+      );
+      await timeSilicaAsync("cache.filesystem.load-tags", { root }, () =>
+        loadTagState(),
+      );
+      const stored = await timeSilicaAsync(
+        "cache.filesystem.read-entry",
+        { root, cacheKeyHash },
+        () => readStoredEntry(getEntryPath(entriesRoot, cacheKey)),
+      );
+      if (!stored) {
+        logSilicaTiming("cache.filesystem.miss", {
+          root,
+          cacheKeyHash,
+          reason: "not-found",
+          softTagCount: softTags.length,
+        });
+        return undefined;
+      }
       const now = Date.now();
       if (
         Number.isFinite(stored.expire) &&
         stored.expire > 0 &&
         stored.timestamp + stored.expire * 1000 <= now
       ) {
+        logSilicaTiming("cache.filesystem.miss", {
+          root,
+          cacheKeyHash,
+          reason: "expired",
+          tagCount: stored.tags?.length ?? 0,
+          softTagCount: softTags.length,
+        });
         return undefined;
       }
       const expiration = getExpirationFromState([
         ...(stored.tags ?? []),
         ...softTags,
       ]);
-      if (expiration > stored.timestamp) return undefined;
+      if (expiration > stored.timestamp) {
+        logSilicaTiming("cache.filesystem.miss", {
+          root,
+          cacheKeyHash,
+          reason: "tag-expired",
+          tagCount: stored.tags?.length ?? 0,
+          softTagCount: softTags.length,
+        });
+        return undefined;
+      }
+      logSilicaTiming("cache.filesystem.hit", {
+        root,
+        cacheKeyHash,
+        tagCount: stored.tags?.length ?? 0,
+        softTagCount: softTags.length,
+        valueBytes: Buffer.byteLength(stored.value, "base64"),
+      });
       return {
         ...stored,
         value: streamFromBuffer(Buffer.from(stored.value, "base64")),
@@ -71,44 +117,98 @@ export function createFilesystemCacheHandler(
       cacheKey: string,
       pendingEntry: Promise<CacheEntry>,
     ): Promise<void> {
-      await ensureCacheRoot(entriesRoot);
-      const entry = await pendingEntry;
+      const cacheKeyHash = getCacheKeyDigest(cacheKey);
+      await timeSilicaAsync("cache.filesystem.ensure-root", { root }, () =>
+        ensureCacheRoot(entriesRoot),
+      );
+      const entry = await timeSilicaAsync(
+        "cache.filesystem.await-entry",
+        { root, cacheKeyHash },
+        () => pendingEntry,
+      );
       const [storedStream, returnedStream] = entry.value.tee();
       entry.value = returnedStream;
+      const buffered = await timeSilicaAsync(
+        "cache.filesystem.buffer-entry",
+        { root, cacheKeyHash },
+        () => bufferFromStream(storedStream),
+      );
       const stored: StoredCacheEntry = {
         ...entry,
-        value: (await bufferFromStream(storedStream)).toString("base64"),
+        value: buffered.toString("base64"),
       };
       const destination = getEntryPath(entriesRoot, cacheKey);
-      await fs.ensureDir(path.dirname(destination));
-      await writeJsonAtomic(destination, stored);
+      await timeSilicaAsync(
+        "cache.filesystem.ensure-entry-dir",
+        { root, cacheKeyHash },
+        () => fs.ensureDir(path.dirname(destination)),
+      );
+      await timeSilicaAsync(
+        "cache.filesystem.write-entry",
+        { root, cacheKeyHash, valueBytes: buffered.length },
+        () => writeJsonAtomic(destination, stored),
+      );
+      logSilicaTiming("cache.filesystem.set", {
+        root,
+        cacheKeyHash,
+        tagCount: entry.tags?.length ?? 0,
+        valueBytes: buffered.length,
+      });
     },
 
     async refreshTags(): Promise<void> {
-      await loadTagState();
+      await timeSilicaAsync("cache.filesystem.refresh-tags", { root }, () =>
+        loadTagState(),
+      );
     },
 
     async getExpiration(tags: string[]): Promise<number> {
-      await loadTagState();
-      return getExpirationFromState(tags);
+      await timeSilicaAsync("cache.filesystem.load-tags", { root }, () =>
+        loadTagState(),
+      );
+      return timeSilica(
+        "cache.filesystem.get-expiration",
+        {
+          root,
+          tagCount: tags.length,
+        },
+        () => getExpirationFromState(tags),
+      );
     },
 
     async updateTags(
       tags: string[],
       durations?: { expire?: number },
     ): Promise<void> {
-      await ensureCacheRoot(entriesRoot);
-      await loadTagState();
+      await timeSilicaAsync("cache.filesystem.ensure-root", { root }, () =>
+        ensureCacheRoot(entriesRoot),
+      );
+      await timeSilicaAsync("cache.filesystem.load-tags", { root }, () =>
+        loadTagState(),
+      );
       const now = Date.now();
       const uniqueTags = [...new Set(tags)];
       tagState ??= { version: 1, tags: {} };
       for (const tag of uniqueTags) {
         tagState.tags[tag] = now;
       }
-      await writeJsonAtomic(tagsPath, tagState);
+      await timeSilicaAsync(
+        "cache.filesystem.write-tags",
+        { root, tagCount: uniqueTags.length },
+        () => writeJsonAtomic(tagsPath, tagState),
+      );
       if (durations?.expire === 0) {
-        await deleteEntriesWithTags(entriesRoot, uniqueTags);
+        await timeSilicaAsync(
+          "cache.filesystem.delete-entries-with-tags",
+          { root, tagCount: uniqueTags.length },
+          () => deleteEntriesWithTags(entriesRoot, uniqueTags),
+        );
       }
+      logSilicaTiming("cache.filesystem.update-tags", {
+        root,
+        tagCount: uniqueTags.length,
+        expire: durations?.expire,
+      });
     },
   };
 
@@ -170,8 +270,12 @@ function readConfigFromVaultDb(projectRoot: string):
 }
 
 function getEntryPath(entriesRoot: string, cacheKey: string): string {
-  const digest = crypto.createHash("sha256").update(cacheKey).digest("hex");
+  const digest = getCacheKeyDigest(cacheKey);
   return path.join(entriesRoot, digest.slice(0, 2), `${digest}.json`);
+}
+
+function getCacheKeyDigest(cacheKey: string): string {
+  return crypto.createHash("sha256").update(cacheKey).digest("hex");
 }
 
 async function readStoredEntry(

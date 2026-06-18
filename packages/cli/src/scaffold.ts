@@ -41,7 +41,7 @@ function gettingStartedMarkdown(): string {
 }
 
 function silicaConfig(): string {
-  return `import { defineConfig } from "@silicajs/core";\n\nexport default defineConfig({\n  title: "My Silica Site",\n  description: "A private knowledge site",\n  theme: "default",\n  // auth: {\n  //   provider: "google",\n  //   allowedDomains: ["example.com"],\n  // },\n});\n`;
+  return `import { defineConfig } from "@silicajs/core";\n\nexport default defineConfig({\n  title: "My Silica Site",\n  description: "A private knowledge site",\n  theme: "default",\n  // Self-hosted via the included Dockerfile. Remove this to deploy to a managed\n  // platform (e.g. Netlify/Vercel) and let its adapter manage caching.\n  render: { output: "standalone" },\n  // auth: {\n  //   provider: "google",\n  //   allowedDomains: ["example.com"],\n  // },\n});\n`;
 }
 
 function tsconfig(): string {

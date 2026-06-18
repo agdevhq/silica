@@ -113,8 +113,17 @@ export type SilicaConfig = {
 
 export type SilicaRenderConfig = {
   prerender?: SilicaPrerenderConfig;
+  /**
+   * Deployment output mode.
+   * - `"default"`: a regular Next.js build. The deployment platform's adapter
+   *   (e.g. Netlify/Vercel) bundles the server and manages caching.
+   * - `"standalone"`: a self-contained Next.js standalone server for
+   *   self-hosting (e.g. Docker). Enables Silica's filesystem cache handler
+   *   automatically.
+   */
+  output?: "standalone" | "default";
   cache?: {
-    storage?: "memory" | "filesystem";
+    /** Directory for the filesystem cache handler (standalone output only). */
     directory?: string;
   };
 };
@@ -173,8 +182,8 @@ export type ResolvedSilicaConfig = {
 
 export type ResolvedSilicaRenderConfig = {
   prerender: ResolvedSilicaPrerenderConfig;
+  output: "standalone" | "default";
   cache: {
-    storage: "memory" | "filesystem";
     directory?: string;
   };
 };

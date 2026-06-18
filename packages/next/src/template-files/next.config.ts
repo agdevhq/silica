@@ -11,10 +11,10 @@ const silicaRoot = path.resolve(nextRoot, "..");
 const vaultMetadata = readVaultMetadata(path.join(silicaRoot, "vault.db"));
 type VaultConfig = {
   assistant?: { provider?: { package?: string } };
-  render?: { cache?: { storage?: "memory" | "filesystem" } };
+  render?: { output?: "standalone" | "default" };
 };
 const resolvedConfig = parseJson<VaultConfig>(vaultMetadata.configJson);
-const useFilesystemCache = resolvedConfig?.render?.cache?.storage !== "memory";
+const standaloneOutput = resolvedConfig?.render?.output === "standalone";
 const serverExternalPackages = [
   "better-sqlite3",
   "just-bash",
@@ -28,8 +28,15 @@ const baseNextConfig: NextConfig = {
   ...(process.env.SILICA_TIMING_LOGS
     ? { env: { SILICA_TIMING_LOGS: process.env.SILICA_TIMING_LOGS } }
     : {}),
-  ...(useFilesystemCache
+  // Standalone output and the filesystem cache handler are both self-hosting
+  // concerns, enabled together by `render.output: "standalone"`. The default
+  // (`"default"`) emits a regular build so the deployment platform's adapter
+  // (e.g. Netlify) bundles the server and installs its own durable Cache
+  // Components handler, instead of Next falling back to writing segments onto a
+  // read-only disk.
+  ...(standaloneOutput
     ? {
+        output: "standalone" as const,
         cacheHandlers: {
           default: require.resolve("./cache-handlers/filesystem-cache.js"),
           remote: require.resolve("./cache-handlers/filesystem-cache.js"),
@@ -38,7 +45,6 @@ const baseNextConfig: NextConfig = {
     : {}),
   generateBuildId: async () => vaultMetadata.renderEnvironmentHash ?? "silica",
   deploymentId: process.env.SILICA_DEPLOYMENT_ID,
-  output: "standalone",
   transpilePackages: [
     "@silicajs/core",
     "@silicajs/next",

@@ -22,9 +22,6 @@ export default defineConfig({
       // Let the deployment adapter manage Next route/data caches.
       storage: "memory",
     },
-    prerender: {
-      strategy: "none",
-      include: ["index", "writing/links"],
-    },
+    prerender: "all",
   },
 });

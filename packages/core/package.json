@@ -34,7 +34,7 @@
     "@shikijs/rehype": "^4.2.0",
     "@silicajs/remark-obsidian": "^0.1.0",
     "@silicajs/search": "^0.3.1",
-    "better-sqlite3": "^12.10.0",
+    "better-sqlite3": "^12.11.1",
     "fast-glob": "^3.3.3",
     "fs-extra": "^11.3.5",
     "github-slugger": "^2.0.0",

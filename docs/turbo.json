@@ -1,0 +1,15 @@
+{
+  "extends": ["//"],
+  "tasks": {
+    "build": {
+      "env": ["SILICA_SITE_URL", "SILICA_CONTENT_DIR"],
+      "passThroughEnv": ["OPENAI_API_KEY", "SILICA_ASSISTANT_SECRET"],
+      "inputs": ["$TURBO_EXTENDS$", ".env*"]
+    },
+    "dev": {
+      "env": ["SILICA_SITE_URL", "SILICA_CONTENT_DIR"],
+      "passThroughEnv": ["OPENAI_API_KEY", "SILICA_ASSISTANT_SECRET"],
+      "inputs": ["$TURBO_EXTENDS$", ".env*"]
+    }
+  }
+}

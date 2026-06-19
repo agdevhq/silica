@@ -1,5 +1,26 @@
 # docs
 
+## 0.1.10
+
+### Patch Changes
+
+- Updated dependencies [13b23e9]
+- Updated dependencies [eb55665]
+- Updated dependencies [562a4dd]
+- Updated dependencies [97f999f]
+- Updated dependencies [df805cb]
+- Updated dependencies [aaa7a80]
+- Updated dependencies [fbdd7ad]
+- Updated dependencies [032b72d]
+- Updated dependencies [beb0e75]
+  - @silicajs/next@0.6.0
+  - @silicajs/assistant@0.2.0
+  - @silicajs/theme-amethyst@0.5.1
+  - @silicajs/search@0.3.2
+  - @silicajs/core@0.9.0
+  - @silicajs/cli@0.4.0
+  - @silicajs/auth@0.1.3
+
 ## 0.1.9
 
 ### Patch Changes

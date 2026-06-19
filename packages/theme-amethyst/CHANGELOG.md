@@ -1,5 +1,18 @@
 # @silicajs/theme-amethyst
 
+## 0.5.1
+
+### Patch Changes
+
+- eb55665: Bump lucide-react to 1.21.0.
+- Updated dependencies [eb55665]
+- Updated dependencies [97f999f]
+- Updated dependencies [aaa7a80]
+- Updated dependencies [beb0e75]
+  - @silicajs/components@0.4.1
+  - @silicajs/ui@0.2.1
+  - @silicajs/core@0.9.0
+
 ## 0.5.0
 
 ### Minor Changes

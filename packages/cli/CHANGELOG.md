@@ -1,5 +1,25 @@
 # @silicajs/cli
 
+## 0.4.0
+
+### Minor Changes
+
+- aaa7a80: Generate self-contained Next.js apps with runtime data, package dependencies, and build roots contained inside `.silica/next`.
+
+### Patch Changes
+
+- fbdd7ad: Load project environment files from the visible Silica project root instead of copying them into the generated Next.js app.
+- beb0e75: Bump better-sqlite3 to 12.11.1.
+- Updated dependencies [13b23e9]
+- Updated dependencies [562a4dd]
+- Updated dependencies [97f999f]
+- Updated dependencies [df805cb]
+- Updated dependencies [aaa7a80]
+- Updated dependencies [032b72d]
+- Updated dependencies [beb0e75]
+  - @silicajs/next@0.6.0
+  - @silicajs/core@0.9.0
+
 ## 0.3.0
 
 ### Minor Changes

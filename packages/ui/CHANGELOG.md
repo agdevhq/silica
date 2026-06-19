@@ -1,5 +1,11 @@
 # @silicajs/ui
 
+## 0.2.1
+
+### Patch Changes
+
+- eb55665: Bump lucide-react to 1.21.0.
+
 ## 0.2.0
 
 ### Minor Changes

@@ -1,5 +1,12 @@
 # @silicajs/search
 
+## 0.3.2
+
+### Patch Changes
+
+- 97f999f: Stop the search index build from overwriting `menu_label` (and other note metadata) when upserting into a vault's existing `notes` table. Sidebar labels set via `menu_label` frontmatter are now preserved instead of being replaced by the page title.
+- beb0e75: Bump better-sqlite3 to 12.11.1.
+
 ## 0.3.1
 
 ### Patch Changes

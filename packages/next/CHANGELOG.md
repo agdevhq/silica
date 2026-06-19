@@ -1,5 +1,28 @@
 # @silicajs/next
 
+## 0.6.0
+
+### Minor Changes
+
+- 13b23e9: Generate Open Graph (`og:image`) preview images for every note automatically, GitHub-style. A new `/api/silica/og/[[...slug]]` route renders a branded 1200×630 card from each note's title, description, and tags, and the page/layout metadata now wires `og:image` and `twitter:image` (with `metadataBase` derived from `baseUrl`).
+- aaa7a80: Generate self-contained Next.js apps with runtime data, package dependencies, and build roots contained inside `.silica/next`.
+
+### Patch Changes
+
+- 562a4dd: Resolve project data and cache paths when generated Next apps run from serverless bundles.
+- df805cb: Revert Netlify project root and render cache changes from #99, #100, and #101.
+- 032b72d: Bump better-auth to 1.6.19.
+- beb0e75: Bump better-sqlite3 to 12.11.1.
+- Updated dependencies [eb55665]
+- Updated dependencies [97f999f]
+- Updated dependencies [aaa7a80]
+- Updated dependencies [032b72d]
+- Updated dependencies [beb0e75]
+  - @silicajs/components@0.4.1
+  - @silicajs/search@0.3.2
+  - @silicajs/core@0.9.0
+  - @silicajs/auth@0.1.3
+
 ## 0.5.0
 
 ### Minor Changes

@@ -1,5 +1,11 @@
 # @silicajs/auth
 
+## 0.1.3
+
+### Patch Changes
+
+- 032b72d: Bump better-auth to 1.6.19.
+
 ## 0.1.2
 
 ### Patch Changes

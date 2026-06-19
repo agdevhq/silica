@@ -30,7 +30,7 @@ npm run build
 # runs: silica build
 ```
 
-See [[publishing/deployment|Deployment]] for what to do with the output.
+See [[deployment/overview|Deployment]] for what to do with the output.
 
 ## `silica start`
 

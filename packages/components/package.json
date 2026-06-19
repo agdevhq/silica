@@ -1,6 +1,6 @@
 {
   "name": "@silicajs/components",
-  "version": "0.4.0",
+  "version": "0.4.1",
   "description": "Silica-aware, framework-agnostic React composables built on @silicajs/ui.",
   "type": "module",
   "types": "./dist/index.d.ts",
@@ -28,9 +28,9 @@
     "test": "vitest run --passWithNoTests"
   },
   "dependencies": {
-    "@silicajs/core": "^0.8.0",
+    "@silicajs/core": "^0.9.0",
     "@silicajs/remark-obsidian": "^0.1.0",
-    "@silicajs/ui": "^0.2.0",
+    "@silicajs/ui": "^0.2.1",
     "lucide-react": "^1.21.0"
   },
   "peerDependencies": {

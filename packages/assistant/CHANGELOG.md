@@ -1,5 +1,22 @@
 # @silicajs/assistant
 
+## 0.2.0
+
+### Minor Changes
+
+- aaa7a80: Generate self-contained Next.js apps with runtime data, package dependencies, and build roots contained inside `.silica/next`.
+
+### Patch Changes
+
+- eb55665: Bump lucide-react to 1.21.0.
+- Updated dependencies [eb55665]
+- Updated dependencies [97f999f]
+- Updated dependencies [aaa7a80]
+- Updated dependencies [beb0e75]
+  - @silicajs/components@0.4.1
+  - @silicajs/ui@0.2.1
+  - @silicajs/core@0.9.0
+
 ## 0.1.0
 
 ### Minor Changes

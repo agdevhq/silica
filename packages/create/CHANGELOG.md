@@ -1,5 +1,14 @@
 # @silicajs/create
 
+## 0.1.4
+
+### Patch Changes
+
+- Updated dependencies [aaa7a80]
+- Updated dependencies [fbdd7ad]
+- Updated dependencies [beb0e75]
+  - @silicajs/cli@0.4.0
+
 ## 0.1.3
 
 ### Patch Changes

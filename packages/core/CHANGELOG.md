@@ -1,5 +1,19 @@
 # @silicajs/core
 
+## 0.9.0
+
+### Minor Changes
+
+- aaa7a80: Generate self-contained Next.js apps with runtime data, package dependencies, and build roots contained inside `.silica/next`.
+
+### Patch Changes
+
+- 97f999f: Stop the search index build from overwriting `menu_label` (and other note metadata) when upserting into a vault's existing `notes` table. Sidebar labels set via `menu_label` frontmatter are now preserved instead of being replaced by the page title.
+- beb0e75: Bump better-sqlite3 to 12.11.1.
+- Updated dependencies [97f999f]
+- Updated dependencies [beb0e75]
+  - @silicajs/search@0.3.2
+
 ## 0.8.0
 
 ### Minor Changes

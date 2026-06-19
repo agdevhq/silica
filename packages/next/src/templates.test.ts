@@ -20,6 +20,7 @@ describe("generated templates", () => {
       "app/api/navigation/route.ts",
       "app/api/search/route.ts",
       "app/api/silica/dev-events/route.ts",
+      "app/api/silica/og/[[...slug]]/route.ts",
       "app/api/silica/revalidate/route.ts",
       "app/layout.tsx",
       "app/not-allowed/page.tsx",

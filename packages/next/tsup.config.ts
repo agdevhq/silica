@@ -30,6 +30,7 @@ export default defineConfig({
     "fs-extra",
     "next",
     "next/cache",
+    "next/og",
     "next/link.js",
     "next/navigation",
     "next/navigation.js",

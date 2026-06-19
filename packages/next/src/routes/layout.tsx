@@ -5,12 +5,33 @@ import { getCacheState, getConfig } from "../server-data.js";
 export async function generateMetadata() {
   const { config } = await getLayoutProps();
   return {
+    metadataBase: resolveMetadataBase(config.baseUrl),
     title: {
       default: config.title,
       template: `%s · ${config.title}`,
     },
     description: config.description,
+    openGraph: {
+      type: "website",
+      siteName: config.title,
+      title: config.title,
+      description: config.description,
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: config.title,
+      description: config.description,
+    },
   };
+}
+
+function resolveMetadataBase(baseUrl?: string): URL | undefined {
+  if (!baseUrl) return undefined;
+  try {
+    return new URL(baseUrl);
+  } catch {
+    return undefined;
+  }
 }
 
 export async function getLayoutProps() {

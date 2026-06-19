@@ -20,6 +20,10 @@
       "types": "./dist/routes/tags-page.d.ts",
       "import": "./dist/routes/tags-page.js"
     },
+    "./routes/opengraph-image": {
+      "types": "./dist/routes/opengraph-image.d.ts",
+      "import": "./dist/routes/opengraph-image.js"
+    },
     "./routes/layout": {
       "types": "./dist/routes/layout.d.ts",
       "import": "./dist/routes/layout.js"

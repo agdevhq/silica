@@ -47,7 +47,7 @@ export async function materializeNextApp(
   await fs.remove(path.join(nextRoot, "app"));
   await removeGeneratedInstallArtifacts(nextRoot);
   await fs.ensureDir(publicRoot);
-  const configImport = await materializeUserConfig(projectRoot, nextRoot);
+  const configImport = await resolveUserConfigImport(projectRoot, nextRoot);
 
   for (const template of getSilicaTemplates()) {
     const destination = path.join(nextRoot, template.path);
@@ -312,7 +312,7 @@ function isPackageInstalled(projectRoot: string, packageName: string): boolean {
   return false;
 }
 
-async function materializeUserConfig(
+async function resolveUserConfigImport(
   projectRoot: string,
   nextRoot: string,
 ): Promise<string | undefined> {
@@ -320,10 +320,8 @@ async function materializeUserConfig(
   await removeGeneratedUserConfig(nextRoot);
   if (!configPath) return undefined;
 
-  const extension = path.extname(configPath) || ".ts";
-  const generatedName = `silica.user.config${extension}`;
-  await fs.copy(configPath, path.join(nextRoot, generatedName));
-  return `./${generatedName}`;
+  const relativePath = relativePosixPath(nextRoot, configPath);
+  return relativePath.startsWith(".") ? relativePath : `./${relativePath}`;
 }
 
 async function findUserConfig(

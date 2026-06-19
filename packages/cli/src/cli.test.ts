@@ -24,12 +24,18 @@ describe("silica CLI helpers", () => {
     expect(
       await fs.pathExists(path.join(root, ".github/workflows/deploy.yml")),
     ).toBe(true);
-    expect(await fs.readFile(path.join(root, "Dockerfile"), "utf8")).toContain(
-      "find . -path '*/server.js'",
+    const dockerfile = await fs.readFile(path.join(root, "Dockerfile"), "utf8");
+    expect(dockerfile).toContain("find . -path '*/server.js'");
+    expect(dockerfile).toContain('"$server_dir/.next/static"');
+    expect(dockerfile).toContain('"$server_dir/public"');
+    expect(dockerfile).toContain('"$server_dir/data"');
+    expect(dockerfile).not.toContain(
+      "COPY --from=build /app/.silica/next/.next/static ./.next/static",
     );
-    expect(
-      await fs.readFile(path.join(root, "Dockerfile"), "utf8"),
-    ).not.toContain("/app/content");
+    expect(dockerfile).not.toContain(
+      "COPY --from=build /app/.silica/next/public ./public",
+    );
+    expect(dockerfile).not.toContain("/app/content");
     expect(
       await fs.readFile(path.join(root, ".dockerignore"), "utf8"),
     ).toContain(".env.*");
@@ -91,10 +97,10 @@ describe("silica CLI helpers", () => {
     ).toContain("@silicajs/theme-amethyst");
     expect(
       await fs.readFile(path.join(nextRoot, "next.config.ts"), "utf8"),
-    ).toContain('jiti("./silica.user.config.ts")');
+    ).toContain('jiti("../../silica.config.ts")');
     expect(
       await fs.pathExists(path.join(nextRoot, "silica.user.config.ts")),
-    ).toBe(true);
+    ).toBe(false);
     const generatedPackageJson = JSON.parse(
       await fs.readFile(path.join(nextRoot, "package.json"), "utf8"),
     ) as {

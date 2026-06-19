@@ -13,6 +13,7 @@ import { SilicaLink } from "@silicajs/components/routing";
 import {
   getBacklinks,
   getBreadcrumbs,
+  getConfig,
   getPage,
   getPageRuntimeData,
   getPrerenderSlugs,
@@ -21,6 +22,7 @@ import {
   resolveWikiLinkFromDb,
   normalizeRouteSlug,
 } from "../server-data.js";
+import { opengraphImagePath } from "./opengraph-image-format.js";
 import type { SilicaTheme } from "@silicajs/core/theme";
 
 function MarkdownLink({
@@ -54,9 +56,25 @@ export async function generateMetadata({ params }: PageProps) {
     renderKey.renderEnvironmentHash,
   );
   if (!entry) return {};
+  const description = getMetaDescription(entry);
+  const config = getConfig();
+  const imageUrl = opengraphImagePath(slug);
   return {
     title: entry.title,
-    description: getMetaDescription(entry),
+    description,
+    openGraph: {
+      type: "article",
+      siteName: config.title,
+      title: entry.title,
+      description,
+      images: [{ url: imageUrl, width: 1200, height: 630, alt: entry.title }],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: entry.title,
+      description,
+      images: [imageUrl],
+    },
   };
 }
 

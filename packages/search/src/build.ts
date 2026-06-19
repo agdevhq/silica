@@ -86,9 +86,6 @@ export function buildSearchTables(
       1
     )
     ON CONFLICT(slug) DO UPDATE SET
-      title = excluded.title,
-      menu_label = excluded.menu_label,
-      description = excluded.description,
       tags_json = excluded.tags_json,
       search_excerpt = excluded.search_excerpt
   `);

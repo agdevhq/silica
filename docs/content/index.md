@@ -1,28 +1,32 @@
 ---
 title: Welcome to Silica
 menu_label: Home
-description: Publish Obsidian-flavored markdown vaults as polished websites.
+description: Publish entire Markdown vaults with Obsidian-like syntax as polished knowledge sites.
 ---
 
-Silica turns a folder of Markdown files into a fast, searchable website. You keep writing in Obsidian-style syntax; Silica handles the navigation, search, links between pages, and hosting.
+Silica turns a folder of Markdown files into a fast, beautiful, searchable website. You write Obsidian-flavored Markdown and Silica builds the navigation, search, and links between pages, then gives you a production site to deploy. If you already have an Obsidian vault, your notes work as-is.
 
 > [!tip] New here?
-> Start with [[getting-started/installation|Installation]], write your first page with [[writing/frontmatter|Frontmatter]], then tune the site in [[publishing/configuration|Configuration]].
+> Get started by [[getting-started/installation|installing Silica]] and running it locally. Then write your content in plain [[writing/markdown-basics|Markdown]], make the site your own through your [[publishing/configuration|configuration]], and [[deployment/overview|deploy it]] when you're ready.
 
 ## What you get
 
-- **Obsidian syntax** — wikilinks, callouts, embeds, highlights, comments, block links, and tags
-- **A polished reading experience** — sidebar navigation, full-text search, table of contents, and backlinks
-- **Dark mode** out of the box
+- **Write in Markdown** — all your content is plain Markdown, with support for Obsidian-flavored syntax like wikilinks, callouts, embeds, highlights, comments, block links, and tags
+- **A connected knowledge graph** — Silica resolves your wikilinks and Markdown links, builds backlinks automatically, and warns about links that don't resolve
+- **Built-in full-text search** — every page's title, content, and tags are indexed at build time, behind a ⌘K command palette (and your sign-in, if enabled)
+- **A polished reading experience** — sidebar navigation, breadcrumbs, a table of contents, and dark mode out of the box
+- **Fast by default** — pages are prerendered to static HTML and cached, so they load instantly
+- **SEO-ready** — clean URLs, per-page titles and meta descriptions, and a generated `sitemap.xml` and `robots.txt`
+- **Optional AI assistant** — answer reader questions from your own pages, with citations
 - **Optional access control** — gate your site behind Google sign-in
-- **Self-hosting** — deploy anywhere that runs a Node container
+- **Deploy your way** — self-host with the included Docker setup or push to a managed platform like Vercel
 
 ## Quick example
 
 Your project stays small — you only ever edit Markdown and one config file:
 
 ```txt
-content/          # your Markdown vault
+content/          # your Markdown files
 public/           # static files (favicon, etc.)
 silica.config.ts  # site settings
 package.json
@@ -40,38 +44,12 @@ export default defineConfig({
 });
 ```
 
-This very site is a Silica vault — it is the Markdown in `docs/content/`, published with Silica.
+This very site is built with Silica — it is just the Markdown in `docs/content/`.
 
-## Documentation map
+## Where to next
 
-### Getting started
-
-- [[getting-started/installation|Installation]]
-- [[getting-started/project-structure|Project structure]]
-- [[getting-started/commands|Commands]]
-
-### Writing content
-
-- [[writing/markdown-basics|Markdown basics]]
-- [[writing/frontmatter|Frontmatter and page properties]]
-- [[writing/links|Links]]
-- [[writing/embeds-and-assets|Embeds and assets]]
-- [[writing/callouts|Callouts]]
-- [[writing/code-and-diagrams|Code and diagrams]]
-- [[writing/tables|Tables]]
-- [[writing/math|Math]]
-- [[writing/tags|Tags]]
-
-### Site features
-
-- [[features/navigation|Navigation]]
-- [[features/search|Search]]
-- [[features/backlinks|Backlinks]]
-- [[features/table-of-contents|Table of contents]]
-
-### Publishing
-
-- [[publishing/drafts-and-publishing|Drafts and publishing]]
-- [[publishing/configuration|Configuration]]
-- [[publishing/authentication|Authentication]]
-- [[publishing/deployment|Deployment]]
+- **Get running** — [[getting-started/installation|Installation]], then learn the [[getting-started/commands|commands]].
+- **Write your pages** — start with [[writing/markdown-basics|Markdown basics]] and [[writing/frontmatter|Frontmatter]].
+- **Make it yours** — tune everything in [[publishing/configuration|Configuration]].
+- **Add an assistant** — let readers ask questions with the [[features/ai-assistant|AI assistant]].
+- **Ship it** — pick a path in [[deployment/overview|Deployment]].

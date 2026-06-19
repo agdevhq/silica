@@ -27,15 +27,10 @@ const serverExternalPackages = [
 
 const baseNextConfig: NextConfig = {
   cacheComponents: true,
-  ...(process.env.SILICA_TIMING_LOGS
-    ? { env: { SILICA_TIMING_LOGS: process.env.SILICA_TIMING_LOGS } }
-    : {}),
   // Standalone output and the filesystem cache handler are both self-hosting
   // concerns, enabled together by `render.output: "standalone"`. The default
   // (`"default"`) emits a regular build so the deployment platform's adapter
-  // (e.g. Netlify) bundles the server and installs its own durable Cache
-  // Components handler, instead of Next falling back to writing segments onto a
-  // read-only disk.
+  // bundles the server and manages its own durable Cache Components handler.
   ...(standaloneOutput
     ? {
         output: "standalone" as const,

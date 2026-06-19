@@ -16,7 +16,7 @@ export const generatedAppPackageManifest: GeneratedAppPackageManifest = {
     "@silicajs/search": "^0.3.1",
     "@silicajs/theme-amethyst": "^0.5.0",
     "@silicajs/ui": "^0.2.0",
-    "@tailwindcss/postcss": "^4.1.18",
+    "@tailwindcss/postcss": "^4.3.1",
     "better-sqlite3": "^12.10.0",
     jiti: "^2.7.0",
     next: "^16.2.0",

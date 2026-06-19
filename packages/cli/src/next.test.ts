@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import crypto from "node:crypto";
 import path from "node:path";
 import fs from "fs-extra";
 import {
@@ -44,7 +45,7 @@ describe("findStandaloneServer", () => {
 });
 
 describe("prepareStandaloneAssets", () => {
-  it("stages static and public assets beside the standalone server", async () => {
+  it("stages static, public, and data assets beside the standalone server", async () => {
     const root = path.join(
       process.cwd(),
       `.tmp-standalone-assets-${crypto.randomUUID()}`,
@@ -63,6 +64,7 @@ describe("prepareStandaloneAssets", () => {
       "console.log('ok');",
     );
     await fs.outputFile(path.join(nextRoot, "public/favicon.svg"), "<svg />");
+    await fs.outputFile(path.join(nextRoot, "data/vault.db"), "");
 
     await prepareStandaloneAssets(nextRoot, serverPath);
 
@@ -71,6 +73,9 @@ describe("prepareStandaloneAssets", () => {
     ).resolves.toBe(true);
     await expect(
       fs.pathExists(path.join(standaloneRoot, "public/favicon.svg")),
+    ).resolves.toBe(true);
+    await expect(
+      fs.pathExists(path.join(standaloneRoot, "data/vault.db")),
     ).resolves.toBe(true);
 
     await fs.remove(root);

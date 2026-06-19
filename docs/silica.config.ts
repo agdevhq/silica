@@ -18,10 +18,6 @@ export default defineConfig({
     strict: false,
   },
   render: {
-    cache: {
-      // Let the deployment adapter manage Next route/data caches.
-      storage: "memory",
-    },
     prerender: "all",
   },
 });

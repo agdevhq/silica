@@ -27,7 +27,7 @@ export function nextConfigTemplate(userConfigImport?: string): string {
       userConfigImport ? `import { createJiti } from "jiti";` : "",
     )
     .replace(
-      "/* __SILICA_CONFIG_OVERRIDE__ */",
+      "const nextConfig = baseNextConfig;",
       nextConfigOverride(userConfigImport),
     );
 }
@@ -107,8 +107,27 @@ export function tsconfigTemplate(hasUserTsconfig: boolean): string {
   return rendered.trimEnd();
 }
 
-export function packageJsonTemplate(): string {
-  return readTemplateFile("package.json");
+export function packageJsonTemplate(
+  dependencies: Record<string, string> = {},
+  devDependencies: Record<string, string> = {},
+): string {
+  return `${JSON.stringify(
+    {
+      private: true,
+      name: ".silica-next",
+      version: "0.0.0",
+      type: "module",
+      scripts: {
+        dev: "next dev",
+        build: "next build",
+        start: "next start",
+      },
+      dependencies,
+      devDependencies,
+    },
+    null,
+    2,
+  )}\n`;
 }
 
 function readTemplateFile(filename: string): string {

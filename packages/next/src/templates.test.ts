@@ -4,6 +4,7 @@ import {
   assistantRouteTemplate,
   getSilicaTemplates,
   nextConfigTemplate,
+  packageJsonTemplate,
   proxyTemplate,
   themeModuleTemplate,
   tsconfigTemplate,
@@ -30,8 +31,15 @@ describe("generated templates", () => {
     ]);
   });
 
-  it("enables externalDir for local theme imports", () => {
-    expect(nextConfigTemplate()).toContain("externalDir: true");
+  it("self-roots generated Next config", () => {
+    const rendered = nextConfigTemplate();
+
+    expect(rendered).toContain("outputFileTracingRoot: turbopackRoot");
+    expect(rendered).toContain(
+      "const turbopackRoot = findTurbopackRoot(nextRoot)",
+    );
+    expect(rendered).toContain("root: turbopackRoot");
+    expect(rendered).not.toContain("externalDir: true");
   });
 
   it("uses the base Next config when there is no user config", () => {
@@ -40,20 +48,46 @@ describe("generated templates", () => {
   });
 
   it("applies user Next config overrides when a user config exists", () => {
-    const rendered = nextConfigTemplate("../../silica.config.ts");
+    const rendered = nextConfigTemplate("./silica.user.config.ts");
 
     expect(rendered).toContain('import { createJiti } from "jiti";');
-    expect(rendered).toContain('jiti("../../silica.config.ts")');
+    expect(rendered).toContain('jiti("./silica.user.config.ts")');
     expect(rendered).toContain("mergeNextConfig(baseNextConfig");
   });
 
-  it("traces only precomputed runtime content", () => {
-    expect(nextConfigTemplate()).toContain('"../content/**/*"');
-    expect(nextConfigTemplate()).toContain('"../vault.db"');
+  it("traces only app-local precomputed runtime data", () => {
+    expect(nextConfigTemplate()).toContain("const tracedDataGlob");
+    expect(nextConfigTemplate()).toContain('"/*": [tracedDataGlob]');
+    expect(nextConfigTemplate()).toContain('path.join(dataRoot, "vault.db")');
+    expect(nextConfigTemplate()).not.toContain('"../content/**/*"');
+    expect(nextConfigTemplate()).not.toContain('"../vault.db"');
     expect(nextConfigTemplate()).not.toContain('"../navigation.json"');
     expect(nextConfigTemplate()).not.toContain('"../cache-state.json"');
     expect(nextConfigTemplate()).not.toContain('"../route-cache-keys.json"');
     expect(nextConfigTemplate()).not.toContain('"../../content/**/*"');
+  });
+
+  it("generates package.json with supplied dependencies", () => {
+    expect(
+      JSON.parse(
+        packageJsonTemplate({
+          next: "^16.2.7",
+          react: "^19.2.6",
+          "react-dom": "^19.2.7",
+          "@silicajs/next": "^0.5.0",
+        }),
+      ),
+    ).toMatchObject({
+      scripts: {
+        build: "next build",
+      },
+      dependencies: {
+        next: "^16.2.7",
+        react: "^19.2.6",
+        "react-dom": "^19.2.7",
+        "@silicajs/next": "^0.5.0",
+      },
+    });
   });
 
   it("configures stable build ids and filesystem cache handlers", () => {
@@ -99,7 +133,8 @@ describe("generated templates", () => {
         filters: { removeDrafts: true, explicitPublish: false },
         render: {
           prerender: { strategy: "all" },
-          cache: { storage: "filesystem" },
+          output: "default",
+          cache: {},
         },
       }),
     ).toContain('"authEnabled": true');
@@ -120,7 +155,8 @@ describe("generated templates", () => {
         filters: { removeDrafts: true, explicitPublish: false },
         render: {
           prerender: { strategy: "all" },
-          cache: { storage: "filesystem" },
+          output: "default",
+          cache: {},
         },
       }),
     ).toContain('"publicPaths": [\n    "/logo.svg"\n  ]');
@@ -164,7 +200,7 @@ describe("generated templates", () => {
     expect(rendered).not.toContain("rateLimit:");
   });
 
-  it("renders the tsconfig extends placeholder when a user config exists", () => {
+  it("can render the tsconfig extends placeholder for legacy callers", () => {
     expect(tsconfigTemplate(true)).toContain(
       '"extends": "../../tsconfig.json"',
     );

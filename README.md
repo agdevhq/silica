@@ -52,7 +52,7 @@ npm run dev
 ## Architecture
 
 1. `@silicajs/cli` materializes `.silica/next/` from templates in `@silicajs/next`.
-2. `@silicajs/core` scans `content/`, filters drafts, builds `.silica/vault.db`, writes runtime markdown to `.silica/content`, and copies assets to `.silica/next/public/silica/`.
+2. `@silicajs/core` scans `content/`, filters drafts, builds `.silica/next/data/vault.db`, writes runtime markdown to `.silica/next/data/content`, and copies assets to `.silica/next/public/silica/`.
 3. Next.js (via `@silicajs/next`) renders vault pages from `.silica/next/app/[[...slug]]/page.tsx`. The cached `VaultContent` server component queries `vault.db`, reads markdown from disk, and returns a React tree.
 4. The theme owns persistent layout chrome while `@silicajs/components` provides the vault tree, breadcrumbs, ToC, backlinks, dark mode, and search UI on top of `@silicajs/ui` primitives.
 5. Auth settings are baked into generated `proxy.ts`, which enforces access before cached pages, search, or vault assets are served.
@@ -69,7 +69,9 @@ export default defineConfig({
 });
 ```
 
-Supported modes are `prerender: "all"`, `prerender: "none"`, depth-based prerendering, and custom selectors with `include`, `exclude`, and `limit`. The cache is always enabled for rendered vault pages; `render.cache.storage` only controls whether it uses memory or a filesystem directory.
+Supported modes are `prerender: "all"`, `prerender: "none"`, depth-based prerendering, and custom selectors with `include`, `exclude`, and `limit`.
+
+`render.output` selects the deployment output: the default (`"default"`) emits a regular Next.js build so the hosting platform's adapter (for example, Vercel) bundles the server and manages caching, while `"standalone"` emits a self-contained server for self-hosting (for example, Docker) and automatically enables Silica's filesystem cache handler (configurable via `render.cache.directory`).
 
 ## Development
 
@@ -89,8 +91,7 @@ The docs site and dogfood fixture lives in `docs/`.
 - `.silica/next/.next/standalone/`
 - `.silica/next/.next/static/`
 - `.silica/next/public/`
-- `.silica/` artifacts
-- `content/`
+- `.silica/next/data/`
 
 This keeps runtime content rendering available while serving through a minimal Node image.
 
@@ -100,11 +101,11 @@ Projects scaffolded with `silica create` include a Dockerfile:
 
 ```bash
 docker build -t my-silica-site .
-docker run --env-file .env -p 3000:3000 -v silica-cache:/app/.silica/cache/next my-silica-site
+docker run --env-file .env -p 3000:3000 -v silica-cache:/app/data/cache/next my-silica-site
 ```
 
 The generated image starts the traced Next.js standalone `server.js`. If auth is enabled, the generated proxy also protects search and vault assets under `/silica/*`.
-Mounting `/app/.silica/cache/next` preserves rendered-note cache entries across container replacement for single-container deployments. Multi-replica deployments need a genuinely shared volume or a future Redis/S3/KV cache handler.
+Mounting `/app/data/cache/next` preserves rendered-note cache entries across container replacement for single-container deployments. Multi-replica deployments need a genuinely shared volume or a future Redis/S3/KV cache handler.
 
 ### Plain Node
 

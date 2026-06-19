@@ -108,6 +108,16 @@ export async function VaultContent({
   ): RenderContext => ({
     slug: currentSlug,
     sourcePath: currentSourcePath,
+    assetBaseUrl: "/silica",
+    wikilinkStrategy: config.wikilinks.strategy,
+    tags: config.tags,
+    ordering: config.ordering,
+    embedDepth,
+    maxEmbedDepth: 3,
+    components: {
+      ...theme.components,
+      a: MarkdownLink,
+    },
     resolveWikiLink: (_currentSlug, target) =>
       resolveWikiLinkFromDb(
         currentSlug,
@@ -122,16 +132,6 @@ export async function VaultContent({
         config.wikilinks.strategy,
         config.ordering,
       ),
-    assetBaseUrl: "/silica",
-    wikilinkStrategy: config.wikilinks.strategy,
-    tags: config.tags,
-    ordering: config.ordering,
-    embedDepth,
-    maxEmbedDepth: 3,
-    components: {
-      ...theme.components,
-      a: MarkdownLink,
-    },
     resolveEmbed: async (target) => {
       const resolved = resolveWikiLinkFromDb(
         currentSlug,

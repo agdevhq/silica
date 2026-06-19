@@ -38,7 +38,12 @@ const execFileAsync = promisify(execFile);
 const MIN_PARALLEL_ANALYSIS_FILES = 64;
 const ANALYSIS_BATCH_SIZE = 16;
 const MAX_ANALYSIS_WORKERS = 12;
-const RENDER_CACHE_SCHEMA_VERSION = "silica-render-v1";
+// Feeds `renderEnvironmentHash`, which keys the durable `"use cache"` entries
+// for rendered pages. Bump this whenever the rendering implementation changes
+// in a way that affects output (markdown pipeline, Shiki engine/themes, etc.)
+// but the user-facing config/theme do not — otherwise stale renders from a
+// previous deploy are served from the durable cache across deploys.
+const RENDER_CACHE_SCHEMA_VERSION = "silica-render-v4-shiki-oniguruma";
 
 export type PrecomputeOptions = {
   projectRoot?: string;
@@ -67,7 +72,10 @@ export async function precompute(
   const graphLinks: Record<string, string[]> = {};
   const brokenLinks: BrokenLink[] = [];
   const searchRecords: SearchRecord[] = [];
-  const runtimeContentRoot = path.join(projectRoot, ".silica/content");
+  const runtimeContentRoot = path.join(
+    projectRoot,
+    ".silica/next/data/content",
+  );
   const relativeGitPaths = markdownFiles.map((file) =>
     normalizeGitPath(path.join(config.contentDir, file.sourcePath)),
   );
@@ -76,7 +84,7 @@ export async function precompute(
     relativeGitPaths,
   );
 
-  await fs.ensureDir(path.join(projectRoot, ".silica"));
+  await fs.ensureDir(path.join(projectRoot, ".silica/next/data"));
   await fs.ensureDir(path.join(projectRoot, ".silica/next/public/silica"));
   await writeRuntimeMarkdown(runtimeContentRoot, markdownFiles);
   const analyses = await analyzeMarkdownFiles(markdownFiles, config, allSlugs, {
@@ -107,7 +115,7 @@ export async function precompute(
       description: analysis.description,
       generatedDescription: analysis.generatedDescription,
       tags: analysis.tags,
-      file: normalizeGitPath(path.join(".silica/content", file.sourcePath)),
+      file: normalizeGitPath(path.join("data/content", file.sourcePath)),
       sourcePath: file.sourcePath,
       sortKey,
       created: stringifyDate(

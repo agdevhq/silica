@@ -2,10 +2,19 @@ import { describe, expect, it } from "vitest";
 import { resolveConfig } from "./config.js";
 
 describe("resolveConfig", () => {
-  it("defaults render settings for static-first standalone output", () => {
+  it("defaults render settings to platform-managed output", () => {
     expect(resolveConfig().render).toEqual({
       prerender: { strategy: "all" },
-      cache: { storage: "filesystem" },
+      output: "default",
+      cache: {},
+    });
+  });
+
+  it("resolves standalone output when requested", () => {
+    expect(resolveConfig({ render: { output: "standalone" } }).render).toEqual({
+      prerender: { strategy: "all" },
+      output: "standalone",
+      cache: {},
     });
   });
 
@@ -168,7 +177,6 @@ describe("resolveConfig", () => {
       resolveConfig({
         render: {
           prerender: { depth: 2, include: ["index"], limit: 10 },
-          cache: { storage: "memory" },
         },
       }).render,
     ).toEqual({
@@ -178,7 +186,8 @@ describe("resolveConfig", () => {
         include: ["index"],
         limit: 10,
       },
-      cache: { storage: "memory" },
+      output: "default",
+      cache: {},
     });
   });
 });

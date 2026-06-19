@@ -13,7 +13,7 @@ import {
 } from "./server-data.js";
 
 describe("server data", () => {
-  it("resolves the project root from a generated Next runtime cwd", async () => {
+  it("resolves the app root from a generated Next runtime cwd", async () => {
     const root = path.join(
       process.cwd(),
       `.tmp-server-data-runtime-${crypto.randomUUID()}`,
@@ -22,14 +22,14 @@ describe("server data", () => {
     const previousCwd = process.cwd();
     const previousProjectRoot = process.env.SILICA_PROJECT_ROOT;
 
-    await fs.ensureDir(nextRoot);
-    await fs.writeFile(path.join(root, ".silica/vault.db"), "");
+    await fs.ensureDir(path.join(nextRoot, "data"));
+    await fs.writeFile(path.join(nextRoot, "data/vault.db"), "");
 
     try {
       delete process.env.SILICA_PROJECT_ROOT;
       process.chdir(nextRoot);
 
-      expect(getProjectRoot()).toBe(root);
+      expect(getProjectRoot()).toBe(nextRoot);
     } finally {
       process.chdir(previousCwd);
       if (previousProjectRoot === undefined) {
@@ -128,7 +128,7 @@ describe("server data", () => {
         ),
       ).toBe("notes/local-image.png");
     } finally {
-      if (await fs.pathExists(path.join(root, ".silica/vault.db"))) {
+      if (await fs.pathExists(path.join(root, ".silica/next/data/vault.db"))) {
         loadVaultDb().close();
       }
       if (previousProjectRoot === undefined) {
@@ -173,7 +173,7 @@ describe("server data", () => {
         "archive/overview",
       );
     } finally {
-      if (await fs.pathExists(path.join(root, ".silica/vault.db"))) {
+      if (await fs.pathExists(path.join(root, ".silica/next/data/vault.db"))) {
         loadVaultDb().close();
       }
       if (previousProjectRoot === undefined) {

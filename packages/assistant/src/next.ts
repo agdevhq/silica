@@ -207,7 +207,7 @@ function loadSiteContext(
   config: ResolvedSilicaConfig,
   requestContext: AssistantRequestContext,
 ): AssistantSiteContext {
-  const contentRoot = path.join(getProjectRoot(), ".silica/content");
+  const contentRoot = path.join(getProjectRoot(), "data/content");
   const homePage = loadHomePageContext(contentRoot);
   const currentPage = loadCurrentPageContext(
     contentRoot,

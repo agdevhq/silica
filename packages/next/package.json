@@ -96,6 +96,10 @@
     "dist"
   ],
   "scripts": {
+    "prebuild": "node ../../scripts/sync-generated-app-manifest.mjs --write",
+    "pretest": "node ../../scripts/sync-generated-app-manifest.mjs --write",
+    "pretypecheck": "node ../../scripts/sync-generated-app-manifest.mjs --write",
+    "prelint": "node ../../scripts/sync-generated-app-manifest.mjs --write",
     "build": "tsup",
     "test": "vitest run --passWithNoTests",
     "typecheck": "tsc --noEmit",
@@ -118,9 +122,12 @@
     "react-dom": "^19.2.0"
   },
   "devDependencies": {
+    "@types/better-sqlite3": "^7.6.13",
+    "@types/node": "^25.9.3",
     "next": "^16.2.7",
     "react": "^19.2.6",
-    "react-dom": "^19.2.7"
+    "react-dom": "^19.2.7",
+    "typescript": "^6.0.3"
   },
   "homepage": "https://github.com/agdevhq/silica/tree/main/packages/next#readme",
   "repository": {

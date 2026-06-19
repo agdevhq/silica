@@ -14,7 +14,8 @@ const baseConfig: ResolvedSilicaConfig = {
   filters: { removeDrafts: true, explicitPublish: false },
   render: {
     prerender: { strategy: "all" },
-    cache: { storage: "filesystem" },
+    output: "default",
+    cache: {},
   },
 };
 

@@ -3,8 +3,9 @@ import fs from "node:fs";
 import Database from "better-sqlite3";
 import type { LoadedSearchIndex } from "@silicajs/search";
 import {
+  resolveDataRoot,
   resolveProjectRoot,
-  VAULT_DATABASE_FILENAME,
+  resolveVaultDatabasePath,
 } from "./runtime-paths.js";
 import type {
   Navigation,
@@ -82,11 +83,11 @@ export function getProjectRoot(): string {
 }
 
 export function getSilicaRoot(): string {
-  return path.join(getProjectRoot(), ".silica");
+  return resolveDataRoot();
 }
 
 export function getVaultDatabasePath(): string {
-  return path.join(getSilicaRoot(), VAULT_DATABASE_FILENAME);
+  return resolveVaultDatabasePath();
 }
 
 export function loadVaultDb(): LoadedVaultDb {

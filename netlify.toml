@@ -1,9 +1,0 @@
-[build]
-command = "SILICA_SITE_URL=${URL:-$DEPLOY_PRIME_URL} npx turbo run build --filter=docs"
-publish = "docs/.silica/next/.next"
-
-[build.environment]
-NODE_VERSION = "22"
-
-[[plugins]]
-package = "@netlify/plugin-nextjs"

@@ -1,6 +1,5 @@
 import crypto from "node:crypto";
 import path from "node:path";
-import os from "node:os";
 import { ReadableStream } from "node:stream/web";
 import Database from "better-sqlite3";
 import fs from "fs-extra";
@@ -34,7 +33,7 @@ describe("filesystem cache handler", () => {
     await fs.remove(root);
   });
 
-  it("uses the OS temp directory for unmanaged generated runtime cache writes", async () => {
+  it("uses the generated app data directory for unmanaged runtime cache writes", async () => {
     const root = path.join(
       process.cwd(),
       `.tmp-unmanaged-runtime-cache-${crypto.randomUUID()}`,
@@ -43,7 +42,7 @@ describe("filesystem cache handler", () => {
     const previousCacheDir = process.env.SILICA_CACHE_DIR;
     const previousProjectRoot = process.env.SILICA_PROJECT_ROOT;
     const previousCwd = process.cwd();
-    const cacheRoot = path.join(os.tmpdir(), "silica-cache");
+    const cacheRoot = path.join(nextRoot, "data/cache/next");
 
     delete process.env.SILICA_CACHE_DIR;
     delete process.env.SILICA_PROJECT_ROOT;
@@ -89,13 +88,13 @@ describe("filesystem cache handler", () => {
     }
   });
 
-  it("reads cache config from the project root when cwd is the generated app", async () => {
+  it("reads cache config from the app data directory when cwd is the generated app", async () => {
     const root = path.join(
       process.cwd(),
       `.tmp-generated-runtime-cache-${crypto.randomUUID()}`,
     );
-    const cacheRoot = path.join(root, ".cache/next");
     const nextRoot = path.join(root, ".silica/next");
+    const cacheRoot = path.join(nextRoot, ".cache/next");
     const previousCwd = process.cwd();
     const previousCacheDir = process.env.SILICA_CACHE_DIR;
     const previousProjectRoot = process.env.SILICA_PROJECT_ROOT;
@@ -261,7 +260,7 @@ async function expectCacheMiss(
 }
 
 function cacheKey(root: string, slug: string): string {
-  const db = new Database(path.join(root, ".silica/vault.db"), {
+  const db = new Database(path.join(root, ".silica/next/data/vault.db"), {
     fileMustExist: true,
     readonly: true,
   });

@@ -46,10 +46,11 @@ export async function startNext(
   nextRoot: string,
 ): Promise<NextSubprocess> {
   installStackTraceRewrite(nextRoot);
-  const subprocess = execa("next", [command, nextRoot], {
+  const subprocess = execa("next", [command], {
     stdin: "inherit",
     stdout: "pipe",
     stderr: "pipe",
+    cwd: nextRoot,
     env: await makeNextEnv(),
   });
 
@@ -83,6 +84,10 @@ export async function prepareStandaloneAssets(
   await syncStandaloneAsset(
     path.join(nextRoot, "public"),
     path.join(serverRoot, "public"),
+  );
+  await syncStandaloneAsset(
+    path.join(nextRoot, "data"),
+    path.join(serverRoot, "data"),
   );
 }
 
@@ -126,7 +131,6 @@ async function makeNextEnv(): Promise<NodeJS.ProcessEnv> {
 
   return {
     ...env,
-    SILICA_PROJECT_ROOT: process.cwd(),
     SILICA_AUTH_ENABLED: authEnabled ? "true" : "false",
     SILICA_ALLOWED_DOMAINS: allowedDomains.join(","),
     SILICA_ALLOWED_EMAILS: allowedEmails.join(","),

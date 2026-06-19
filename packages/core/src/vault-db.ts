@@ -54,11 +54,11 @@ export async function writeVaultDatabase(
   projectRoot: string,
   input: VaultDbBuildInput,
 ): Promise<string> {
-  const silicaRoot = path.join(projectRoot, ".silica");
-  await fs.ensureDir(silicaRoot);
+  const dataRoot = path.join(projectRoot, ".silica/next/data");
+  await fs.ensureDir(dataRoot);
 
-  const databasePath = path.join(silicaRoot, VAULT_DATABASE_FILENAME);
-  const temporaryPath = path.join(silicaRoot, `${VAULT_DATABASE_FILENAME}.tmp`);
+  const databasePath = path.join(dataRoot, VAULT_DATABASE_FILENAME);
+  const temporaryPath = path.join(dataRoot, `${VAULT_DATABASE_FILENAME}.tmp`);
   await removeDatabaseFiles(temporaryPath);
 
   const db = new Database(temporaryPath);

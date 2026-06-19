@@ -1,13 +1,9 @@
 import crypto from "node:crypto";
-import os from "node:os";
 import path from "node:path";
 import { ReadableStream } from "node:stream/web";
 import Database from "better-sqlite3";
 import fs from "fs-extra";
-import {
-  resolveGeneratedRuntimeProjectRoot,
-  tryResolveProjectRoot,
-} from "../runtime-paths.js";
+import { tryResolveDataRoot } from "../runtime-paths.js";
 import {
   logSilicaTiming,
   timeSilica,
@@ -232,27 +228,24 @@ async function ensureCacheRoot(entriesRoot: string): Promise<void> {
 function resolveCacheRoot(): string {
   if (process.env.SILICA_CACHE_DIR) return process.env.SILICA_CACHE_DIR;
 
-  const generatedProjectRoot = resolveGeneratedRuntimeProjectRoot();
-  const projectRoot = tryResolveProjectRoot() ?? process.cwd();
-  const config = readConfigFromVaultDb(projectRoot);
+  const dataRoot = tryResolveDataRoot();
+  const appRoot = dataRoot ? path.dirname(dataRoot) : process.cwd();
+  const config = dataRoot ? readConfigFromVaultDb(dataRoot) : undefined;
   const configured = config?.render?.cache?.directory;
   if (configured) {
     return path.isAbsolute(configured)
       ? configured
-      : path.join(projectRoot, configured);
+      : path.join(appRoot, configured);
   }
-  if (generatedProjectRoot && !process.env.SILICA_PROJECT_ROOT) {
-    return path.join(os.tmpdir(), "silica-cache");
-  }
-  return path.join(projectRoot, ".silica/cache/next");
+  return path.join(appRoot, "data/cache/next");
 }
 
-function readConfigFromVaultDb(projectRoot: string):
+function readConfigFromVaultDb(dataRoot: string):
   | {
       render?: { cache?: { directory?: string } };
     }
   | undefined {
-  const databasePath = path.join(projectRoot, ".silica/vault.db");
+  const databasePath = path.join(dataRoot, "vault.db");
   if (!fs.existsSync(databasePath)) return;
   const db = new Database(databasePath, {
     fileMustExist: true,

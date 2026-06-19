@@ -72,7 +72,7 @@ export function watchContent({
 async function readRenderHashes(
   projectRoot: string,
 ): Promise<Map<string, string>> {
-  const databasePath = path.join(projectRoot, ".silica/vault.db");
+  const databasePath = path.join(projectRoot, ".silica/next/data/vault.db");
   if (!(await fs.pathExists(databasePath))) return new Map();
   const db = new Database(databasePath, {
     fileMustExist: true,

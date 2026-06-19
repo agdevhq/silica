@@ -1,5 +1,7 @@
 import path from "node:path";
+import crypto from "node:crypto";
 import fs from "fs-extra";
+import { generatedAppPackageManifest } from "@silicajs/next";
 import { afterEach, describe, expect, it } from "vitest";
 import { loadProjectEnv } from "./env.js";
 import { materializeNextApp } from "./materialize.js";
@@ -7,6 +9,7 @@ import { scaffoldProject } from "./scaffold.js";
 import { scaffoldDependencyRanges } from "./scaffold-versions.js";
 
 const tempRoots: string[] = [];
+
 afterEach(async () => {
   await Promise.all(tempRoots.splice(0).map((root) => fs.remove(root)));
 });
@@ -70,6 +73,7 @@ describe("silica CLI helpers", () => {
       path.join(root, "silica.config.ts"),
       'export default { title: "Test Vault" };\n',
     );
+    await writeProjectPackage(root);
     await fs.ensureDir(path.join(root, "public"));
     await fs.writeFile(path.join(root, "public/favicon.svg"), "<svg />");
 
@@ -87,16 +91,63 @@ describe("silica CLI helpers", () => {
     ).toContain("@silicajs/theme-amethyst");
     expect(
       await fs.readFile(path.join(nextRoot, "next.config.ts"), "utf8"),
-    ).toContain('jiti("../../silica.config.ts")');
+    ).toContain('jiti("./silica.user.config.ts")');
+    expect(
+      await fs.pathExists(path.join(nextRoot, "silica.user.config.ts")),
+    ).toBe(true);
+    const generatedPackageJson = JSON.parse(
+      await fs.readFile(path.join(nextRoot, "package.json"), "utf8"),
+    ) as {
+      dependencies: Record<string, string>;
+      devDependencies: Record<string, string>;
+    };
+    expect(generatedPackageJson.dependencies.next).toBe(
+      generatedAppPackageManifest.dependencies.next,
+    );
+    expect(generatedPackageJson.dependencies.react).toBe(
+      generatedAppPackageManifest.dependencies.react,
+    );
+    const nextTarball = workspaceTarballFilename("@silicajs/next", "next");
+    expect(generatedPackageJson.dependencies["@silicajs/next"]).toBe(
+      `file:.silica-packages/${nextTarball}`,
+    );
+    expect(
+      await fs.pathExists(path.join(nextRoot, ".silica-packages", nextTarball)),
+    ).toBe(true);
+    const uiTarball = workspaceTarballFilename("@silicajs/ui", "ui");
+    expect(generatedPackageJson.dependencies["@silicajs/ui"]).toBe(
+      `file:.silica-packages/${uiTarball}`,
+    );
+    expect(generatedPackageJson.dependencies["@tailwindcss/postcss"]).toBe(
+      generatedAppPackageManifest.dependencies["@tailwindcss/postcss"],
+    );
+    expect(generatedPackageJson.dependencies.tailwindcss).toBe(
+      generatedAppPackageManifest.dependencies.tailwindcss,
+    );
+    expect(generatedPackageJson.devDependencies["@types/node"]).toBe(
+      generatedAppPackageManifest.devDependencies["@types/node"],
+    );
+    expect(generatedPackageJson.devDependencies["@types/better-sqlite3"]).toBe(
+      generatedAppPackageManifest.devDependencies["@types/better-sqlite3"],
+    );
+    expect(generatedPackageJson.devDependencies.typescript).toBe(
+      generatedAppPackageManifest.devDependencies.typescript,
+    );
     expect(await fs.pathExists(path.join(nextRoot, "public/favicon.svg"))).toBe(
       true,
     );
+    expect(
+      (
+        await fs.lstat(path.join(nextRoot, "public/favicon.svg"))
+      ).isSymbolicLink(),
+    ).toBe(false);
   });
 
   it("loads project env without materializing env files", async () => {
     const root = await makeTempRoot("silica-project-env");
     await fs.ensureDir(path.join(root, "content"));
     await fs.writeFile(path.join(root, "content/index.md"), "# Home");
+    await writeProjectPackage(root);
     await fs.writeFile(path.join(root, ".env"), "SILICA_TEST_ENV=local\n");
     await fs.writeFile(path.join(root, ".env.example"), "SECRET=\n");
 
@@ -128,7 +179,10 @@ describe("silica CLI helpers", () => {
     const root = await makeTempRoot("silica-materialize-assistant");
     await fs.ensureDir(path.join(root, "content"));
     await fs.writeFile(path.join(root, "content/index.md"), "# Home");
-    await fs.writeJson(path.join(root, "package.json"), { type: "module" });
+    await writeProjectPackage(root, {
+      "@acme/provider": "^1.0.0",
+      "@silicajs/assistant": "^0.1.0",
+    });
     await fs.outputJson(
       path.join(root, "node_modules/@silicajs/assistant/package.json"),
       {},
@@ -161,6 +215,10 @@ describe("silica CLI helpers", () => {
       'import * as assistantProvider from "@acme/provider"',
     );
     expect(route).toContain("providerModule: assistantProvider");
+    const generatedPackageJson = JSON.parse(
+      await fs.readFile(path.join(nextRoot, "package.json"), "utf8"),
+    ) as { dependencies: Record<string, string> };
+    expect(generatedPackageJson.dependencies["@acme/provider"]).toBe("^1.0.0");
   });
 });
 
@@ -172,4 +230,32 @@ async function makeTempRoot(prefix: string): Promise<string> {
   tempRoots.push(root);
   await fs.emptyDir(root);
   return root;
+}
+
+async function writeProjectPackage(
+  root: string,
+  dependencies: Record<string, string> = {},
+): Promise<void> {
+  await fs.writeJson(path.join(root, "package.json"), {
+    type: "module",
+    dependencies: {
+      "@silicajs/core": "^0.8.0",
+      "@silicajs/next": "^0.5.0",
+      "@silicajs/theme-amethyst": "^0.5.0",
+      next: "^16.2.7",
+      react: "^19.2.6",
+      "react-dom": "^19.2.7",
+      ...dependencies,
+    },
+  });
+}
+
+function workspaceTarballFilename(
+  packageName: string,
+  workspace: string,
+): string {
+  const packageJson = fs.readJsonSync(
+    path.join(process.cwd(), `../${workspace}/package.json`),
+  ) as { version: string };
+  return `${packageName.replace(/^@/, "").replace("/", "-")}-${packageJson.version}.tgz`;
 }

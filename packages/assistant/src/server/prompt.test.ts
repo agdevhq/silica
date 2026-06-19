@@ -16,7 +16,7 @@ const site: AssistantSiteContext = {
     sourcePath: "writing/frontmatter.md",
     excerpt: "Frontmatter configures page metadata.",
   },
-  contentRoot: "/project/.silica/content",
+  contentRoot: "/project/.silica/next/data/content",
   resolveCitation: () => undefined,
 };
 

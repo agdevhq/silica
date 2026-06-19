@@ -125,7 +125,7 @@ describe("precompute", () => {
     expect(result.graph.links.index).toEqual(["notes/auth"]);
     expect(result.graph.backlinks["notes/auth"]).toEqual(["index"]);
 
-    const db = new Database(path.join(root, ".silica/vault.db"), {
+    const db = new Database(path.join(root, ".silica/next/data/vault.db"), {
       readonly: true,
       fileMustExist: true,
     });
@@ -284,7 +284,9 @@ describe("precompute", () => {
       "index",
       "notes/auth",
     ]);
-    expect(await fs.pathExists(path.join(root, ".silica/vault.db"))).toBe(true);
+    expect(
+      await fs.pathExists(path.join(root, ".silica/next/data/vault.db")),
+    ).toBe(true);
     expect(await fs.pathExists(path.join(root, ".silica/search.db"))).toBe(
       false,
     );
@@ -298,7 +300,9 @@ describe("precompute", () => {
       ),
     ).toBe(true);
     expect(
-      await fs.pathExists(path.join(root, ".silica/content/index.md")),
+      await fs.pathExists(
+        path.join(root, ".silica/next/data/content/index.md"),
+      ),
     ).toBe(true);
     expect(
       await fs.pathExists(path.join(root, ".silica/cache-state.json")),
@@ -317,7 +321,9 @@ describe("precompute", () => {
     expect(readRenderHash(root, "index")).toMatch(/^[a-f0-9]{64}$/);
     expect(readSearchRowCount(root)).toBe(2);
     expect(
-      await fs.pathExists(path.join(root, ".silica/content/draft.md")),
+      await fs.pathExists(
+        path.join(root, ".silica/next/data/content/draft.md"),
+      ),
     ).toBe(false);
     expect(
       result.manifest.entries.every((entry) => !path.isAbsolute(entry.file)),
@@ -677,7 +683,7 @@ function readSearchRowCount(root: string): number {
 }
 
 function openVaultDb(root: string): Database.Database {
-  const db = new Database(path.join(root, ".silica/vault.db"), {
+  const db = new Database(path.join(root, ".silica/next/data/vault.db"), {
     fileMustExist: true,
     readonly: true,
   });

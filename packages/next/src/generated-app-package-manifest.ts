@@ -17,7 +17,7 @@ export const generatedAppPackageManifest: GeneratedAppPackageManifest = {
     "@silicajs/theme-amethyst": "^0.5.0",
     "@silicajs/ui": "^0.2.0",
     "@tailwindcss/postcss": "^4.3.1",
-    "better-sqlite3": "^12.10.0",
+    "better-sqlite3": "^12.11.1",
     jiti: "^2.7.0",
     next: "^16.2.0",
     react: "^19.2.0",

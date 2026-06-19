@@ -10,7 +10,7 @@ import { runAssistant } from "./runtime.js";
 
 const site: AssistantSiteContext = {
   siteTitle: "Docs",
-  contentRoot: "/project/.silica/content",
+  contentRoot: "/project/.silica/next/data/content",
   resolveCitation: (sourcePath) =>
     sourcePath === "guides/install.md"
       ? {

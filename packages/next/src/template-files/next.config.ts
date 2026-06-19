@@ -7,8 +7,10 @@ import type { NextConfig } from "next";
 
 const require = createRequire(import.meta.url);
 const nextRoot = path.dirname(fileURLToPath(import.meta.url));
-const silicaRoot = path.resolve(nextRoot, "..");
-const vaultMetadata = readVaultMetadata(path.join(silicaRoot, "vault.db"));
+const dataRoot = path.join(nextRoot, "data");
+const turbopackRoot = findTurbopackRoot(nextRoot);
+const tracedDataGlob = `${relativePosixPath(turbopackRoot, dataRoot)}/**/*`;
+const vaultMetadata = readVaultMetadata(path.join(dataRoot, "vault.db"));
 type VaultConfig = {
   assistant?: { provider?: { package?: string } };
   render?: { output?: "standalone" | "default" };
@@ -55,11 +57,14 @@ const baseNextConfig: NextConfig = {
     "@silicajs/theme-amethyst",
   ],
   serverExternalPackages,
+  outputFileTracingRoot: turbopackRoot,
   outputFileTracingIncludes: {
-    "/*": ["../content/**/*", "../vault.db"],
+    "/*": [tracedDataGlob],
+  },
+  turbopack: {
+    root: turbopackRoot,
   },
   experimental: {
-    externalDir: true,
     serverSourceMaps: process.env.NODE_ENV !== "production",
   },
 };
@@ -88,6 +93,23 @@ function parseJson<T>(value: string | undefined): T | undefined {
   return value ? (JSON.parse(value) as T) : undefined;
 }
 
-/* __SILICA_CONFIG_OVERRIDE__ */
+function findTurbopackRoot(start: string): string {
+  let current = start;
+  while (true) {
+    if (fs.existsSync(path.join(current, "node_modules/next/package.json"))) {
+      return current;
+    }
+
+    const parent = path.dirname(current);
+    if (parent === current) return start;
+    current = parent;
+  }
+}
+
+function relativePosixPath(from: string, to: string): string {
+  return path.relative(from, to).split(path.sep).join("/") || ".";
+}
+
+const nextConfig = baseNextConfig;
 
 export default nextConfig;

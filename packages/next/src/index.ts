@@ -10,6 +10,10 @@ export {
   type TemplateFile,
 } from "./templates.js";
 export {
+  generatedAppPackageManifest,
+  type GeneratedAppPackageManifest,
+} from "./generated-app-package-manifest.js";
+export {
   getAllSlugs,
   getBacklinks,
   getBreadcrumbs,

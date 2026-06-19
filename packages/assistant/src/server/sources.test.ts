@@ -19,7 +19,7 @@ const citationsBySourcePath: Record<string, AssistantCitation> = {
 
 const site: AssistantSiteContext = {
   siteTitle: "Docs",
-  contentRoot: "/project/.silica/content",
+  contentRoot: "/project/.silica/next/data/content",
   resolveCitation: (sourcePath) => citationsBySourcePath[sourcePath],
 };
 

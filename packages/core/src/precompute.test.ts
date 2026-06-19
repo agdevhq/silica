@@ -51,6 +51,11 @@ describe("precompute", () => {
       title: "Authentication and Authorization",
       menuLabel: "Auth",
     });
+    // The search index build upserts into the same notes table; it must not
+    // clobber the menu_label written from frontmatter.
+    expect(readNavigationEntries(root)).toEqual([
+      { slug: "index", title: "Auth" },
+    ]);
 
     await fs.remove(root);
   });

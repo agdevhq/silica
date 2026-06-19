@@ -3,7 +3,12 @@
   Silica
 </h1>
 
+[![create-silica on npm](https://img.shields.io/npm/v/create-silica?label=create-silica&color=6c47ff)](https://www.npmjs.com/package/create-silica)
+[![Documentation](https://img.shields.io/badge/docs-silicajs.dev-6c47ff)](https://www.silicajs.dev)
+
 Silica is a framework for publishing Obsidian-flavored markdown vaults as polished, authenticated, server-rendered knowledge sites.
+
+Read the documentation at **[silicajs.dev](https://www.silicajs.dev)**.
 
 The user's project stays small:
 

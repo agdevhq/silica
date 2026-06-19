@@ -71,7 +71,7 @@ export default defineConfig({
 
 Supported modes are `prerender: "all"`, `prerender: "none"`, depth-based prerendering, and custom selectors with `include`, `exclude`, and `limit`.
 
-`render.output` selects the deployment output: the default (`"default"`) emits a regular Next.js build so the hosting platform's adapter (e.g. Netlify/Vercel) bundles the server and manages caching, while `"standalone"` emits a self-contained server for self-hosting (e.g. Docker) and automatically enables Silica's filesystem cache handler (configurable via `render.cache.directory`).
+`render.output` selects the deployment output: the default (`"default"`) emits a regular Next.js build so the hosting platform's adapter (for example, Vercel) bundles the server and manages caching, while `"standalone"` emits a self-contained server for self-hosting (for example, Docker) and automatically enables Silica's filesystem cache handler (configurable via `render.cache.directory`).
 
 ## Development
 

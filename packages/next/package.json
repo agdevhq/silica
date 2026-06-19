@@ -64,10 +64,6 @@
       "types": "./dist/server-data.d.ts",
       "import": "./dist/server-data.js"
     },
-    "./server-timing": {
-      "types": "./dist/server-timing.d.ts",
-      "import": "./dist/server-timing.js"
-    },
     "./cache-handlers/filesystem": {
       "types": "./dist/cache-handlers/filesystem.d.ts",
       "import": "./dist/cache-handlers/filesystem.js"

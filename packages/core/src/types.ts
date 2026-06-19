@@ -116,7 +116,7 @@ export type SilicaRenderConfig = {
   /**
    * Deployment output mode.
    * - `"default"`: a regular Next.js build. The deployment platform's adapter
-   *   (e.g. Netlify/Vercel) bundles the server and manages caching.
+   *   (for example, Vercel) bundles the server and manages caching.
    * - `"standalone"`: a self-contained Next.js standalone server for
    *   self-hosting (e.g. Docker). Enables Silica's filesystem cache handler
    *   automatically.

@@ -15,13 +15,8 @@ let highlighterPromise: Promise<Highlighter> | undefined;
 /**
  * Returns a process-wide Shiki highlighter.
  *
- * It uses the WASM Oniguruma engine. The pure-JavaScript RegExp engine has no
- * WASM startup cost, but on Netlify's serverless V8 its first tokenization pass
- * over a freshly used grammar intermittently mis-tokenized: Shiki renders dual
- * themes as one tokenization pass per theme, and the cold first (light) pass
- * collapsed every token to a single scope while the warm second (dark) pass was
- * correct — so pages rendered correct dark colors but broken light colors.
- * Oniguruma is the battle-tested default and tokenizes deterministically.
+ * It uses the WASM Oniguruma engine so Shiki tokenizes dual-theme code blocks
+ * deterministically across cold starts and deployment runtimes.
  *
  * The singleton means the WASM module and grammars/themes are only ever
  * compiled once per instance; languages are still loaded lazily on demand by

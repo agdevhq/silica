@@ -4,7 +4,7 @@ menu_label: Home
 description: Publish entire Markdown vaults with Obsidian-like syntax as polished knowledge sites.
 ---
 
-Silica turns a folder of Markdown files into a fast, beautiful, searchable website. You write Obsidian-flavored Markdown and Silica builds the navigation, search, and links between pages, then gives you a production site to deploy. If you already have an Obsidian vault, your notes work as-is.
+Silica turns an entire tree of Markdown files into a fast, beautiful, searchable website. Your folder hierarchy becomes the site's structure, and Silica builds the navigation, search, and links between pages, then gives you a production site to deploy. If you already have an Obsidian vault, your notes work as-is.
 
 > [!tip] New here?
 > Get started by [[getting-started/installation|installing Silica]] and running it locally. Then write your content in plain [[writing/markdown-basics|Markdown]], make the site your own through your [[publishing/configuration|configuration]], and [[deployment/overview|deploy it]] when you're ready.

@@ -23,7 +23,7 @@ Merge the Version Packages PR when ready to publish. npm trusted publishing uses
 | Script                            | Command                                          | Purpose                                        |
 | --------------------------------- | ------------------------------------------------ | ---------------------------------------------- |
 | `npm run release:check`           | scaffold check + build + lint + typecheck + test | Validate repo before release                   |
-| `npm run release:version`         | `changeset version` + `scaffold-versions:update` | Bump versions, update changelogs and scaffolds |
+| `npm run release:version`         | `changeset version` + scaffold/generated manifest sync | Bump versions, update changelogs and generated pins |
 | `npm run release:publish`         | `changeset publish`                              | Publish changed packages to npm                |
 | `npm run scaffold-versions:check` | sync scaffold package versions against published | CI guard for create template versions          |
 
@@ -48,7 +48,7 @@ Changesets reads pending `.changeset/*.md` files and:
 - Generates/updates `CHANGELOG.md` per package
 - Deletes consumed `.changeset/*.md` files
 
-Then `scaffold-versions:update` syncs version pins in scaffold templates.
+Then `scaffold-versions:update` and `generated-app-manifest:update` sync version pins in scaffold templates and the generated Next app manifest.
 
 ### Publish (after versions are bumped on main)
 

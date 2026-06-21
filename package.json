@@ -23,7 +23,7 @@
     "perf:large-vault:measure": "npm run perf:large-vault:measure --workspace docs",
     "release:check": "npm run scaffold-versions:check && npm run generated-app-manifest:check && npm run format && npm run build && npm run lint && npm run typecheck && npm test",
     "release:publish": "changeset publish",
-    "release:version": "changeset version && npm run scaffold-versions:update",
+    "release:version": "changeset version && npm run scaffold-versions:update && npm run generated-app-manifest:update",
     "scaffold-versions:check": "node scripts/sync-scaffold-versions.mjs --check",
     "scaffold-versions:update": "node scripts/sync-scaffold-versions.mjs --write",
     "test": "turbo run test",

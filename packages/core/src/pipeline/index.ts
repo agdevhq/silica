@@ -37,6 +37,9 @@ import {
   rehypeUnwrapSilicaEmbeds,
 } from "./plugins.js";
 
+/** Obsidian strikethrough uses `~~text~~`; single tildes are subscript, not delete. */
+const remarkGfmOptions = { singleTilde: false } as const;
+
 type MdastNode = {
   type: string;
   value?: string;
@@ -367,7 +370,7 @@ function baseProcessor(context: RenderContext) {
   return unified()
     .use(remarkParse)
     .use(remarkFrontmatter, ["yaml"])
-    .use(remarkGfm)
+    .use(remarkGfm, remarkGfmOptions)
     .use(remarkMath)
     .use(remarkObsidian, { inlineTags: context.tags?.inline ?? true })
     .use(remarkSilicaObsidian, context)
@@ -381,7 +384,7 @@ async function runRemarkObsidian(markdown: string, context: RenderContext) {
   const processor = unified()
     .use(remarkParse)
     .use(remarkFrontmatter, ["yaml"])
-    .use(remarkGfm)
+    .use(remarkGfm, remarkGfmOptions)
     .use(remarkMath)
     .use(remarkObsidian, { inlineTags: context.tags?.inline ?? true })
     .use(remarkSilicaObsidian, context);
@@ -413,7 +416,7 @@ function parsePlainTextMarkdown(markdown: string): MdastNode {
   return unified()
     .use(remarkParse)
     .use(remarkFrontmatter, ["yaml"])
-    .use(remarkGfm)
+    .use(remarkGfm, remarkGfmOptions)
     .use(remarkMath)
     .use(remarkObsidian)
     .parse(markdown) as MdastNode;

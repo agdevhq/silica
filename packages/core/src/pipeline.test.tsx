@@ -411,6 +411,19 @@ describe("renderMarkdown", () => {
     expect(html).toContain("<pre");
   }, 15_000);
 
+  it("only treats double tildes as strikethrough", async () => {
+    const result = await renderMarkdown(
+      "~~crossed out~~ and ~not crossed~",
+      testContext("index", ["index"]),
+    );
+
+    const html = renderToStaticMarkup(<>{result.content}</>);
+
+    expect(html).toContain("<del>crossed out</del>");
+    expect(html).toContain("~not crossed~");
+    expect(html).not.toContain("<del>not crossed</del>");
+  }, 15_000);
+
   it("sanitizes raw HTML and escapes OFM-injected labels", async () => {
     const result = await renderMarkdown(
       '[[<img src=x onerror=alert(1)>]]\n\n<script>alert(1)</script>\n\n<img src=x onerror=alert(1)>\n\n<h2 id="raw-id">Raw heading</h2>\n\n<h2 id="footnote-label">User heading</h2>',

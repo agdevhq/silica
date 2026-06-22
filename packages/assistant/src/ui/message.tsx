@@ -43,7 +43,7 @@ export function AssistantMessage({ message, onRetry }: AssistantMessageProps) {
       {message.content ? (
         <div className="prose prose-sm dark:prose-invert min-w-0 max-w-none break-words text-sm">
           <ReactMarkdown
-            remarkPlugins={[remarkGfm]}
+            remarkPlugins={[[remarkGfm, { singleTilde: false }]]}
             components={{ a: MarkdownLink }}
           >
             {message.content}

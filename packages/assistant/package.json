@@ -36,7 +36,7 @@
     "test": "vitest run --passWithNoTests"
   },
   "dependencies": {
-    "@core-ai/core-ai": "^0.11.0",
+    "@core-ai/core-ai": "^0.11.1",
     "@silicajs/components": "^0.4.1",
     "@silicajs/core": "^0.9.0",
     "@silicajs/ui": "^0.2.1",

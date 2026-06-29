@@ -31,7 +31,7 @@
     "@silicajs/core": "^0.9.0",
     "@silicajs/remark-obsidian": "^0.1.0",
     "@silicajs/ui": "^0.2.1",
-    "lucide-react": "^1.21.0"
+    "lucide-react": "^1.22.0"
   },
   "peerDependencies": {
     "react": "^19.2.0",

@@ -58,6 +58,40 @@ export type SilicaAssistantRateLimitConfig = {
   trustedProxyHeaders?: string[];
 };
 
+export const SILICA_ASSISTANT_MCP_TOOLS = [
+  "search_pages",
+  "read_page",
+  "list_pages",
+  "run_shell",
+] as const;
+
+/** Tools the generated MCP server can expose to external agents. */
+export type SilicaAssistantMcpTool =
+  (typeof SILICA_ASSISTANT_MCP_TOOLS)[number];
+
+export type SilicaAssistantMcpRateLimitConfig = {
+  /** Maximum MCP requests allowed per API key in the configured window. */
+  maxRequests?: number;
+  /** Window size in milliseconds. Defaults to one minute. */
+  windowMs?: number;
+};
+
+export type SilicaAssistantMcpConfig = {
+  enabled?: boolean;
+  /** Tools exposed to MCP clients. Defaults to every tool. */
+  tools?: SilicaAssistantMcpTool[];
+  /**
+   * Built-in per-API-key request rate limit for the generated MCP route. Pass
+   * `false` only when another quota guard protects the endpoint.
+   */
+  rateLimit?: SilicaAssistantMcpRateLimitConfig | false;
+};
+
+export type ResolvedSilicaAssistantMcpConfig = {
+  tools: SilicaAssistantMcpTool[];
+  rateLimit?: SilicaAssistantMcpRateLimitConfig | false;
+};
+
 export type SilicaAssistantConfig = {
   enabled?: boolean;
   /** Provider the assistant uses for model calls. */
@@ -69,12 +103,19 @@ export type SilicaAssistantConfig = {
    * quota guard protects the generated assistant route.
    */
   rateLimit?: SilicaAssistantRateLimitConfig | false;
+  /**
+   * Expose the site's content to external AI agents over the Model Context
+   * Protocol, authenticated with API keys from `SILICA_MCP_API_KEYS`.
+   * Off by default.
+   */
+  mcp?: SilicaAssistantMcpConfig | boolean;
 };
 
 export type ResolvedSilicaAssistantConfig = {
   provider: SilicaAssistantProviderConfig;
   model: string;
   rateLimit?: SilicaAssistantRateLimitConfig | false;
+  mcp?: ResolvedSilicaAssistantMcpConfig;
 };
 
 export type SilicaNextConfig = Record<string, unknown>;

@@ -58,3 +58,15 @@ export async function startCommand(): Promise<void> {
   const nextRoot = await materializeNextApp({ projectRoot });
   await runStart(nextRoot);
 }
+
+const MCP_API_KEY_PREFIX = "slk_";
+const MCP_API_KEY_BYTES = 32;
+
+/** Generates a random API key for the assistant MCP endpoint. */
+export function generateMcpApiKey(): string {
+  return `${MCP_API_KEY_PREFIX}${crypto.randomBytes(MCP_API_KEY_BYTES).toString("base64url")}`;
+}
+
+export function mcpKeyCommand(): void {
+  console.log(generateMcpApiKey());
+}

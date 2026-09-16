@@ -69,6 +69,69 @@ describe("resolveConfig", () => {
     ).toBeUndefined();
   });
 
+  it("leaves the assistant MCP server disabled by default", () => {
+    expect(
+      resolveConfig({ assistant: { provider: "openai", model: "gpt-5.2" } })
+        .assistant?.mcp,
+    ).toBeUndefined();
+    expect(
+      resolveConfig({
+        assistant: { provider: "openai", model: "gpt-5.2", mcp: false },
+      }).assistant?.mcp,
+    ).toBeUndefined();
+    expect(
+      resolveConfig({
+        assistant: {
+          provider: "openai",
+          model: "gpt-5.2",
+          mcp: { enabled: false },
+        },
+      }).assistant?.mcp,
+    ).toBeUndefined();
+  });
+
+  it("resolves the assistant MCP server with every tool by default", () => {
+    expect(
+      resolveConfig({
+        assistant: { provider: "openai", model: "gpt-5.2", mcp: true },
+      }).assistant?.mcp,
+    ).toEqual({
+      tools: ["search_pages", "read_page", "list_pages", "run_shell"],
+    });
+    expect(
+      resolveConfig({
+        assistant: {
+          provider: "openai",
+          model: "gpt-5.2",
+          mcp: {
+            tools: ["read_page", "search_pages", "read_page"],
+            rateLimit: { maxRequests: 5 },
+          },
+        },
+      }).assistant?.mcp,
+    ).toEqual({
+      tools: ["read_page", "search_pages"],
+      rateLimit: { maxRequests: 5 },
+    });
+  });
+
+  it("rejects unknown or empty MCP tool lists", () => {
+    expect(() =>
+      resolveConfig({
+        assistant: {
+          provider: "openai",
+          model: "gpt-5.2",
+          mcp: { tools: ["read_page", "write_page" as never] },
+        },
+      }),
+    ).toThrow(/Unknown Silica MCP tool "write_page"/);
+    expect(() =>
+      resolveConfig({
+        assistant: { provider: "openai", model: "gpt-5.2", mcp: { tools: [] } },
+      }),
+    ).toThrow(/at least one tool/);
+  });
+
   it("resolves azure-openai endpoint as a runtime env mapping", () => {
     expect(
       resolveConfig({

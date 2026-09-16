@@ -9,6 +9,16 @@ describe("silica proxy helpers", () => {
     expect(isSilicaPublicPath("/api/authenticated-search")).toBe(false);
   });
 
+  it("allows configured public prefixes for self-authenticating routes", () => {
+    expect(isSilicaPublicPath("/api/mcp", [], ["/api/mcp"])).toBe(true);
+    expect(isSilicaPublicPath("/api/mcp/anything", [], ["/api/mcp"])).toBe(
+      true,
+    );
+    expect(isSilicaPublicPath("/api/mcpx", [], ["/api/mcp"])).toBe(false);
+    expect(isSilicaPublicPath("/api/mcp")).toBe(false);
+    expect(isSilicaPublicPath("/api/mcp", [], ["//evil"])).toBe(false);
+  });
+
   it("allows configured public branding assets", () => {
     expect(isSilicaPublicPath("/favicon.svg", ["/favicon.svg"])).toBe(true);
     expect(isSilicaPublicPath("/logo.png", ["/logo.png"])).toBe(true);

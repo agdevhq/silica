@@ -3,6 +3,7 @@ import {
   buildCommand,
   createCommand,
   devCommand,
+  mcpKeyCommand,
   startCommand,
 } from "./commands.js";
 
@@ -10,6 +11,8 @@ export {
   buildCommand,
   createCommand,
   devCommand,
+  generateMcpApiKey,
+  mcpKeyCommand,
   startCommand,
 } from "./commands.js";
 
@@ -47,6 +50,13 @@ export async function main(argv = process.argv): Promise<void> {
     .description("start the built hidden Next.js app")
     .action(async () => {
       await startCommand();
+    });
+
+  program
+    .command("mcp-key")
+    .description("generate a random API key for the assistant MCP endpoint")
+    .action(() => {
+      mcpKeyCommand();
     });
 
   await program.parseAsync(argv);

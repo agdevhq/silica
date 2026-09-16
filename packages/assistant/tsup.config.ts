@@ -14,11 +14,13 @@ export default defineConfig({
   clean: true,
   external: [
     "@core-ai/core-ai",
+    /^@modelcontextprotocol\/sdk(\/|$)/,
     "@silicajs/components",
     "@silicajs/core",
     "@silicajs/core/runtime",
     "@silicajs/next",
     "@silicajs/next/server-data",
+    "@silicajs/search",
     "@silicajs/ui",
     "just-bash",
     "react",

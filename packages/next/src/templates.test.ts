@@ -3,6 +3,7 @@ import {
   assistantModuleTemplate,
   assistantRouteTemplate,
   getSilicaTemplates,
+  mcpRouteTemplate,
   nextConfigTemplate,
   packageJsonTemplate,
   proxyTemplate,
@@ -139,6 +140,61 @@ describe("generated templates", () => {
         },
       }),
     ).toContain('"authEnabled": true');
+  });
+
+  it("opens the MCP endpoint in the generated proxy only when enabled", () => {
+    const baseConfig = {
+      projectRoot: "/tmp/site",
+      title: "Test",
+      description: "Test",
+      contentDir: "content",
+      theme: "default",
+      wikilinks: { strategy: "shortest" as const, strict: false },
+      tags: { inline: true },
+      ordering: { numericPrefixes: true },
+      filters: { removeDrafts: true, explicitPublish: false },
+      render: {
+        prerender: { strategy: "all" as const },
+        output: "default" as const,
+        cache: {},
+      },
+    };
+    const assistant = {
+      model: "gpt-5.2",
+      provider: {
+        package: "@core-ai/openai",
+        factory: "createOpenAI",
+      },
+    };
+
+    expect(proxyTemplate({ ...baseConfig, assistant })).toContain(
+      '"publicPrefixes": []',
+    );
+    expect(
+      proxyTemplate({
+        ...baseConfig,
+        assistant: { ...assistant, mcp: { tools: ["read_page"] } },
+      }),
+    ).toContain('"publicPrefixes": [\n    "/api/mcp"\n  ]');
+  });
+
+  it("generates an MCP route without provider imports", () => {
+    const rendered = mcpRouteTemplate();
+
+    expect(rendered).toContain(
+      'import { createMcpRouteHandler } from "@silicajs/assistant/mcp/next"',
+    );
+    expect(rendered).toContain(
+      "export const { POST, GET, DELETE } = createMcpRouteHandler();",
+    );
+    expect(rendered).not.toContain("@core-ai");
+  });
+
+  it("externalizes the MCP SDK only when the MCP server is enabled", () => {
+    const rendered = nextConfigTemplate();
+    expect(rendered).toContain(
+      'resolvedConfig?.assistant?.mcp ? "@modelcontextprotocol/sdk" : undefined',
+    );
   });
 
   it("bakes the configured logo into generated proxy public paths", () => {

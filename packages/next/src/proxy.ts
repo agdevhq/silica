@@ -6,6 +6,11 @@ export type SilicaProxyOptions = {
   allowedDomains?: readonly string[];
   allowedEmails?: readonly string[];
   publicPaths?: readonly string[];
+  /**
+   * Path prefixes that bring their own authentication (for example the MCP
+   * endpoint, which checks API keys) and must bypass the sign-in redirect.
+   */
+  publicPrefixes?: readonly string[];
 };
 
 const PUBLIC_PREFIXES = [
@@ -31,7 +36,9 @@ export async function silicaProxy(
   const authEnabled =
     options.authEnabled === true || process.env.SILICA_AUTH_ENABLED === "true";
   if (!authEnabled) return NextResponse.next();
-  if (isSilicaPublicPath(pathname, options.publicPaths)) {
+  if (
+    isSilicaPublicPath(pathname, options.publicPaths, options.publicPrefixes)
+  ) {
     return NextResponse.next();
   }
 
@@ -69,15 +76,20 @@ export const config = {
 export function isSilicaPublicPath(
   pathname: string,
   publicPaths: readonly string[] = [],
+  publicPrefixes: readonly string[] = [],
 ): boolean {
   const allowedPublicPaths = new Set([
     ...PUBLIC_PATHS,
     ...publicPaths.filter(isPublicPath),
   ]);
+  const allowedPublicPrefixes = [
+    ...PUBLIC_PREFIXES,
+    ...publicPrefixes.filter(isPublicPath),
+  ];
 
   return (
     allowedPublicPaths.has(pathname) ||
-    PUBLIC_PREFIXES.some(
+    allowedPublicPrefixes.some(
       (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`),
     )
   );

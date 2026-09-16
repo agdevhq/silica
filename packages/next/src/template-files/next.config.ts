@@ -12,7 +12,7 @@ const turbopackRoot = findTurbopackRoot(nextRoot);
 const tracedDataGlob = `${relativePosixPath(turbopackRoot, dataRoot)}/**/*`;
 const vaultMetadata = readVaultMetadata(path.join(dataRoot, "vault.db"));
 type VaultConfig = {
-  assistant?: { provider?: { package?: string } };
+  assistant?: { provider?: { package?: string }; mcp?: unknown };
   render?: { output?: "standalone" | "default" };
 };
 const resolvedConfig = parseJson<VaultConfig>(vaultMetadata.configJson);
@@ -21,6 +21,7 @@ const serverExternalPackages = [
   "better-sqlite3",
   "just-bash",
   resolvedConfig?.assistant?.provider?.package,
+  resolvedConfig?.assistant?.mcp ? "@modelcontextprotocol/sdk" : undefined,
 ].filter((packageName, index, packages): packageName is string => {
   return Boolean(packageName) && packages.indexOf(packageName) === index;
 });

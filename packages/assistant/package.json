@@ -20,6 +20,14 @@
       "types": "./dist/next.d.ts",
       "import": "./dist/next.js"
     },
+    "./mcp": {
+      "types": "./dist/mcp/index.d.ts",
+      "import": "./dist/mcp/index.js"
+    },
+    "./mcp/next": {
+      "types": "./dist/mcp/next.d.ts",
+      "import": "./dist/mcp/next.js"
+    },
     "./ui": {
       "types": "./dist/ui/index.d.ts",
       "import": "./dist/ui/index.js"
@@ -48,10 +56,18 @@
   },
   "peerDependencies": {
     "react": "^19.2.0",
-    "react-dom": "^19.2.0"
+    "react-dom": "^19.2.0",
+    "@modelcontextprotocol/sdk": "^1.29.0"
+  },
+  "peerDependenciesMeta": {
+    "@modelcontextprotocol/sdk": {
+      "optional": true
+    }
   },
   "devDependencies": {
+    "@modelcontextprotocol/sdk": "^1.29.0",
     "@silicajs/next": "^0.6.0",
+    "@silicajs/search": "^0.3.2",
     "@types/react": "^19.2.17",
     "@types/react-dom": "^19.2.3",
     "react": "^19.2.6",

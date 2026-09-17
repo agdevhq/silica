@@ -8,12 +8,15 @@ import {
   assistantRouteTemplate,
   generatedAppPackageManifest,
   getSilicaTemplates,
+  mcpRouteTemplate,
   nextConfigTemplate,
   packageJsonTemplate,
   proxyTemplate,
   themeModuleTemplate,
   tsconfigTemplate,
 } from "@silicajs/next";
+
+const MCP_SDK_PACKAGE = "@modelcontextprotocol/sdk";
 
 export type MaterializeOptions = {
   projectRoot?: string;
@@ -82,6 +85,12 @@ export async function materializeNextApp(
       assistantRoutePath,
       assistantRouteTemplate(config.assistant),
     );
+    if (config.assistant.mcp) {
+      assertMcpDependenciesInstalled(projectRoot);
+      const mcpRoutePath = path.join(nextRoot, "app/api/mcp/route.ts");
+      await fs.ensureDir(path.dirname(mcpRoutePath));
+      await fs.writeFile(mcpRoutePath, mcpRouteTemplate());
+    }
   }
   await fs.writeFile(
     path.join(nextRoot, "package.json"),
@@ -163,6 +172,15 @@ async function makeGeneratedAppDependencies(
         packageVersions,
         config.assistant.provider.package,
       );
+    if (config.assistant.mcp) {
+      dependencies[MCP_SDK_PACKAGE] = await resolveProjectDependency(
+        projectRoot,
+        nextRoot,
+        localPackagesRoot,
+        packageVersions,
+        MCP_SDK_PACKAGE,
+      );
+    }
   }
 
   return [dependencies, devDependencies];
@@ -298,6 +316,16 @@ function assertAssistantDependenciesInstalled(
       `Assistant is enabled in silica.config.ts but ${provider.package} is not installed.\n` +
         "Install it together with @silicajs/assistant for your configured model, e.g.:\n" +
         `  npm install @silicajs/assistant ${provider.package}`,
+    );
+  }
+}
+
+function assertMcpDependenciesInstalled(projectRoot: string): void {
+  if (!isPackageInstalled(projectRoot, MCP_SDK_PACKAGE)) {
+    throw new Error(
+      `The MCP server is enabled in silica.config.ts (assistant.mcp) but ${MCP_SDK_PACKAGE} is not installed.\n` +
+        "Install it alongside @silicajs/assistant:\n" +
+        `  npm install ${MCP_SDK_PACKAGE}`,
     );
   }
 }

@@ -12,6 +12,7 @@ export default defineConfig({
   assistant: {
     provider: "openai",
     model: "gpt-5.4-mini",
+    mcp: true,
   },
   wikilinks: {
     strategy: "shortest",

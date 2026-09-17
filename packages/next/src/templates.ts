@@ -74,6 +74,13 @@ export const POST = createAssistantRouteHandler({
 `;
 }
 
+export function mcpRouteTemplate(): string {
+  return `import { createMcpRouteHandler } from "@silicajs/assistant/mcp/next";
+
+export const { POST, GET, DELETE } = createMcpRouteHandler();
+`;
+}
+
 export function proxyTemplate(config: ResolvedSilicaConfig): string {
   return `import type { NextRequest } from "next/server";
 import { silicaProxy } from "@silicajs/next/proxy";
@@ -84,6 +91,7 @@ const silicaProxyConfig = ${JSON.stringify(
       allowedDomains: config.auth?.allowedDomains ?? [],
       allowedEmails: config.auth?.allowedEmails ?? [],
       publicPaths: config.logo ? [config.logo] : [],
+      publicPrefixes: config.assistant?.mcp ? ["/api/mcp"] : [],
     },
     null,
     2,

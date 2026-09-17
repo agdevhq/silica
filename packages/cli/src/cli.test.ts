@@ -3,6 +3,7 @@ import crypto from "node:crypto";
 import fs from "fs-extra";
 import { generatedAppPackageManifest } from "@silicajs/next";
 import { afterEach, describe, expect, it } from "vitest";
+import { generateMcpApiKey } from "./commands.js";
 import { loadProjectEnv } from "./env.js";
 import { materializeNextApp } from "./materialize.js";
 import { scaffoldProject } from "./scaffold.js";
@@ -238,6 +239,103 @@ describe("silica CLI helpers", () => {
       await fs.readFile(path.join(nextRoot, "package.json"), "utf8"),
     ) as { dependencies: Record<string, string> };
     expect(generatedPackageJson.dependencies["@acme/provider"]).toBe("^1.0.0");
+    expect(
+      await fs.pathExists(path.join(nextRoot, "app/api/mcp/route.ts")),
+    ).toBe(false);
+    expect(generatedPackageJson.dependencies["@modelcontextprotocol/sdk"]).toBe(
+      undefined,
+    );
+  });
+
+  it("materializes the MCP route and SDK dependency only when enabled", async () => {
+    const root = await makeTempRoot("silica-materialize-mcp");
+    await fs.ensureDir(path.join(root, "content"));
+    await fs.writeFile(path.join(root, "content/index.md"), "# Home");
+    await writeProjectPackage(root, {
+      "@acme/provider": "^1.0.0",
+      "@modelcontextprotocol/sdk": "^1.29.0",
+      "@silicajs/assistant": "^0.1.0",
+    });
+    for (const packageName of [
+      "@silicajs/assistant",
+      "@acme/provider",
+      "@modelcontextprotocol/sdk",
+    ]) {
+      await fs.outputJson(
+        path.join(root, "node_modules", packageName, "package.json"),
+        {},
+      );
+    }
+    await fs.writeFile(
+      path.join(root, "silica.config.ts"),
+      `export default {
+  assistant: {
+    provider: { package: "@acme/provider", factory: "createAcme" },
+    model: "acme-chat",
+    mcp: { tools: ["read_page", "search_pages"] }
+  }
+};
+`,
+    );
+
+    const nextRoot = await materializeNextApp({ projectRoot: root });
+
+    const route = await fs.readFile(
+      path.join(nextRoot, "app/api/mcp/route.ts"),
+      "utf8",
+    );
+    expect(route).toContain(
+      'import { createMcpRouteHandler } from "@silicajs/assistant/mcp/next"',
+    );
+    expect(route).toContain("export const { POST, GET, DELETE }");
+    const generatedPackageJson = JSON.parse(
+      await fs.readFile(path.join(nextRoot, "package.json"), "utf8"),
+    ) as { dependencies: Record<string, string> };
+    expect(generatedPackageJson.dependencies["@modelcontextprotocol/sdk"]).toBe(
+      "^1.29.0",
+    );
+    expect(
+      await fs.readFile(path.join(nextRoot, "proxy.ts"), "utf8"),
+    ).toContain('"/api/mcp"');
+  });
+
+  it("fails materialization when the MCP SDK is not a project dependency", async () => {
+    const root = await makeTempRoot("silica-materialize-mcp-missing");
+    await fs.ensureDir(path.join(root, "content"));
+    await fs.writeFile(path.join(root, "content/index.md"), "# Home");
+    await writeProjectPackage(root, {
+      "@acme/provider": "^1.0.0",
+      "@silicajs/assistant": "^0.1.0",
+    });
+    for (const packageName of ["@silicajs/assistant", "@acme/provider"]) {
+      await fs.outputJson(
+        path.join(root, "node_modules", packageName, "package.json"),
+        {},
+      );
+    }
+    await fs.writeFile(
+      path.join(root, "silica.config.ts"),
+      `export default {
+  assistant: {
+    provider: { package: "@acme/provider", factory: "createAcme" },
+    model: "acme-chat",
+    mcp: true
+  }
+};
+`,
+    );
+
+    // Inside the monorepo the hoisted SDK satisfies the install check, so the
+    // project package.json lookup is the first gate that can fail here.
+    await expect(materializeNextApp({ projectRoot: root })).rejects.toThrow(
+      /@modelcontextprotocol\/sdk is (not installed|missing from package\.json)/,
+    );
+  });
+
+  it("generates prefixed, random MCP API keys", () => {
+    const key = generateMcpApiKey();
+    expect(key).toMatch(/^slk_[A-Za-z0-9_-]{43}$/);
+    expect(generateMcpApiKey()).not.toBe(key);
   });
 });
 

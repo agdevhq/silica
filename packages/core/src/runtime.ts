@@ -38,6 +38,7 @@ export {
   type WikiLinkResolutionIndex,
 } from "./path.js";
 export { tagToHref } from "./tags.js";
+export { SILICA_ASSISTANT_MCP_TOOLS } from "./types.js";
 export {
   ASSISTANT_PROVIDER_PRESETS,
   resolveAssistantProvider,
@@ -73,7 +74,9 @@ export type {
   RenderCacheState,
   RenderResult,
   ResolvedSilicaAssistantConfig,
+  ResolvedSilicaAssistantMcpConfig,
   ResolvedSilicaConfig,
+  SilicaAssistantMcpTool,
   SilicaAssistantProviderConfig,
   SilicaAssistantProviderInput,
   SilicaAssistantProviderPresetConfig,

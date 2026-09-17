@@ -4,6 +4,7 @@ export {
   resolveAssistantProvider,
   type SilicaAssistantProviderPreset,
 } from "./assistant-providers.js";
+export { SILICA_ASSISTANT_MCP_TOOLS } from "./types.js";
 export { resolvePublicAssetPath } from "./logo.js";
 export {
   isMarkdownFile,
@@ -101,10 +102,14 @@ export type {
   RenderCacheState,
   RenderResult,
   ResolvedSilicaAssistantConfig,
+  ResolvedSilicaAssistantMcpConfig,
   ResolvedSilicaConfig,
   ResolvedSilicaPrerenderConfig,
   ResolvedSilicaRenderConfig,
   SilicaAssistantConfig,
+  SilicaAssistantMcpConfig,
+  SilicaAssistantMcpRateLimitConfig,
+  SilicaAssistantMcpTool,
   SilicaAssistantProviderConfig,
   SilicaAssistantProviderInput,
   SilicaAssistantProviderPresetConfig,

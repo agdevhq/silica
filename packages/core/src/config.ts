@@ -3,13 +3,17 @@ import { existsSync } from "node:fs";
 import { createJiti } from "jiti";
 import { resolveAssistantProvider } from "./assistant-providers.js";
 import { resolvePublicAssetPath } from "./logo.js";
-import type {
-  ResolvedSilicaAssistantConfig,
-  ResolvedSilicaConfig,
-  ResolvedSilicaPrerenderConfig,
-  SilicaAssistantConfig,
-  SilicaConfig,
-  SilicaPrerenderConfig,
+import {
+  SILICA_ASSISTANT_MCP_TOOLS,
+  type ResolvedSilicaAssistantConfig,
+  type ResolvedSilicaAssistantMcpConfig,
+  type ResolvedSilicaConfig,
+  type ResolvedSilicaPrerenderConfig,
+  type SilicaAssistantConfig,
+  type SilicaAssistantMcpConfig,
+  type SilicaAssistantMcpTool,
+  type SilicaConfig,
+  type SilicaPrerenderConfig,
 } from "./types.js";
 
 export function defineConfig(config: SilicaConfig): SilicaConfig {
@@ -115,13 +119,55 @@ function resolveAssistantConfig(
     );
   }
 
+  const mcp = resolveAssistantMcpConfig(assistant.mcp);
   return {
     provider: resolveAssistantProvider(assistant.provider),
     model: assistant.model,
     ...(assistant.rateLimit !== undefined
       ? { rateLimit: assistant.rateLimit }
       : {}),
+    ...(mcp ? { mcp } : {}),
   };
+}
+
+function resolveAssistantMcpConfig(
+  mcp: SilicaAssistantMcpConfig | boolean | undefined,
+): ResolvedSilicaAssistantMcpConfig | undefined {
+  if (!mcp) return undefined;
+  const config = mcp === true ? {} : mcp;
+  if (config.enabled === false) return undefined;
+
+  const tools = resolveAssistantMcpTools(config.tools);
+  return {
+    tools,
+    ...(config.rateLimit !== undefined ? { rateLimit: config.rateLimit } : {}),
+  };
+}
+
+function resolveAssistantMcpTools(
+  tools: SilicaAssistantMcpTool[] | undefined,
+): SilicaAssistantMcpTool[] {
+  if (tools === undefined) return [...SILICA_ASSISTANT_MCP_TOOLS];
+
+  const known = new Set<string>(SILICA_ASSISTANT_MCP_TOOLS);
+  const unknown = tools.filter((tool) => !known.has(tool));
+  if (unknown.length > 0) {
+    throw new Error(
+      `Unknown Silica MCP tool${unknown.length > 1 ? "s" : ""} ${unknown
+        .map((tool) => JSON.stringify(tool))
+        .join(
+          ", ",
+        )}. Expected one of: ${SILICA_ASSISTANT_MCP_TOOLS.join(", ")}.`,
+    );
+  }
+
+  const resolved = [...new Set(tools)];
+  if (resolved.length === 0) {
+    throw new Error(
+      "Silica MCP requires at least one tool (assistant.mcp.tools), or disable it with assistant.mcp: false.",
+    );
+  }
+  return resolved;
 }
 
 function resolvePrerenderConfig(

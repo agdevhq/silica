@@ -2,6 +2,7 @@ export {
   assistantModuleTemplate,
   assistantRouteTemplate,
   getSilicaTemplates,
+  mcpRouteTemplate,
   nextConfigTemplate,
   packageJsonTemplate,
   proxyTemplate,

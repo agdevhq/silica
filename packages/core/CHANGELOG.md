@@ -1,5 +1,11 @@
 # @silicajs/core
 
+## 0.10.0
+
+### Minor Changes
+
+- 255be28: Add `assistant.mcp` config for exposing the site to external AI agents over the Model Context Protocol, with a tool allowlist and per-key rate limit settings.
+
 ## 0.9.0
 
 ### Minor Changes

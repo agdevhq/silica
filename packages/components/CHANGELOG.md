@@ -1,5 +1,12 @@
 # @silicajs/components
 
+## 0.4.2
+
+### Patch Changes
+
+- Updated dependencies [255be28]
+  - @silicajs/core@0.10.0
+
 ## 0.4.1
 
 ### Patch Changes

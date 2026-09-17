@@ -40,6 +40,12 @@ updates:
       interval: weekly
       day: monday
     open-pull-requests-limit: 5
+    ignore:
+      # changesets/action v2 requires Changesets CLI v3 and renames its inputs.
+      # Bump it together with @changesets/cli.
+      - dependency-name: changesets/action
+        update-types:
+          - "version-update:semver-major"
     groups:
       github-actions:
         patterns:

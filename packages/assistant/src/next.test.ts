@@ -1,5 +1,20 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { createChatStream, type ChatModel } from "@core-ai/core-ai";
+import {
+  createChatStream,
+  TEXT_ONLY_MODALITIES,
+  type ChatModel,
+  type ModelCapabilities,
+} from "@core-ai/core-ai";
+
+const fakeCapabilities: ModelCapabilities = {
+  reasoning: {
+    mode: "unsupported",
+    supportedEfforts: [],
+    restrictsSamplingParams: false,
+    supportedToolChoices: ["auto", "none", "required", "tool"],
+  },
+  modalities: TEXT_ONLY_MODALITIES,
+};
 import {
   createAssistantRouteHandler,
   type AssistantRouteOptions,
@@ -43,6 +58,7 @@ vi.mock("@silicajs/next/server-data", () => ({
 const fakeModel: ChatModel = {
   provider: "fake",
   modelId: "fake-model",
+  capabilities: fakeCapabilities,
   async stream() {
     return createChatStream(
       (async function* () {

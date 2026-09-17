@@ -1,12 +1,24 @@
 import { describe, expect, it } from "vitest";
 import {
   createChatStream,
+  TEXT_ONLY_MODALITIES,
   type ChatModel,
   type GenerateOptions,
+  type ModelCapabilities,
   type StreamEvent,
 } from "@core-ai/core-ai";
 import type { AssistantSiteContext, AssistantStreamEvent } from "../types.js";
 import { runAssistant } from "./runtime.js";
+
+const fakeCapabilities: ModelCapabilities = {
+  reasoning: {
+    mode: "unsupported",
+    supportedEfforts: [],
+    restrictsSamplingParams: false,
+    supportedToolChoices: ["auto", "none", "required", "tool"],
+  },
+  modalities: TEXT_ONLY_MODALITIES,
+};
 
 const site: AssistantSiteContext = {
   siteTitle: "Docs",
@@ -39,6 +51,7 @@ function createScriptedModel(script: StreamEvent[][]): {
   const model: ChatModel = {
     provider: "fake",
     modelId: "fake-model",
+    capabilities: fakeCapabilities,
     async stream(options) {
       calls.push(options);
       const events = script[Math.min(calls.length - 1, script.length - 1)]!;

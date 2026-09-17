@@ -86,7 +86,7 @@ Do **not** use `npx changeset --empty` for these PRs. Empty changesets satisfy t
 
 ### Dependabot PRs
 
-Dependabot PRs get a changeset automatically in the **Require Changeset** workflow:
+Dependabot PRs are prepared automatically by the **Prepare Dependabot PR** workflow (`.github/workflows/dependabot-prepare.yml`). It runs the generated-file sync scripts (`scaffold-versions:update`, `generated-app-manifest:update`) and adds a changeset:
 
 | Change                                                                                                        | Changeset                                                            |
 | ------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------- |
@@ -95,7 +95,9 @@ Dependabot PRs get a changeset automatically in the **Require Changeset** workfl
 
 Publishable packages are those with `publishConfig.access: public` and not `private: true`.
 
-The changeset commit is pushed with a repo deploy key (`DEPENDABOT_CHANGESET_DEPLOY_KEY`), not `GITHUB_TOKEN`, so CI re-runs on the new commit. A loop cannot occur: the script skips when a changeset already exists on the branch.
+The prepared commit is pushed with a repo deploy key (`DEPENDABOT_CHANGESET_DEPLOY_KEY`), not `GITHUB_TOKEN`, so CI and Require Changeset re-run on the new commit. The key must be stored as a **Dependabot** secret: workflows triggered by Dependabot PRs cannot see regular Actions secrets. A loop cannot occur: the sync scripts are idempotent and the changeset script skips when a changeset already exists on the branch.
+
+Dependabot groups updates (`.github/dependabot.yml`): production and dev minor/patch bumps each arrive in one weekly PR, security updates in one, GitHub Actions in one. Major bumps come individually. `@core-ai/*` minor bumps are ignored because they carry breaking changes in 0.x; bump those deliberately.
 
 ## PR Conventions
 

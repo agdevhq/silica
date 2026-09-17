@@ -20,10 +20,19 @@ updates:
         dependency-type: development
         patterns:
           - "*"
+        update-types:
+          - minor
+          - patch
       security-updates:
         applies-to: security-updates
         patterns:
           - "*"
+    ignore:
+      # @core-ai ships breaking API changes in 0.x minor releases. Patch bumps
+      # still arrive automatically; minor bumps are done deliberately.
+      - dependency-name: "@core-ai/*"
+        update-types:
+          - "version-update:semver-minor"
 
   - package-ecosystem: github-actions
     directory: /

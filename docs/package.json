@@ -23,7 +23,7 @@
     "@silicajs/next": "^0.7.0",
     "@silicajs/search": "^0.3.2",
     "@silicajs/theme-amethyst": "^0.5.2",
-    "next": "^16.3.4",
+    "next": "^16.3.5",
     "react": "^19.3.0",
     "react-dom": "^19.3.0"
   },

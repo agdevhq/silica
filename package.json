@@ -31,17 +31,17 @@
     "format": "prettier --check ."
   },
   "devDependencies": {
-    "@changesets/cli": "^2.31.1",
+    "@changesets/cli": "^3.0.2",
     "@playwright/test": "^1.63.0",
     "@types/fs-extra": "^11.0.4",
-    "@types/node": "^25.9.6",
+    "@types/node": "^26.5.1",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
     "@vitejs/plugin-react": "^6.0.2",
     "prettier": "^3.9.6",
     "tsup": "^8.5.1",
     "turbo": "^2.10.12",
-    "typescript": "^6.0.3",
-    "vitest": "^4.1.11"
+    "typescript": "^7.0.2",
+    "vitest": "^5.0.0"
   }
 }

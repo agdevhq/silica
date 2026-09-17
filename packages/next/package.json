@@ -115,10 +115,10 @@
     "@silicajs/core": "^0.10.0",
     "@silicajs/remark-obsidian": "^0.1.0",
     "@silicajs/search": "^0.3.2",
-    "better-auth": "1.6.30",
+    "better-auth": "1.7.4",
     "better-sqlite3": "^12.11.1",
     "jiti": "^2.7.0",
-    "katex": "^0.17.0"
+    "katex": "^0.18.7"
   },
   "peerDependencies": {
     "next": "^16.2.0",
@@ -128,7 +128,7 @@
   "devDependencies": {
     "@types/better-sqlite3": "^7.6.13",
     "@types/node": "^25.9.6",
-    "next": "^16.3.4",
+    "next": "^16.3.5",
     "react": "^19.3.0",
     "react-dom": "^19.3.0",
     "typescript": "^6.0.3"

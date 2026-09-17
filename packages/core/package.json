@@ -41,7 +41,7 @@
     "gray-matter": "^4.0.3",
     "hast-util-to-string": "^3.0.1",
     "jiti": "^2.7.0",
-    "katex": "^0.17.0",
+    "katex": "^0.18.7",
     "rehype-autolink-headings": "^7.1.0",
     "rehype-katex": "^7.0.1",
     "rehype-raw": "^7.0.0",
@@ -57,7 +57,7 @@
     "shiki": "^4.4.3",
     "unified": "^11.0.5",
     "unist-util-visit": "^5.1.0",
-    "zod": "^4.6.1"
+    "zod": "^4.6.5"
   },
   "peerDependencies": {
     "react": "^19.2.0"

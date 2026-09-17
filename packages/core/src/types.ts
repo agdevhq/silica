@@ -121,8 +121,7 @@ export type ResolvedSilicaAssistantConfig = {
 export type SilicaNextConfig = Record<string, unknown>;
 
 export type SilicaNextConfigOverride =
-  | SilicaNextConfig
-  | ((base: SilicaNextConfig) => SilicaNextConfig);
+  SilicaNextConfig | ((base: SilicaNextConfig) => SilicaNextConfig);
 
 export type SilicaConfig = {
   title?: string;

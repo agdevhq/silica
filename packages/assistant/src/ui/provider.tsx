@@ -343,8 +343,7 @@ export async function streamAnswer(options: {
 
   if (!response.ok) {
     const payload = (await response.json().catch(() => undefined)) as
-      | { error?: string }
-      | undefined;
+      { error?: string } | undefined;
     throw new AssistantRequestError(
       payload?.error ?? "The assistant is unavailable right now.",
     );

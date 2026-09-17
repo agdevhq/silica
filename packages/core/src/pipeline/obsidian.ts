@@ -266,8 +266,7 @@ function wikilinkToHast(
 }
 
 function isWikiNode(node: SilicaMdastNode): node is (
-  | ObsidianWikilink
-  | ObsidianWikiEmbed
+  ObsidianWikilink | ObsidianWikiEmbed
 ) & {
   data?: Record<string, unknown>;
 } {

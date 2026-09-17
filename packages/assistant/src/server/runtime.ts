@@ -67,14 +67,13 @@ export async function runAssistant(
 
   const messages: Message[] = [
     { role: "system", content: buildSystemPrompt(site) },
-    ...transcript.map(
-      (message): Message =>
-        message.role === "user"
-          ? { role: "user", content: message.content }
-          : {
-              role: "assistant",
-              parts: [{ type: "text", text: message.content }],
-            },
+    ...transcript.map((message): Message =>
+      message.role === "user"
+        ? { role: "user", content: message.content }
+        : {
+            role: "assistant",
+            parts: [{ type: "text", text: message.content }],
+          },
     ),
   ];
 

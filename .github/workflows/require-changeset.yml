@@ -11,7 +11,7 @@ jobs:
     if: github.head_ref != 'changeset-release/main'
     runs-on: ubuntu-latest
     permissions:
-      contents: write
+      contents: read
       pull-requests: read
     steps:
       - name: Checkout Repo
@@ -32,33 +32,6 @@ jobs:
 
       - name: Install Dependencies
         run: npm ci
-
-      - name: Add Dependabot changeset
-        if: github.event.pull_request.user.login == 'dependabot[bot]'
-        env:
-          BASE_REF: main
-        run: node scripts/dependabot-changeset.mjs
-
-      - name: Commit Dependabot changeset
-        if: github.event.pull_request.user.login == 'dependabot[bot]'
-        env:
-          DEPENDABOT_CHANGESET_DEPLOY_KEY: ${{ secrets.DEPENDABOT_CHANGESET_DEPLOY_KEY }}
-        run: |
-          if [ -z "$(git status --porcelain .changeset)" ]; then
-            echo "No changeset changes to commit."
-            exit 0
-          fi
-
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add .changeset/
-          git commit -m "Add changeset for Dependabot dependency updates"
-
-          mkdir -p ~/.ssh
-          printf '%s\n' "$DEPENDABOT_CHANGESET_DEPLOY_KEY" > ~/.ssh/id_ed25519
-          chmod 600 ~/.ssh/id_ed25519
-          ssh-keyscan github.com >> ~/.ssh/known_hosts
-          git push "git@github.com:${{ github.repository }}.git" "HEAD:${{ github.head_ref }}"
 
       - name: Skip changeset check
         if: contains(github.event.pull_request.labels.*.name, 'skip-changeset')

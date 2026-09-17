@@ -117,6 +117,7 @@
     "@silicajs/search": "^0.3.2",
     "better-auth": "1.7.4",
     "better-sqlite3": "^12.11.1",
+    "fs-extra": "^11.4.0",
     "jiti": "^2.7.0",
     "katex": "^0.18.7"
   },

@@ -48,11 +48,11 @@
     "@silicajs/components": "^0.4.2",
     "@silicajs/core": "^0.10.0",
     "@silicajs/ui": "^0.2.1",
-    "just-bash": "^3.0.1",
-    "lucide-react": "^1.21.0",
+    "just-bash": "^3.4.2",
+    "lucide-react": "^1.43.0",
     "react-markdown": "^10.1.0",
     "remark-gfm": "^4.0.1",
-    "zod": "^4.0.0"
+    "zod": "^4.6.1"
   },
   "peerDependencies": {
     "react": "^19.2.0",
@@ -65,13 +65,13 @@
     }
   },
   "devDependencies": {
-    "@modelcontextprotocol/sdk": "^1.29.0",
+    "@modelcontextprotocol/sdk": "^1.30.0",
     "@silicajs/next": "^0.7.0",
     "@silicajs/search": "^0.3.2",
-    "@types/react": "^19.2.17",
-    "@types/react-dom": "^19.2.3",
-    "react": "^19.2.6",
-    "react-dom": "^19.2.7",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0",
     "tsup": "^8.5.1"
   },
   "homepage": "https://github.com/agdevhq/silica/tree/main/packages/assistant#readme",

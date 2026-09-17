@@ -26,8 +26,7 @@ export type AssistantSignedTranscriptMessage = {
 
 /** One turn of the client-held conversation transcript. */
 export type AssistantTranscriptMessage =
-  | AssistantUserTranscriptMessage
-  | AssistantSignedTranscriptMessage;
+  AssistantUserTranscriptMessage | AssistantSignedTranscriptMessage;
 
 /** Request body of `POST /api/assistant`. */
 export type AssistantRequest = {

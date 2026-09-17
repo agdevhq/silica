@@ -7,8 +7,21 @@ updates:
       day: monday
     open-pull-requests-limit: 10
     groups:
+      dependencies:
+        applies-to: version-updates
+        dependency-type: production
+        patterns:
+          - "*"
+        update-types:
+          - minor
+          - patch
       dev-dependencies:
+        applies-to: version-updates
         dependency-type: development
+        patterns:
+          - "*"
+      security-updates:
+        applies-to: security-updates
         patterns:
           - "*"
 
@@ -18,3 +31,7 @@ updates:
       interval: weekly
       day: monday
     open-pull-requests-limit: 5
+    groups:
+      github-actions:
+        patterns:
+          - "*"

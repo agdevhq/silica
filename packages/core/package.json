@@ -31,12 +31,12 @@
     "lint": "tsc --noEmit"
   },
   "dependencies": {
-    "@shikijs/rehype": "^4.2.0",
+    "@shikijs/rehype": "^4.4.3",
     "@silicajs/remark-obsidian": "^0.1.0",
     "@silicajs/search": "^0.3.2",
     "better-sqlite3": "^12.11.1",
     "fast-glob": "^3.3.3",
-    "fs-extra": "^11.3.5",
+    "fs-extra": "^11.4.0",
     "github-slugger": "^2.0.0",
     "gray-matter": "^4.0.3",
     "hast-util-to-string": "^3.0.1",
@@ -54,17 +54,17 @@
     "remark-math": "^6.0.0",
     "remark-parse": "^11.0.0",
     "remark-rehype": "^11.1.2",
-    "shiki": "^4.2.0",
+    "shiki": "^4.4.3",
     "unified": "^11.0.5",
     "unist-util-visit": "^5.1.0",
-    "zod": "^4.4.3"
+    "zod": "^4.6.1"
   },
   "peerDependencies": {
     "react": "^19.2.0"
   },
   "devDependencies": {
-    "react": "^19.2.6",
-    "react-dom": "^19.2.7"
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0"
   },
   "homepage": "https://github.com/agdevhq/silica/tree/main/packages/core#readme",
   "repository": {

@@ -115,7 +115,7 @@
     "@silicajs/core": "^0.10.0",
     "@silicajs/remark-obsidian": "^0.1.0",
     "@silicajs/search": "^0.3.2",
-    "better-auth": "1.6.19",
+    "better-auth": "1.6.30",
     "better-sqlite3": "^12.11.1",
     "jiti": "^2.7.0",
     "katex": "^0.17.0"
@@ -127,10 +127,10 @@
   },
   "devDependencies": {
     "@types/better-sqlite3": "^7.6.13",
-    "@types/node": "^25.9.3",
-    "next": "^16.2.9",
-    "react": "^19.2.6",
-    "react-dom": "^19.2.7",
+    "@types/node": "^25.9.6",
+    "next": "^16.3.4",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0",
     "typescript": "^6.0.3"
   },
   "homepage": "https://github.com/agdevhq/silica/tree/main/packages/next#readme",

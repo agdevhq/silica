@@ -167,8 +167,7 @@ const enterInlineFootnote: FromMarkdownHandle = function enterInlineFootnote(
 function exitWiki(this: CompileContext, token: Token) {
   const raw = this.sliceSerialize(token);
   const node = this.stack[this.stack.length - 1] as
-    | ObsidianWikilink
-    | ObsidianWikiEmbed;
+    ObsidianWikilink | ObsidianWikiEmbed;
   const markerLength = node.type === "obsidianWikiEmbed" ? 3 : 2;
   const parsed = parseWikiInner(raw.slice(markerLength, -2), {
     embed: node.type === "obsidianWikiEmbed",

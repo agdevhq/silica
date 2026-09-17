@@ -29,9 +29,7 @@ type PagePropertyBrokenLinkPart = {
 };
 
 export type PagePropertyPart =
-  | PagePropertyTextPart
-  | PagePropertyLinkPart
-  | PagePropertyBrokenLinkPart;
+  PagePropertyTextPart | PagePropertyLinkPart | PagePropertyBrokenLinkPart;
 
 export type PageProperty = {
   key: string;

@@ -1,5 +1,19 @@
 # docs
 
+## 0.1.11
+
+### Patch Changes
+
+- Updated dependencies [255be28]
+- Updated dependencies [255be28]
+- Updated dependencies [255be28]
+- Updated dependencies [255be28]
+  - @silicajs/assistant@0.3.0
+  - @silicajs/cli@0.5.0
+  - @silicajs/core@0.10.0
+  - @silicajs/next@0.7.0
+  - @silicajs/theme-amethyst@0.5.2
+
 ## 0.1.10
 
 ### Patch Changes

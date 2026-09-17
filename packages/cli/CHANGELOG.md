@@ -1,5 +1,18 @@
 # @silicajs/cli
 
+## 0.5.0
+
+### Minor Changes
+
+- 255be28: Materialize the MCP route and its SDK dependency when `assistant.mcp` is enabled, fail early when `@modelcontextprotocol/sdk` is missing, and add `silica mcp-key` for generating API keys.
+
+### Patch Changes
+
+- Updated dependencies [255be28]
+- Updated dependencies [255be28]
+  - @silicajs/core@0.10.0
+  - @silicajs/next@0.7.0
+
 ## 0.4.0
 
 ### Minor Changes

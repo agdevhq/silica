@@ -1,5 +1,17 @@
 # @silicajs/next
 
+## 0.7.0
+
+### Minor Changes
+
+- 255be28: Generate an `/api/mcp` route when `assistant.mcp` is enabled, let the proxy bypass sign-in for self-authenticating path prefixes, and externalize the MCP SDK in the generated Next config only when the server is on.
+
+### Patch Changes
+
+- Updated dependencies [255be28]
+  - @silicajs/core@0.10.0
+  - @silicajs/components@0.4.2
+
 ## 0.6.0
 
 ### Minor Changes

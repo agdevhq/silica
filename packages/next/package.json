@@ -116,7 +116,7 @@
     "@silicajs/remark-obsidian": "^0.1.0",
     "@silicajs/search": "^0.3.2",
     "better-auth": "1.6.30",
-    "better-sqlite3": "^12.11.1",
+    "better-sqlite3": "^13.0.3",
     "jiti": "^2.7.0",
     "katex": "^0.17.0"
   },

@@ -49,7 +49,7 @@
     "@silicajs/core": "^0.10.1",
     "@silicajs/ui": "^0.2.2",
     "just-bash": "^3.4.2",
-    "lucide-react": "^1.45.0",
+    "lucide-react": "^1.47.0",
     "react-markdown": "^10.1.0",
     "remark-gfm": "^4.0.1",
     "zod": "^4.6.5"

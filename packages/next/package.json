@@ -132,7 +132,7 @@
     "next": "^16.3.5",
     "react": "^19.3.0",
     "react-dom": "^19.3.0",
-    "typescript": "^6.0.3"
+    "typescript": "^7.0.2"
   },
   "homepage": "https://github.com/agdevhq/silica/tree/main/packages/next#readme",
   "repository": {

@@ -32,7 +32,7 @@
     "better-sqlite3": "^12.11.1",
     "chokidar": "^5.0.0",
     "commander": "^15.0.0",
-    "execa": "^9.6.1",
+    "execa": "^10.0.1",
     "fs-extra": "^11.4.0"
   },
   "homepage": "https://github.com/agdevhq/silica/tree/main/packages/cli#readme",

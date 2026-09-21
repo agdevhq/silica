@@ -1,6 +1,6 @@
 {
   "name": "@silicajs/assistant",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "description": "Optional AI assistant for Silica knowledge sites — core-ai runtime, constrained markdown tools, and theme-consumable UI.",
   "type": "module",
   "license": "MIT",
@@ -45,9 +45,9 @@
   },
   "dependencies": {
     "@core-ai/core-ai": "^0.24.0",
-    "@silicajs/components": "^0.4.3",
+    "@silicajs/components": "^0.4.4",
     "@silicajs/core": "^0.10.1",
-    "@silicajs/ui": "^0.2.2",
+    "@silicajs/ui": "^0.2.3",
     "just-bash": "^3.4.2",
     "lucide-react": "^1.47.0",
     "react-markdown": "^10.1.0",
@@ -66,7 +66,7 @@
   },
   "devDependencies": {
     "@modelcontextprotocol/sdk": "^1.30.0",
-    "@silicajs/next": "^0.7.1",
+    "@silicajs/next": "^0.7.2",
     "@silicajs/search": "^0.3.2",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",

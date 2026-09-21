@@ -1,5 +1,13 @@
 # @silicajs/cli
 
+## 0.5.2
+
+### Patch Changes
+
+- bf58572: Bump execa to 10.0.1.
+- Updated dependencies [d086810]
+  - @silicajs/next@0.7.2
+
 ## 0.5.1
 
 ### Patch Changes

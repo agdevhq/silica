@@ -2,8 +2,8 @@
 // Run npm run scaffold-versions:update after package version changes.
 
 export const scaffoldDependencyRanges = {
-  "@silicajs/cli": "^0.5.1",
+  "@silicajs/cli": "^0.5.2",
   "@silicajs/core": "^0.10.1",
-  "@silicajs/next": "^0.7.1",
-  "@silicajs/theme-amethyst": "^0.5.3",
+  "@silicajs/next": "^0.7.2",
+  "@silicajs/theme-amethyst": "^0.5.4",
 } as const;

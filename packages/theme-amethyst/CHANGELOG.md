@@ -1,5 +1,14 @@
 # @silicajs/theme-amethyst
 
+## 0.5.4
+
+### Patch Changes
+
+- d086810: Bump lucide-react to 1.47.0, better-auth to 1.7.5.
+- Updated dependencies [d086810]
+  - @silicajs/components@0.4.4
+  - @silicajs/ui@0.2.3
+
 ## 0.5.3
 
 ### Patch Changes

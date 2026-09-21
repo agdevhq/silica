@@ -1,5 +1,14 @@
 # @silicajs/next
 
+## 0.7.2
+
+### Patch Changes
+
+- d086810: Bump lucide-react to 1.47.0, better-auth to 1.7.5.
+- Updated dependencies [d086810]
+  - @silicajs/auth@0.1.5
+  - @silicajs/components@0.4.4
+
 ## 0.7.1
 
 ### Patch Changes

@@ -8,14 +8,14 @@ export type GeneratedAppPackageManifest = {
 
 export const generatedAppPackageManifest: GeneratedAppPackageManifest = {
   dependencies: {
-    "@silicajs/auth": "^0.1.4",
-    "@silicajs/components": "^0.4.3",
+    "@silicajs/auth": "^0.1.5",
+    "@silicajs/components": "^0.4.4",
     "@silicajs/core": "^0.10.1",
-    "@silicajs/next": "^0.7.1",
+    "@silicajs/next": "^0.7.2",
     "@silicajs/remark-obsidian": "^0.1.0",
     "@silicajs/search": "^0.3.2",
-    "@silicajs/theme-amethyst": "^0.5.3",
-    "@silicajs/ui": "^0.2.2",
+    "@silicajs/theme-amethyst": "^0.5.4",
+    "@silicajs/ui": "^0.2.3",
     "@tailwindcss/postcss": "^4.3.3",
     "better-sqlite3": "^12.11.1",
     jiti: "^2.7.0",

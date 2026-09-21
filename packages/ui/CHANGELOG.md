@@ -1,5 +1,11 @@
 # @silicajs/ui
 
+## 0.2.3
+
+### Patch Changes
+
+- d086810: Bump lucide-react to 1.47.0, better-auth to 1.7.5.
+
 ## 0.2.2
 
 ### Patch Changes

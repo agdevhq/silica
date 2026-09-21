@@ -33,6 +33,12 @@ updates:
       - dependency-name: "@core-ai/*"
         update-types:
           - "version-update:semver-minor"
+      # TypeScript 7 (native compiler) no longer exposes the JS compiler API
+      # that tsup's dts build (rollup-plugin-dts) relies on, so every package
+      # build fails. Revisit once tsup supports it or we move off tsup.
+      - dependency-name: "typescript"
+        update-types:
+          - "version-update:semver-major"
 
   - package-ecosystem: github-actions
     directory: /

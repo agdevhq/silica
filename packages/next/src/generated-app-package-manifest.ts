@@ -26,7 +26,7 @@ export const generatedAppPackageManifest: GeneratedAppPackageManifest = {
   },
   devDependencies: {
     "@types/better-sqlite3": "^7.6.13",
-    "@types/node": "^26.6.1",
+    "@types/node": "^26.6.4",
     typescript: "^6.0.3",
   },
 };

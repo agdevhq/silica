@@ -48,8 +48,8 @@
     "@silicajs/components": "^0.4.3",
     "@silicajs/core": "^0.10.1",
     "@silicajs/ui": "^0.2.2",
-    "just-bash": "^3.4.2",
-    "lucide-react": "^1.47.0",
+    "just-bash": "^3.6.0",
+    "lucide-react": "^1.50.0",
     "react-markdown": "^10.1.0",
     "remark-gfm": "^4.0.1",
     "zod": "^4.6.5"
@@ -65,7 +65,7 @@
     }
   },
   "devDependencies": {
-    "@modelcontextprotocol/sdk": "^1.30.0",
+    "@modelcontextprotocol/sdk": "^1.31.0",
     "@silicajs/next": "^0.7.1",
     "@silicajs/search": "^0.3.2",
     "@types/react": "^19.3.0",

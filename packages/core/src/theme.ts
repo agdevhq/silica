@@ -48,6 +48,7 @@ export type ThemeAssistantSlots = {
     className?: string;
     label?: string;
     iconOnly?: boolean;
+    onOpen?: () => void;
   }) => React.ReactNode;
   /**
    * The assistant chat window (conversation + composer). Fills its

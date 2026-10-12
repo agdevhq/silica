@@ -20,6 +20,7 @@ import {
   SidebarGroupContent,
   SidebarHeader,
   SidebarRail,
+  useSidebar,
 } from "@silicajs/ui/components/sidebar";
 
 export type SidebarProps = {
@@ -33,6 +34,8 @@ export function Sidebar({
   config,
   assistant,
 }: SidebarProps) {
+  const { isMobile, setOpenMobile } = useSidebar();
+
   return (
     <ShadcnSidebar>
       <SidebarHeader className="gap-3 border-b border-sidebar-border">
@@ -48,7 +51,13 @@ export function Sidebar({
         <div className="flex items-center gap-2 px-1 pb-1">
           <SearchTrigger className="min-w-0 flex-1 justify-start" />
           {assistant ? (
-            <assistant.Trigger className="shrink-0" iconOnly />
+            <assistant.Trigger
+              className="shrink-0"
+              iconOnly
+              onOpen={() => {
+                if (isMobile) setOpenMobile(false);
+              }}
+            />
           ) : null}
         </div>
       </SidebarHeader>

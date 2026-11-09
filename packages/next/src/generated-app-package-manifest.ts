@@ -16,7 +16,7 @@ export const generatedAppPackageManifest: GeneratedAppPackageManifest = {
     "@silicajs/search": "^0.3.2",
     "@silicajs/theme-amethyst": "^0.5.3",
     "@silicajs/ui": "^0.2.2",
-    "@tailwindcss/postcss": "^4.3.3",
+    "@tailwindcss/postcss": "^4.3.4",
     "better-sqlite3": "^12.11.1",
     jiti: "^2.7.0",
     next: "^16.2.0",
@@ -26,7 +26,7 @@ export const generatedAppPackageManifest: GeneratedAppPackageManifest = {
   },
   devDependencies: {
     "@types/better-sqlite3": "^7.6.13",
-    "@types/node": "^26.6.1",
+    "@types/node": "^26.6.6",
     typescript: "^6.0.3",
   },
 };

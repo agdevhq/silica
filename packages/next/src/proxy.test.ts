@@ -25,4 +25,9 @@ describe("silica proxy helpers", () => {
     expect(isSilicaPublicPath("/logo.png")).toBe(false);
     expect(isSilicaPublicPath("/nested/logo.svg")).toBe(false);
   });
+
+  it("never exposes the sitemap of an auth-gated site", () => {
+    expect(isSilicaPublicPath("/sitemap.xml")).toBe(false);
+    expect(isSilicaPublicPath("/robots.txt")).toBe(true);
+  });
 });

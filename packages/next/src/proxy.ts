@@ -19,12 +19,13 @@ const PUBLIC_PREFIXES = [
   "/api/silica/revalidate",
   "/api/silica/dev-events",
 ];
+// Never add /sitemap.xml here: on an auth-gated site it lists every page slug.
+// robots.txt stays public so crawlers can read its "Disallow: /".
 const PUBLIC_PATHS = [
   "/sign-in",
   "/not-allowed",
   "/favicon.ico",
   "/robots.txt",
-  "/sitemap.xml",
 ];
 
 export async function silicaProxy(

@@ -792,21 +792,40 @@ async function writeSitemapAndRobots(
     /\/$/,
     "",
   );
+  const sitemapPath = path.join(publicRoot, "sitemap.xml");
+  const robotsPath = path.join(publicRoot, "robots.txt");
+  const userSitemap = await fs.pathExists(
+    path.join(projectRoot, "public/sitemap.xml"),
+  );
+  const userRobots = await fs.pathExists(
+    path.join(projectRoot, "public/robots.txt"),
+  );
+
+  // A private (auth-gated) site must not publish its page list, and should
+  // tell crawlers to stay away instead of pointing them at a sitemap.
+  if (config.auth?.enabled) {
+    if (!userSitemap) await fs.remove(sitemapPath);
+    if (!userRobots) {
+      await fs.writeFile(robotsPath, "User-agent: *\nDisallow: /\n");
+    }
+    return;
+  }
+
   const urls = manifest.entries
     .filter(isListedEntry)
     .map(
       (entry) => `  <url><loc>${baseUrl}${slugToHref(entry.slug)}</loc></url>`,
     )
     .join("\n");
-  if (!(await fs.pathExists(path.join(projectRoot, "public/sitemap.xml")))) {
+  if (!userSitemap) {
     await fs.writeFile(
-      path.join(publicRoot, "sitemap.xml"),
+      sitemapPath,
       `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls}\n</urlset>\n`,
     );
   }
-  if (!(await fs.pathExists(path.join(projectRoot, "public/robots.txt")))) {
+  if (!userRobots) {
     await fs.writeFile(
-      path.join(publicRoot, "robots.txt"),
+      robotsPath,
       `User-agent: *\nAllow: /\nSitemap: ${baseUrl}/sitemap.xml\n`,
     );
   }

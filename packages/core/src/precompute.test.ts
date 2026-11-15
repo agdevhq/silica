@@ -615,6 +615,43 @@ describe("precompute", () => {
 
     await fs.remove(root);
   });
+
+  it("omits the sitemap and disallows crawling on auth-gated sites", async () => {
+    const root = path.join(process.cwd(), ".tmp-precompute-private-sitemap");
+    await fs.emptyDir(path.join(root, "content"));
+    await fs.writeFile(path.join(root, "content/index.md"), "# Home");
+    await fs.writeFile(path.join(root, "content/secret-plan.md"), "# Secret");
+    // A stale sitemap from an earlier public build must not survive.
+    await fs.ensureDir(path.join(root, ".silica/next/public"));
+    await fs.writeFile(
+      path.join(root, ".silica/next/public/sitemap.xml"),
+      "<xml>/secret-plan</xml>",
+    );
+
+    await precompute({
+      projectRoot: root,
+      config: resolveConfig(
+        {
+          title: "Test",
+          baseUrl: "https://vault.example.com",
+          auth: { provider: "google", allowedDomains: ["example.com"] },
+        },
+        root,
+      ),
+    });
+
+    await expect(
+      fs.pathExists(path.join(root, ".silica/next/public/sitemap.xml")),
+    ).resolves.toBe(false);
+    const robots = await fs.readFile(
+      path.join(root, ".silica/next/public/robots.txt"),
+      "utf8",
+    );
+    expect(robots).toContain("Disallow: /");
+    expect(robots).not.toContain("Sitemap");
+
+    await fs.remove(root);
+  });
 });
 
 describe("getGitDates", () => {
